@@ -1,0 +1,24 @@
+name: Fetch Threat Intel Feeds
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # every 15 minutes
+  workflow_dispatch:          # allow manual trigger
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Fetch all feeds and push to Spin
+        env:
+          SPIN_APP_NAME: bcr-threat-intel
+        run: node fetch-feeds.js

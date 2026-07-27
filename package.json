@@ -1,0 +1,11 @@
+{
+  "name": "bcr-feed-fetcher",
+  "version": "1.0.0",
+  "description": "Server-side feed fetcher for BCR Threat Intelligence Dashboard",
+  "main": "fetch-feeds.js",
+  "type": "module",
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "rss-parser": "^3.13.0"
+  }
+}
