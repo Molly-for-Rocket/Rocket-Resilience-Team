@@ -2,9 +2,6 @@ import fetch from 'node-fetch';
 import Parser from 'rss-parser';
 
 const parser = new Parser({ timeout: 15000, headers: { 'User-Agent': 'Mozilla/5.0 (compatible; RocketBCR/2.0)' } });
-const SPIN_APP = process.env.SPIN_APP_NAME || 'bcr-threat-intel';
-const SPIN_BASE = `https://spin.rp.foc.zone/api/full-stack/${SPIN_APP}/data`;
-
 // ─── DATA SOURCES ─────────────────────────────────────────────────────────────
 
 const RSS_SOURCES = [
@@ -206,42 +203,22 @@ function parseJSONSource(data, source) {
   return items;
 }
 
-// ─── PUSH TO SPIN ─────────────────────────────────────────────────────────────
+// ─── WRITE OUTPUT FILE ────────────────────────────────────────────────────────
+// spin.rp.foc.zone is an internal Rocket URL not reachable from GitHub Actions.
+// Instead we write alerts.json to the repo; the workflow commits it back so the
+// dashboard can fetch it from the GitHub raw content URL.
 
-async function pushToSpin(allItems, healthMap) {
-  // Write all alerts as a single record (replace strategy: delete old, write new)
+import { writeFileSync } from 'fs';
+
+function writeOutput(allItems, healthMap) {
   const payload = {
     fetchedAt: new Date().toISOString(),
     totalItems: allItems.length,
     health: healthMap,
     alerts: allItems,
   };
-
-  try {
-    // Try to find existing snapshot record and update it, else create
-    const listRes = await fetch(`${SPIN_BASE}/alerts?limit=5`, { method: 'GET' });
-    const listData = await listRes.json();
-    const existing = listData.records && listData.records[0];
-
-    if (existing) {
-      const updateRes = await fetch(`${SPIN_BASE}/alerts/${existing.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: payload, replace: true }),
-      });
-      if (updateRes.ok) { console.log(`✓ Updated Spin data store: ${allItems.length} alerts`); return; }
-    }
-
-    const createRes = await fetch(`${SPIN_BASE}/alerts`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: payload }),
-    });
-    if (createRes.ok) console.log(`✓ Created Spin data store record: ${allItems.length} alerts`);
-    else console.log(`✗ Spin write failed: ${createRes.status} ${await createRes.text()}`);
-  } catch (e) {
-    console.log(`✗ Spin push error: ${e.message}`);
-  }
+  writeFileSync('alerts.json', JSON.stringify(payload));
+  console.log(`✓ Wrote alerts.json: ${allItems.length} alerts`);
 }
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
@@ -278,7 +255,7 @@ async function main() {
   const healthy = Object.values(healthMap).filter(h => h.status === 'ok').length;
   console.log(`\n=== Results: ${deduped.length} alerts from ${healthy}/${RSS_SOURCES.length + JSON_SOURCES.length} sources ===\n`);
 
-  await pushToSpin(deduped, healthMap);
+  writeOutput(deduped, healthMap);
 }
 
 main().catch(console.error);
