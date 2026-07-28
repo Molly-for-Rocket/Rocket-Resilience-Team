@@ -40,19 +40,50 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; min-height: 100vh; }
-    .topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 24px; background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+    /* ── Sidebar nav ── */
+    :root { --sidebar-w: 220px; --sidebar-collapsed: 52px; }
+    .app-shell { display:flex; min-height:100vh; }
+    .sidenav { width:var(--sidebar-w); flex-shrink:0; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:200; transition:width .22s cubic-bezier(.4,0,.2,1); overflow:hidden; }
+    .sidenav.collapsed { width:var(--sidebar-collapsed); }
+    .sidenav-header { display:flex; align-items:center; gap:10px; padding:16px 14px 12px; border-bottom:1px solid var(--border); min-height:68px; flex-shrink:0; }
+    .sidenav-logo { font-size:20px; font-weight:800; white-space:nowrap; overflow:hidden; letter-spacing:-0.5px; flex:1; }
+    .sidenav-logo .r { color:var(--accent); }
+    .sidenav-logo .m { color:var(--text); }
+    .sidenav-toggle { width:28px; height:28px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--muted); font-size:14px; transition:background .15s; }
+    .sidenav-toggle:hover { background:var(--border); color:var(--text); }
+    .sidenav-status { padding:8px 14px 10px; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; align-items:center; gap:8px; overflow:hidden; white-space:nowrap; }
+    .sidenav-status-text { font-size:11px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; }
+    .sidenav-body { flex:1; overflow-y:auto; overflow-x:hidden; padding:8px 0; }
+    .sidenav-body::-webkit-scrollbar { width:3px; }
+    .sidenav-body::-webkit-scrollbar-thumb { background:#CBD5E1; border-radius:2px; }
+    .sidenav-section { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted); padding:10px 16px 4px; white-space:nowrap; overflow:hidden; }
+    .sidenav.collapsed .sidenav-section { opacity:0; }
+    .sidenav-item { display:flex; align-items:center; gap:10px; padding:9px 14px; cursor:pointer; font-size:13px; font-weight:500; color:var(--muted); white-space:nowrap; transition:background .12s, color .12s; border:none; background:none; width:100%; text-align:left; font-family:var(--font); border-left:3px solid transparent; }
+    .sidenav-item:hover { background:var(--surface2); color:var(--text); }
+    .sidenav-item.active { color:var(--accent); background:rgba(200,16,46,.06); border-left-color:var(--accent); font-weight:600; }
+    .sidenav-icon { font-size:15px; flex-shrink:0; width:20px; text-align:center; }
+    .sidenav-label { overflow:hidden; flex:1; }
+    .sidenav-footer { padding:12px 14px; border-top:1px solid var(--border); flex-shrink:0; }
+    .sidenav-sync { width:100%; padding:7px 10px; background:var(--accent); color:#fff; border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; font-family:var(--font); white-space:nowrap; overflow:hidden; display:flex; align-items:center; justify-content:center; gap:6px; transition:background .15s; }
+    .sidenav-sync:hover { background:#9B0021; }
+    .sidenav.collapsed .sidenav-label, .sidenav.collapsed .sidenav-section, .sidenav.collapsed .sidenav-logo .m,
+    .sidenav.collapsed .sidenav-status-text, .sidenav.collapsed .sidenav-sync span { display:none; }
+    .sidenav.collapsed .sidenav-logo { font-size:16px; }
+    /* Main content shifts right to clear sidebar */
+    .app-content { flex:1; margin-left:var(--sidebar-w); transition:margin-left .22s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column; min-height:100vh; }
+    .app-content.nav-collapsed { margin-left:var(--sidebar-collapsed); }
+    /* Topbar */
+    .topbar { display:flex; align-items:center; justify-content:flex-end; padding:10px 24px; background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; box-shadow:0 2px 8px rgba(0,0,0,.06); gap:12px; }
     .topbar-left { display:flex; align-items:center; gap:12px; }
-    .logo { font-size:18px; font-weight:700; color:var(--accent); letter-spacing:-0.5px; }
+    .logo { font-size:22px; font-weight:800; color:var(--accent); letter-spacing:-0.5px; }
     .logo span { color:var(--text); }
     .badge-live { background:var(--red); color:#fff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; text-transform:uppercase; letter-spacing:1px; animation:pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
     .topbar-right { display:flex; align-items:center; gap:16px; }
     .status-dot { width:8px; height:8px; border-radius:50%; background:var(--green); display:inline-block; }
     .status-text { font-size:12px; color:var(--muted); }
-    .nav-tabs { display:flex; gap:0; background:var(--surface); border-bottom:1px solid var(--border); padding:0 16px; overflow-x:hidden; }
-    .nav-tab { padding:10px 13px; cursor:pointer; font-size:12px; font-weight:500; color:var(--muted); border-bottom:2px solid transparent; white-space:nowrap; transition:all .2s; background:none; border-top:none; border-left:none; border-right:none; flex:1; text-align:center; }
-    .nav-tab:hover { color:var(--text); }
-    .nav-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+    .nav-tabs { display:none; }
+    .nav-tab { display:none; }
     .main { padding:24px; max-width:1600px; margin:0 auto; }
     .tab-content { display:none; }
     .tab-content.active { display:block; }
@@ -218,34 +249,69 @@
   </style>
 </head>
 <body>
+<div class="app-shell">
 
-<!-- TOP BAR -->
+<!-- ═══ SIDEBAR NAV ═══ -->
+<nav class="sidenav" id="sidenav">
+  <div class="sidenav-header">
+    <div class="sidenav-logo"><span class="r">Rocket</span><span class="m"> Resilience</span></div>
+    <button class="sidenav-toggle" onclick="toggleSidenav()" title="Collapse / expand">&#9776;</button>
+  </div>
+  <div class="sidenav-status">
+    <span class="status-dot" id="global-status-dot"></span>
+    <span class="sidenav-status-text" id="global-status-text">Initializing…</span>
+  </div>
+  <div class="sidenav-body">
+    <div class="sidenav-section">Main</div>
+    <button class="sidenav-item active" id="snav-dashboard" onclick="snavClick('dashboard','snav-dashboard',function(){setTimeout(initMiniMap,50)})"><span class="sidenav-icon">&#128202;</span><span class="sidenav-label">Dashboard</span></button>
+    <button class="sidenav-item" id="snav-alerts" onclick="snavClick('alerts','snav-alerts')"><span class="sidenav-icon">&#128308;</span><span class="sidenav-label">Alert Feed</span></button>
+    <button class="sidenav-item" id="snav-sources" onclick="snavClick('sources','snav-sources')"><span class="sidenav-icon">&#128240;</span><span class="sidenav-label">Data Sources</span></button>
+    <div class="sidenav-section">Analysis</div>
+    <button class="sidenav-item" id="snav-ai" onclick="snavClick('ai','snav-ai')"><span class="sidenav-icon">&#129302;</span><span class="sidenav-label">AI Report</span></button>
+    <button class="sidenav-item" id="snav-appmonitoring" onclick="snavClick('appmonitoring','snav-appmonitoring')"><span class="sidenav-icon">&#128187;</span><span class="sidenav-label">App Monitoring</span></button>
+    <div class="sidenav-section">Locations</div>
+    <button class="sidenav-item" id="snav-locations" onclick="snavClick('locations','snav-locations',function(){setTimeout(function(){initMap();if(map)map.invalidateSize();renderLocationTable();},50)})"><span class="sidenav-icon">&#127760;</span><span class="sidenav-label">Locations</span></button>
+    <button class="sidenav-item" id="snav-critical-buildings" onclick="snavClick('critical-buildings','snav-critical-buildings',loadCriticalBuildings)"><span class="sidenav-icon">&#9670;</span><span class="sidenav-label">Critical Buildings</span></button>
+    <div class="sidenav-section">Config</div>
+    <button class="sidenav-item" id="snav-keywords" onclick="snavClick('keywords','snav-keywords')"><span class="sidenav-icon">&#128274;</span><span class="sidenav-label">Keywords</span></button>
+    <button class="sidenav-item" id="snav-dedup" onclick="snavClick('dedup','snav-dedup')"><span class="sidenav-icon">&#128203;</span><span class="sidenav-label">Dedup &amp; Filters</span></button>
+    <button class="sidenav-item" id="snav-feedhealth" onclick="snavClick('feedhealth','snav-feedhealth')"><span class="sidenav-icon">&#9989;</span><span class="sidenav-label">Feed Health</span></button>
+    <button class="sidenav-item" id="snav-logs" onclick="snavClick('logs','snav-logs')"><span class="sidenav-icon">&#128196;</span><span class="sidenav-label">Activity Log</span></button>
+    <button class="sidenav-item" id="snav-settings" onclick="snavClick('settings','snav-settings')"><span class="sidenav-icon">&#9881;</span><span class="sidenav-label">Settings</span></button>
+  </div>
+  <div class="sidenav-footer">
+    <button class="sidenav-sync" onclick="runSyncNow()">&#8635;<span> Sync Now</span></button>
+  </div>
+</nav>
+
+<!-- ═══ MAIN CONTENT AREA ═══ -->
+<div class="app-content" id="app-content">
+
+<!-- TOP BAR (title only — nav moved to sidebar) -->
 <header class="topbar">
-  <div class="topbar-left">
+  <div style="display:flex;align-items:center;gap:12px;flex:1">
     <div class="logo"><span style="color:var(--accent)">Rocket</span><span style="color:var(--text)"> Resilience Monitor</span></div>
     <span class="badge-live">Live</span>
   </div>
   <div class="topbar-right">
-    <span class="status-dot" id="global-status-dot"></span>
-    <span class="status-text" id="global-status-text">Initializing feeds…</span>
     <button class="btn btn-primary btn-sm" onclick="runSyncNow()">&#8635; Sync Now</button>
   </div>
 </header>
 
-<!-- NAV TABS -->
-<nav class="nav-tabs">
-  <button class="nav-tab active" onclick="switchTab('dashboard', this); setTimeout(initMiniMap, 50)">Dashboard</button>
-  <button class="nav-tab" onclick="switchTab('sources', this)">Data Sources</button>
-  <button class="nav-tab" onclick="switchTab('alerts', this)">Alert Feed</button>
-  <button class="nav-tab" onclick="switchTab('appmonitoring', this)">App Monitoring</button>
-  <button class="nav-tab" onclick="switchTab('ai', this)">AI Report</button>
-  <button class="nav-tab" onclick="switchTab('locations', this); setTimeout(function(){initMap(); if(map) map.invalidateSize(); renderLocationTable();}, 50)">Locations</button>
-  <button class="nav-tab" onclick="switchTab('critical-buildings', this); loadCriticalBuildings()">Critical Buildings</button>
-  <button class="nav-tab" onclick="switchTab('dedup', this)">Dedup &amp; Filters</button>
-  <button class="nav-tab" onclick="switchTab('logs', this)">Activity Log</button>
-  <button class="nav-tab" onclick="switchTab('feedhealth', this)">Feed Health</button>
-  <button class="nav-tab" onclick="switchTab('keywords', this)">Keywords</button>
-  <button class="nav-tab" onclick="switchTab('settings', this)">Settings</button>
+<!-- legacy nav (hidden, kept so any JS referencing nav-tab still works) -->
+<nav class="nav-tabs" style="display:none">
+  <button class="nav-tab active" id="navtab-dashboard">Dashboard</button>
+  <button class="nav-tab" id="navtab-sources">Data Sources</button>
+  <button class="nav-tab" id="navtab-alerts">Alert Feed</button>
+  <button class="nav-tab" id="navtab-appmonitoring">App Monitoring</button>
+  <button class="nav-tab" id="navtab-ai">AI Report</button>
+  <button class="nav-tab" id="navtab-locations">Locations</button>
+  <button class="nav-tab" id="navtab-critical-buildings">Critical Buildings</button>
+  <button class="nav-tab" id="navtab-dedup">Dedup &amp; Filters</button>
+  <button class="nav-tab" id="navtab-logs">Activity Log</button>
+  <button class="nav-tab" id="navtab-feedhealth">Feed Health</button>
+  <button class="nav-tab" id="navtab-keywords">Keywords</button>
+  <button class="nav-tab" id="navtab-settings">Settings</button>
 </nav>
 
 <main class="main">
@@ -1745,8 +1811,11 @@
 </main>
 
 <footer class="page-footer">
-  AI Email Alert System &middot; RocketFlow &middot; v2.1.0 &middot; 2026-07-16
+  Rocket Resilience Monitor &middot; RocketFlow &middot; v2.2.0 &middot; 2026-07-28
 </footer>
+
+</div><!-- /.app-content -->
+</div><!-- /.app-shell -->
 
 <script>
   function switchTab(id, el) {
@@ -1754,6 +1823,10 @@
     document.querySelectorAll('.nav-tab').forEach(function(t){ t.classList.remove('active'); });
     document.getElementById('tab-' + id).classList.add('active');
     if (el) el.classList.add('active');
+    /* sync sidebar active state */
+    document.querySelectorAll('.sidenav-item').forEach(function(b){ b.classList.remove('active'); });
+    var sb = document.getElementById('snav-' + id);
+    if (sb) sb.classList.add('active');
     if (id === 'keywords') {
       setTimeout(function() {
         renderBuiltinKeywordLists();
@@ -1761,6 +1834,40 @@
       }, 0);
     }
   }
+
+  function snavClick(tabId, btnId, extra) {
+    /* Activate tab content */
+    document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); });
+    document.getElementById('tab-' + tabId).classList.add('active');
+    /* Activate sidebar item */
+    document.querySelectorAll('.sidenav-item').forEach(function(b){ b.classList.remove('active'); });
+    var btn = document.getElementById(btnId);
+    if (btn) btn.classList.add('active');
+    if (typeof extra === 'function') extra();
+    if (tabId === 'keywords') {
+      setTimeout(function(){ renderBuiltinKeywordLists(); renderCustomKeywordTags(); }, 0);
+    }
+  }
+
+  function toggleSidenav() {
+    var nav = document.getElementById('sidenav');
+    var content = document.getElementById('app-content');
+    nav.classList.toggle('collapsed');
+    content.classList.toggle('nav-collapsed');
+    try { localStorage.setItem('sidenavCollapsed', nav.classList.contains('collapsed') ? '1' : '0'); } catch(e){}
+  }
+
+  /* Restore sidebar collapse state on load */
+  (function(){
+    try {
+      if (localStorage.getItem('sidenavCollapsed') === '1') {
+        var nav = document.getElementById('sidenav');
+        var content = document.getElementById('app-content');
+        if (nav) nav.classList.add('collapsed');
+        if (content) content.classList.add('nav-collapsed');
+      }
+    } catch(e){}
+  })();
 
   /* ── Custom keyword system ──────────────────────────────────────────────────
      Stored in localStorage under 'customKeywords'.
