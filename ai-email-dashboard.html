@@ -2094,6 +2094,11 @@
       return div;
     };
     legend.addTo(map);
+
+    /* Re-plot any terror items already loaded before this tab was opened */
+    if (typeof allItems !== 'undefined' && allItems.length) {
+      plotTerrorOnMaps(allItems.filter(function(i){ return i.category === 'terror'; }));
+    }
   }
 
   var miniMap = null;
