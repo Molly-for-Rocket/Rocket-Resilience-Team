@@ -72,11 +72,12 @@
     .stat-delta { font-size:11px; margin-top:6px; }
     .delta-up { color:var(--red); }
     .delta-down { color:var(--green); }
-    .cat-tech { color:var(--tech); } .cat-human { color:var(--human); } .cat-natural { color:var(--natural); } .cat-financial { color:var(--financial); }
+    .cat-tech { color:var(--tech); } .cat-human { color:var(--human); } .cat-natural { color:var(--natural); } .cat-financial { color:var(--financial); } .cat-datacenter { color:#7C3AED; }
     .cat-tech-bg { background:rgba(37,99,235,.06); border-color:rgba(37,99,235,.2); }
     .cat-human-bg { background:rgba(200,16,46,.06); border-color:rgba(200,16,46,.2); }
     .cat-natural-bg { background:rgba(22,163,74,.06); border-color:rgba(22,163,74,.2); }
     .cat-financial-bg { background:rgba(217,119,6,.06); border-color:rgba(217,119,6,.2); }
+    .cat-datacenter-bg { background:rgba(124,58,237,.06); border-color:rgba(124,58,237,.2); }
     .alert-list { display:flex; flex-direction:column; gap:8px; }
     .alert-item { border-radius:8px; border-left:3px solid var(--border); background:var(--surface2); cursor:pointer; transition:background .15s; display:flex; flex-direction:column; }
     .alert-item:hover { background:#E8EAF0; }
@@ -261,7 +262,7 @@
     </div>
   </div>
 
-  <div class="grid-4" style="margin-bottom:16px">
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:16px">
     <div class="stat-tile cat-human-bg" onclick="filterByCategory('human')" style="cursor:pointer" title="Click to filter alerts by Human-Made category">
       <div class="stat-number cat-human" id="stat-human">—</div>
       <div class="stat-label">Human-Made Threats</div>
@@ -281,6 +282,11 @@
       <div class="stat-number cat-financial" id="stat-financial">—</div>
       <div class="stat-label">Financial / Regulatory</div>
       <div class="stat-delta" id="stat-financial-delta">Loading…</div>
+    </div>
+    <div class="stat-tile cat-datacenter-bg" onclick="filterByCategory('datacenter')" style="cursor:pointer" title="Click to filter alerts affecting Data Centers">
+      <div class="stat-number cat-datacenter" id="stat-datacenter">—</div>
+      <div class="stat-label">Data Center / Infra</div>
+      <div class="stat-delta" id="stat-datacenter-delta">Loading…</div>
     </div>
   </div>
 
@@ -1849,6 +1855,9 @@
     {name:'Detroit - Hudson\'s', city:'Detroit', state:'MI', lat:42.3319, lng:-83.0456, type:'Office', category:'Corporate', alertLevel:4},
     {name:'Grand Rapids - 280 Ann St NW', city:'Grand Rapids', state:'MI', lat:42.9634, lng:-85.6681, type:'Office', category:'Corporate', alertLevel:4},
     {name:'Novi - 39555 Orchard Hill Place', city:'Novi', state:'MI', lat:42.4784, lng:-83.4755, type:'Office', category:'Corporate', alertLevel:4},
+    // Michigan — Data Centers
+    {name:'Data Center — Troy (800 Tower Drive)', city:'Troy', state:'MI', lat:42.5601, lng:-83.1499, type:'DataCenter', category:'DataCenter', alertLevel:4},
+    {name:'Data Center — Detroit (1401 Rosa Parks Blvd)', city:'Detroit', state:'MI', lat:42.3547, lng:-83.0718, type:'DataCenter', category:'DataCenter', alertLevel:4},
     // Arizona
     {name:'Chandler - 140 North Arizona Ave', city:'Chandler', state:'AZ', lat:33.3062, lng:-111.8413, type:'Office', category:'Corporate', alertLevel:4},
     {name:'Chandler - 2335 South Ellis St', city:'Chandler', state:'AZ', lat:33.2794, lng:-111.8419, type:'Office', category:'Corporate', alertLevel:4},
@@ -1939,6 +1948,16 @@
   function makePinIcon(loc) {
     var isCritical = loc.type === 'Critical';
     var isHQ = loc.type === 'HQ';
+    var isDC = loc.type === 'DataCenter';
+    if (isDC) {
+      var anim = loc.alertLevel <= 1 ? 'animation:pinPulseRed 1.4s infinite;' : '';
+      return L.divIcon({
+        className: '',
+        html: '<div title="' + (loc.name || 'Data Center') + '" style="width:22px;height:22px;background:#7C3AED;border:2px solid #fff;box-shadow:0 2px 8px rgba(124,58,237,.7);border-radius:4px;' + anim + ';display:flex;align-items:center;justify-content:center"><span style="color:#fff;font-size:11px;font-weight:900;line-height:1">DC</span></div>',
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
+      });
+    }
     if (isCritical) {
       /* Gold diamond pin — larger, distinct shape */
       var anim = loc.alertLevel <= 1 ? 'animation:pinPulseRed 1.4s infinite;' : '';
@@ -2105,6 +2124,7 @@
         + '<div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#D97706;margin-right:6px;vertical-align:middle"></span>SEV 4 Moderate Threat Zone</div>'
         + '<div style="margin-top:6px;border-top:1px solid #E2E6EF;padding-top:6px">'
         + '<span style="display:inline-block;width:14px;height:14px;background:#F59E0B;transform:rotate(45deg);margin-right:8px;vertical-align:middle"></span><strong>Critical Building</strong><br>'
+        + '<span style="display:inline-block;width:12px;height:12px;background:#7C3AED;border-radius:3px;margin-right:6px;vertical-align:middle;font-size:8px;color:#fff;text-align:center;line-height:12px">DC</span><strong>Data Center</strong><br>'
         + '<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#7C0000;margin-right:6px;vertical-align:middle"></span>HQ Building<br>'
         + '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#16A34A;margin-right:6px;vertical-align:middle"></span>Office — No Active Alerts</div>';
       return div;
@@ -2166,19 +2186,29 @@
     monitoredLocations.forEach(function(loc) {
       var isCrit = loc.type === 'Critical';
       var isHQ = loc.type === 'HQ';
-      var color = isCrit ? '#F59E0B' : (isHQ ? '#7C0000' : '#16A34A');
+      var isDC = loc.type === 'DataCenter';
       var size = isCrit ? 10 : (isHQ ? 9 : 7);
-      var icon = isCrit
-        ? L.divIcon({
-            className: '',
-            html: '<div style="width:' + size + 'px;height:' + size + 'px;background:#F59E0B;border:1.5px solid #fff;box-shadow:0 1px 4px rgba(245,158,11,.6);transform:rotate(45deg)"></div>',
-            iconSize: [size, size], iconAnchor: [size/2, size/2]
-          })
-        : L.divIcon({
-            className: '',
-            html: '<div style="width:' + size + 'px;height:' + size + 'px;background:' + color + ';border:1.5px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.35)"></div>',
-            iconSize: [size, size], iconAnchor: [size/2, size/2]
-          });
+      var icon;
+      if (isDC) {
+        icon = L.divIcon({
+          className: '',
+          html: '<div style="width:11px;height:11px;background:#7C3AED;border:1.5px solid #fff;border-radius:2px;box-shadow:0 1px 4px rgba(124,58,237,.6);display:flex;align-items:center;justify-content:center"><span style="color:#fff;font-size:6px;font-weight:900;line-height:1">DC</span></div>',
+          iconSize: [11, 11], iconAnchor: [5.5, 5.5]
+        });
+      } else if (isCrit) {
+        icon = L.divIcon({
+          className: '',
+          html: '<div style="width:' + size + 'px;height:' + size + 'px;background:#F59E0B;border:1.5px solid #fff;box-shadow:0 1px 4px rgba(245,158,11,.6);transform:rotate(45deg)"></div>',
+          iconSize: [size, size], iconAnchor: [size/2, size/2]
+        });
+      } else {
+        var color = isHQ ? '#7C0000' : '#16A34A';
+        icon = L.divIcon({
+          className: '',
+          html: '<div style="width:' + size + 'px;height:' + size + 'px;background:' + color + ';border:1.5px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.35)"></div>',
+          iconSize: [size, size], iconAnchor: [size/2, size/2]
+        });
+      }
       L.marker([loc.lat, loc.lng], {icon: icon}).addTo(miniMap)
         .bindTooltip(loc.name, {permanent: false, direction: 'top', offset: [0, -6]});
     });
@@ -2324,17 +2354,35 @@
   var KEYWORDS_FINANCIAL = ['sanctions','ofac','sdn','financial','regulatory','fine','penalty','sec','fed rate','interest rate','market','economy','treasury','compliance','lawsuit','settlement'];
 
   var rocketEntities = [
-    'Rocket Mortgage', 'Rocket Money', 'Rocket Auto', 'Rocket Close',
-    'Rocket Central', 'Rock Central', 'Mr. Cooper', 'Mr Cooper',
-    'Redfin', 'Rocket Companies', 'Rocket Limited Partnership',
-    'Bedrock', 'Rock Connections', 'LMB Mortgage', 'RockLoans',
-    'Lendesk', 'Rocket Title', 'Sift', 'Core Digital Media',
-    'Forsalebyowner', 'Woodward Capital', 'Rock FOC', 'Rocket India',
-    'Rocket Community Fund',
-    /* Critical buildings — alerts mentioning these get +1 tier boost */
+    // Core / holding
+    'Rocket Companies', 'Rocket Limited Partnership', 'Rocket LP', 'Rock Holdings',
+    // Mortgage / lending
+    'Rocket Mortgage', 'Quicken Loans', 'Amrock', 'RockLoans', 'RocketLoans',
+    'LMB Mortgage', 'Lendesk', 'Rocket Close',
+    // Fintech / consumer
+    'Rocket Money', 'Rocket Central', 'Rock Central',
+    // Real estate
+    'Rocket Homes', 'Redfin', 'Forsalebyowner', 'For Sale By Owner',
+    // Automotive
+    'Rocket Auto',
+    // Title / insurance
+    'Rocket Title',
+    // Detroit real estate / development
+    'Bedrock', 'Bedrock Detroit', 'Bedrock Management',
+    // Services / staffing
+    'Rock Connections', 'Rock FOC', 'Rock FOC Technologies',
+    // International
+    'Rocket India', 'Lendesk Technologies',
+    // Other
+    'Sift Enterprises', 'Sift', 'Rocket Community Fund', 'Core Digital Media',
+    'Mr. Cooper', 'Mr Cooper', 'Cooper Mortgage',
+    'Woodward Capital',
+    /* Critical buildings & data centers — alerts mentioning these get +1 tier boost */
     'First National Building', 'One Campus Martius', 'Chrysler House',
     '1001 Woodward', 'Cypress Waters', '9800 Hillwood', '17785 Center Court',
-    'Qube', '611 Woodward'
+    'Qube', '611 Woodward',
+    /* Data centers */
+    '800 Tower Drive', 'Tower Drive Troy', '1401 Rosa Parks', 'Rosa Parks Blvd Detroit'
   ];
 
   function containsRocketEntity(text) {
@@ -2389,7 +2437,7 @@
   }
 
   function catLabel(c) {
-    return {tech:'Cyber / Tech', human:'Human-Made', natural:'Natural / Weather', financial:'Financial / Regulatory', terror:'Physical Security / Terror'}[c] || 'General';
+    return {tech:'Cyber / Tech', human:'Human-Made', natural:'Natural / Weather', financial:'Financial / Regulatory', terror:'Physical Security / Terror', datacenter:'Data Center / Infrastructure', cyber:'Cyber / Tech', infrastructure:'Infrastructure'}[c] || 'General';
   }
 
   function timeAgo(dateStr) {
@@ -2590,6 +2638,12 @@
       + '<div class="expand-field"><div class="expand-label">Date / Time</div><div class="expand-value">' + (item.pubDate ? new Date(item.pubDate).toLocaleString() : ago) + (item.updated && item.updated !== item.pubDate ? ' &nbsp;&middot;&nbsp; <strong>Updated:</strong> ' + new Date(item.updated).toLocaleString() : '') + '</div></div>'
       + '<div class="expand-field"><div class="expand-label">Source</div><div class="expand-value">' + (item.link ? '<a href="' + escHtml(item.link) + '" target="_blank" style="color:var(--accent)">' + escHtml(item.source) + ' &rarr;</a>' : escHtml(item.source)) + '</div></div>'
       + '<div class="expand-field"><div class="expand-label">Summary</div><div class="expand-value">' + escHtml(desc) + '</div></div>'
+      + (function(){
+          var tags = [];
+          if (item.isOngoing) tags.push('<span style="font-size:11px;font-weight:700;background:rgba(200,16,46,.12);color:#C8102E;padding:2px 7px;border-radius:4px;margin-right:6px">&#9679; ONGOING / ACTIVE</span>');
+          if (item.hasGovResponse) tags.push('<span style="font-size:11px;font-weight:700;background:rgba(22,163,74,.12);color:#16A34A;padding:2px 7px;border-radius:4px">&#10003; GOVERNMENT RESPONDING</span>');
+          return tags.length ? '<div class="expand-field"><div class="expand-label">Status</div><div class="expand-value">' + tags.join('') + '</div></div>' : '';
+        })()
       + '<div class="expand-field"><div class="expand-label">' + (isTerror ? (isCyberTerrorItem((item.title||'')+' '+(item.desc||'')) ? '&#9888; Rocket Companies — Cyber Terror Assessment' : '&#9888; Rocket Companies — Physical Security Assessment') : 'Impact on Rocket Companies') + '</div><div class="expand-value" style="background:' + (isTerror ? 'rgba(124,0,0,.06)' : 'rgba(200,16,46,.05)') + ';border:1px solid ' + (isTerror ? 'rgba(124,0,0,.2)' : 'rgba(200,16,46,.15)') + ';border-radius:6px;padding:10px">' + riskToCompany(item.category, item) + '</div></div>'
       + '<div class="expand-field"><div class="expand-label">Severity</div><div class="expand-value"><span class="sev-badge ' + sevClass + '">' + label + '</span></div></div>'
       + '<div class="expand-field"><div class="expand-label">Impact</div><div class="expand-value">' + impactLabel(item.severity) + ' &nbsp;<span style="color:var(--muted);font-size:11px">' + impactDesc(item.severity) + '</span></div></div>'
@@ -2668,16 +2722,19 @@
       }
     }
 
-    var counts = {human:0, tech:0, natural:0, financial:0};
+    var counts = {human:0, tech:0, natural:0, financial:0, datacenter:0, cyber:0, infrastructure:0};
     deduped.forEach(function(i){ if (counts[i.category] !== undefined) counts[i.category]++; });
+    // cyber and infrastructure roll up into tech display; datacenter is separate
     document.getElementById('stat-human').textContent = counts.human;
-    document.getElementById('stat-tech').textContent = counts.tech;
+    document.getElementById('stat-tech').textContent = counts.tech + counts.cyber + counts.infrastructure;
     document.getElementById('stat-natural').textContent = counts.natural;
     document.getElementById('stat-financial').textContent = counts.financial;
+    document.getElementById('stat-datacenter').textContent = counts.datacenter;
     document.getElementById('stat-human-delta').textContent = counts.human + ' items from live feeds';
-    document.getElementById('stat-tech-delta').textContent = counts.tech + ' items from live feeds';
+    document.getElementById('stat-tech-delta').textContent = (counts.tech + counts.cyber + counts.infrastructure) + ' items from live feeds';
     document.getElementById('stat-natural-delta').textContent = counts.natural + ' items from live feeds';
     document.getElementById('stat-financial-delta').textContent = counts.financial + ' items from live feeds';
+    document.getElementById('stat-datacenter-delta').textContent = counts.datacenter + ' items from live feeds';
     /* Refresh critical buildings live alerts if that tab has been opened */
     if (cbLoaded) { cbLoaded = false; renderCriticalBuildings(); cbLoaded = true; }
   }
@@ -2690,7 +2747,7 @@
     } else {
       activeCategoryFilter = cat;
       tiles.forEach(function(t){ t.style.outline = ''; });
-      var map = {human:'stat-human', tech:'stat-tech', natural:'stat-natural', financial:'stat-financial'};
+      var map = {human:'stat-human', tech:'stat-tech', natural:'stat-natural', financial:'stat-financial', datacenter:'stat-datacenter'};
       var el = document.getElementById(map[cat]);
       if (el) el.closest('.stat-tile').style.outline = '2px solid var(--accent)';
     }
@@ -3004,33 +3061,34 @@
 
       // Map alerts.json format → email dashboard's internal format
       allItems = payload.alerts.map(function(a) {
-        // Map category names — alerts.json uses 'general','infrastructure'; email dash uses 'human','tech'
+        // Map category names — preserve datacenter; map general→human, infrastructure/cyber→tech
         var cat = a.category || 'human';
         if (cat === 'general') cat = 'human';
         if (cat === 'infrastructure') cat = 'tech';
-        if (cat === 'cyber') cat = 'tech';
+        // Note: 'cyber', 'datacenter', 'natural', 'financial', 'terror' pass through unchanged
 
-        // Map severity: alerts.json uses 0-4 (0=worst), email dash uses higher=worse
-        // Convert: 0→5, 1→4, 2→3, 3→2, 4→1
-        var sev = typeof a.severity === 'number' ? (5 - a.severity) : 1;
+        // Severity: both alerts.json and dashboard use 0=worst (SEV1 Crisis), 4=minor — pass through directly
+        var sev = typeof a.severity === 'number' ? a.severity : 4;
 
         // Re-check terror keywords against existing terror detection
         var fullText = (a.title || '') + ' ' + (a.description || '');
         if (isTerrorItem(fullText)) cat = 'terror';
 
         return {
-          id:       a.id || Math.random().toString(36).substr(2,9),
-          title:    a.title || '',
-          desc:     a.description || '',
-          link:     a.link || '',
-          source:   a.sourceName || a.sourceId || '',
-          pubDate:  a.pubDate || '',
-          category: cat,
-          severity: sev,
-          terror:   a.terror || null,
-          lat:      a.lat || null,
-          lng:      a.lng || null,
-          region:   a.region || '',
+          id:            a.id || Math.random().toString(36).substr(2,9),
+          title:         a.title || '',
+          desc:          a.description || '',
+          link:          a.link || '',
+          source:        a.sourceName || a.sourceId || '',
+          pubDate:       a.pubDate || '',
+          category:      cat,
+          severity:      sev,
+          terror:        a.terror || null,
+          lat:           a.lat || null,
+          lng:           a.lng || null,
+          region:        a.region || '',
+          isOngoing:     a.isOngoing || false,
+          hasGovResponse: a.hasGovResponse || false,
         };
       });
 

@@ -5,149 +5,209 @@ const parser = new Parser({ timeout: 15000, headers: { 'User-Agent': 'Mozilla/5.
 // ─── DATA SOURCES ─────────────────────────────────────────────────────────────
 // minSeverity: items scoring above this number (less urgent) are dropped.
 // 0=Catastrophic 1=Critical 2=High 3=Moderate 4=Minor (all kept)
+// Resilience team needs: terrorist attacks, threat actor attacks on tech in North
+// America, political unrest/mass demonstrations, direct Rocket entity impacts,
+// government response updates, ongoing situation updates, data center risk.
 
 const RSS_SOURCES = [
-  // Cyber / tech threat intel — keep everything CISA/SANS flags
-  { id: 'sans',          name: 'SANS Internet Storm Center',  category: 'cyber',      region: 'national',     minSeverity: 3, url: 'https://isc.sans.edu/rssfeed_full.xml' },
-  // FBI terrorism/law enforcement — every item is potentially relevant
-  { id: 'fbi',           name: 'FBI Press Releases',          category: 'terror',     region: 'national',     minSeverity: 4, url: 'https://www.fbi.gov/feeds/fbi-in-the-news/rss.xml' },
-  // National news — only surface items scoring Tier 3 or better (operational impact)
-  { id: 'cbs',           name: 'CBS News National',           category: 'general',    region: 'national',     minSeverity: 3, url: 'https://www.cbsnews.com/latest/rss/main' },
-  { id: 'thehill',       name: 'The Hill',                    category: 'general',    region: 'national',     minSeverity: 3, url: 'https://thehill.com/feed/' },
-  { id: 'nbc',           name: 'NBC News',                    category: 'general',    region: 'national',     minSeverity: 3, url: 'https://feeds.nbcnews.com/nbcnews/public/news' },
-  { id: 'abc',           name: 'ABC News US',                 category: 'general',    region: 'national',     minSeverity: 3, url: 'https://feeds.abcnews.com/abcnews/usheadlines' },
-  { id: 'npr',           name: 'NPR News',                    category: 'general',    region: 'national',     minSeverity: 3, url: 'https://feeds.npr.org/1001/rss.xml' },
-  { id: 'fox',           name: 'Fox News',                    category: 'general',    region: 'national',     minSeverity: 3, url: 'https://moxie.foxnews.com/google-publisher/latest.xml' },
-  { id: 'cnn',           name: 'CNN Top Stories',             category: 'general',    region: 'national',     minSeverity: 3, url: 'http://rss.cnn.com/rss/cnn_topstories.rss' },
-  // Detroit / HQ region — keep broader since staff safety is primary concern
-  { id: 'bridgemi',      name: 'Bridge Michigan',             category: 'general',    region: 'detroit',      minSeverity: 4, url: 'https://www.bridgemi.com/feed/' },
-  { id: 'wdet',          name: 'WDET Detroit Public Radio',   category: 'general',    region: 'detroit',      minSeverity: 4, url: 'https://wdet.org/feed/' },
-  // Regional offices — moderate threshold, surface anything with operational impact
-  { id: 'latimes',       name: 'LA Times',                    category: 'general',    region: 'socal',        minSeverity: 3, url: 'https://www.latimes.com/local/rss2.0.xml' },
-  { id: 'abc7la',        name: 'ABC7 LA',                     category: 'general',    region: 'socal',        minSeverity: 3, url: 'https://abc7.com/feed/' },
-  { id: 'nbcdfw',        name: 'NBC5 DFW Local',              category: 'general',    region: 'dfw',          minSeverity: 3, url: 'https://www.nbcdfw.com/news/local/feed/' },
-  { id: 'nbcdfw2',       name: 'NBC5 DFW Top Stories',        category: 'general',    region: 'dfw',          minSeverity: 3, url: 'https://www.nbcdfw.com/feed/' },
-  { id: 'wfaa',          name: 'WFAA Dallas',                 category: 'general',    region: 'dfw',          minSeverity: 3, url: 'https://www.wfaa.com/feeds/syndication/rss/news' },
-  { id: 'wtop',          name: 'WTOP News DC',                category: 'general',    region: 'dc',           minSeverity: 3, url: 'https://wtop.com/feed/' },
-  { id: 'wamu',          name: 'WAMU 88.5 DC',                category: 'general',    region: 'dc',           minSeverity: 3, url: 'https://wamu.org/feed/' },
-  { id: 'pgpostgazette', name: 'Pittsburgh Post-Gazette',     category: 'general',    region: 'pennsylvania', minSeverity: 3, url: 'https://www.post-gazette.com/rss/all' },
-  { id: 'windsorstar',   name: 'Windsor Star',                category: 'general',    region: 'canada',       minSeverity: 3, url: 'https://windsorstar.com/feed/' },
-  { id: 'wcnc',          name: 'WCNC Charlotte (NBC)',        category: 'general',    region: 'carolina',     minSeverity: 3, url: 'https://www.wcnc.com/feed/' },
-  { id: 'fox8cleveland', name: 'Fox 8 Cleveland (WJW)',       category: 'general',    region: 'ohio',         minSeverity: 3, url: 'https://fox8.com/feed/' },
-  { id: 'ktar',          name: 'KTAR Phoenix News',           category: 'general',    region: 'arizona',      minSeverity: 3, url: 'https://www.ktar.com/feed/' },
-  // Financial regulators — enforcement/fraud/regulatory actions relevant to mortgage/lending
-  { id: 'cfpb',          name: 'CFPB Newsroom',               category: 'financial',  region: 'national',     minSeverity: 4, url: 'https://www.consumerfinance.gov/about-us/newsroom/feed/' },
-  { id: 'sec',           name: 'SEC Press Releases',          category: 'financial',  region: 'national',     minSeverity: 4, url: 'https://www.sec.gov/news/pressreleases.rss' },
+  // ── Cyber / Tech threat intel ──────────────────────────────────────────────
+  { id: 'sans',          name: 'SANS Internet Storm Center',    category: 'cyber',       region: 'national',     minSeverity: 2, url: 'https://isc.sans.edu/rssfeed_full.xml' },
+  { id: 'cisa-alerts',   name: 'CISA Advisories',               category: 'cyber',       region: 'national',     minSeverity: 2, url: 'https://www.cisa.gov/uscert/ncas/alerts.xml' },
+  // ── Terror / Law Enforcement ───────────────────────────────────────────────
+  { id: 'fbi',           name: 'FBI Press Releases',            category: 'terror',      region: 'national',     minSeverity: 2, url: 'https://www.fbi.gov/feeds/fbi-in-the-news/rss.xml' },
+  { id: 'dhs',           name: 'DHS Newsroom',                  category: 'terror',      region: 'national',     minSeverity: 2, url: 'https://www.dhs.gov/dhs-news-updates/feed' },
+  // ── National News (strict filter — only genuine resilience events) ─────────
+  { id: 'cbs',           name: 'CBS News National',             category: 'general',     region: 'national',     minSeverity: 2, url: 'https://www.cbsnews.com/latest/rss/main' },
+  { id: 'nbc',           name: 'NBC News',                      category: 'general',     region: 'national',     minSeverity: 2, url: 'https://feeds.nbcnews.com/nbcnews/public/news' },
+  { id: 'abc',           name: 'ABC News US',                   category: 'general',     region: 'national',     minSeverity: 2, url: 'https://feeds.abcnews.com/abcnews/usheadlines' },
+  { id: 'npr',           name: 'NPR News',                      category: 'general',     region: 'national',     minSeverity: 2, url: 'https://feeds.npr.org/1001/rss.xml' },
+  { id: 'cnn',           name: 'CNN Top Stories',               category: 'general',     region: 'national',     minSeverity: 2, url: 'http://rss.cnn.com/rss/cnn_topstories.rss' },
+  // ── Detroit / HQ / Data Center region ─────────────────────────────────────
+  { id: 'bridgemi',      name: 'Bridge Michigan',               category: 'general',     region: 'detroit',      minSeverity: 3, url: 'https://www.bridgemi.com/feed/' },
+  { id: 'wdet',          name: 'WDET Detroit Public Radio',     category: 'general',     region: 'detroit',      minSeverity: 3, url: 'https://wdet.org/feed/' },
+  { id: 'clickondet',    name: 'Click On Detroit (WDIV)',       category: 'general',     region: 'detroit',      minSeverity: 3, url: 'https://www.clickondetroit.com/rss/news.xml' },
+  { id: 'wxyz',          name: 'WXYZ Detroit',                  category: 'general',     region: 'detroit',      minSeverity: 3, url: 'https://www.wxyz.com/news/rss' },
+  { id: 'freep',         name: 'Detroit Free Press',            category: 'general',     region: 'detroit',      minSeverity: 3, url: 'https://rssfeeds.freep.com/freep/home?format=xml' },
+  { id: 'detroitnews',   name: 'Detroit News',                  category: 'general',     region: 'detroit',      minSeverity: 3, url: 'https://www.detroitnews.com/rss/news' },
+  { id: 'mspemergency',  name: 'Michigan State Police',         category: 'datacenter',  region: 'detroit',      minSeverity: 3, url: 'https://www.michigan.gov/msp/rss/news.xml' },
+  { id: 'miready',       name: 'Michigan EMHSD Ready',          category: 'datacenter',  region: 'detroit',      minSeverity: 3, url: 'https://www.michigan.gov/miready/rss/news.xml' },
+  // ── Regional offices — strict filter ──────────────────────────────────────
+  { id: 'latimes',       name: 'LA Times',                      category: 'general',     region: 'socal',        minSeverity: 2, url: 'https://www.latimes.com/local/rss2.0.xml' },
+  { id: 'abc7la',        name: 'ABC7 LA',                       category: 'general',     region: 'socal',        minSeverity: 2, url: 'https://abc7.com/feed/' },
+  { id: 'nbcdfw',        name: 'NBC5 DFW Local',                category: 'general',     region: 'dfw',          minSeverity: 2, url: 'https://www.nbcdfw.com/news/local/feed/' },
+  { id: 'wfaa',          name: 'WFAA Dallas',                   category: 'general',     region: 'dfw',          minSeverity: 2, url: 'https://www.wfaa.com/feeds/syndication/rss/news' },
+  { id: 'wtop',          name: 'WTOP News DC',                  category: 'general',     region: 'dc',           minSeverity: 2, url: 'https://wtop.com/feed/' },
+  { id: 'wcnc',          name: 'WCNC Charlotte (NBC)',          category: 'general',     region: 'carolina',     minSeverity: 2, url: 'https://www.wcnc.com/feed/' },
+  // ── Financial regulators — only enforcement actions, not routine releases ──
+  { id: 'cfpb',          name: 'CFPB Newsroom',                 category: 'financial',   region: 'national',     minSeverity: 2, url: 'https://www.consumerfinance.gov/about-us/newsroom/feed/' },
+  { id: 'sec',           name: 'SEC Press Releases',            category: 'financial',   region: 'national',     minSeverity: 2, url: 'https://www.sec.gov/news/pressreleases.rss' },
 ];
 
 const JSON_SOURCES = [
-  { id: 'nws',        name: 'NWS Active Alerts',            category: 'natural',        region: 'national',  minSeverity: 3, url: 'https://api.weather.gov/alerts/active?area=MI,CA,TX,DC,VA,MD,PA,NC,OH,AZ,IN,IL,FL,GA,CO,NV,WA,MN', headers: { 'Accept': 'application/geo+json', 'User-Agent': 'RocketBCR/2.0 (bcr@rocketcompanies.com)' } },
-  { id: 'usgs',       name: 'USGS Earthquakes',             category: 'natural',        region: 'national',  minSeverity: 4, url: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson' },
-  { id: 'fema',       name: 'FEMA Disaster Declarations',  category: 'natural',        region: 'national',  minSeverity: 4, url: 'https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?%24orderby=declarationDate%20desc&%24top=50' },
-  { id: 'cisa-kev',   name: 'CISA Known Exploited Vulns',  category: 'cyber',          region: 'national',  minSeverity: 3, url: 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json' },
-  { id: 'salesforce', name: 'Salesforce Status',           category: 'infrastructure', region: 'national',  minSeverity: 4, url: 'https://api.status.salesforce.com/v1/incidents' },
+  { id: 'nws',         name: 'NWS Active Alerts',           category: 'natural',        region: 'national',  minSeverity: 2, url: 'https://api.weather.gov/alerts/active?area=MI,CA,TX,DC,VA,MD,PA,NC,OH,AZ,IN,IL,FL,GA,CO,NV,WA,MN', headers: { 'Accept': 'application/geo+json', 'User-Agent': 'RocketBCR/2.0 (bcr@rocketcompanies.com)' } },
+  { id: 'usgs',        name: 'USGS Earthquakes',            category: 'natural',        region: 'national',  minSeverity: 3, url: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson' },
+  { id: 'fema',        name: 'FEMA Disaster Declarations',  category: 'natural',        region: 'national',  minSeverity: 3, url: 'https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?%24orderby=declarationDate%20desc&%24top=50' },
+  { id: 'cisa-kev',    name: 'CISA Known Exploited Vulns',  category: 'cyber',          region: 'national',  minSeverity: 2, url: 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json' },
+  { id: 'salesforce',  name: 'Salesforce Status',           category: 'infrastructure', region: 'national',  minSeverity: 3, url: 'https://api.status.salesforce.com/v1/incidents' },
 ];
 
 // ─── SEVERITY SCORING ─────────────────────────────────────────────────────────
-// Aligned with Rocket LP THIRA (Feb 2026). Tiers map as:
-//   0 = Catastrophic  (THIRA Critical, score > 9 — existential/mass-casualty)
-//   1 = Critical      (THIRA Critical, score > 6 — cyberattack, active threat, major disaster)
-//   2 = High          (THIRA High, score > 3 — terrorism, active shooter, severe weather, fraud)
-//   3 = Moderate      (THIRA Medium — developing incidents, outages, regulatory actions)
-//   4 = Minor         (THIRA Low — advisories, routine news)
+// Philosophy: Only surface what the Resilience team actually needs to know.
+// NOT news for general awareness — only operational threats to Rocket Companies,
+// its people, its facilities, and its critical infrastructure.
+//
+// SEV 0 (score 0) = Catastrophic: mass-casualty, infrastructure collapse, EMP
+// SEV 1 (score 1) = Crisis/Active: attack underway, confirmed breach, major disaster
+// SEV 2 (score 2) = Major/Emerging: credible threat, significant incident, Rocket entity
+// SEV 3 (score 3) = Significant: developing situation, weather warning, advisory
+// SEV 4 (score 4) = Minor: background monitoring (usually filtered out by minSeverity)
+//
+// Key rule: debates, routine regulatory filings, opinion pieces, market commentary,
+// legislation-in-progress, election news = SEV 4 — do not surface.
 
-// Tier 0: Catastrophic — existential threats, mass-casualty events, nationwide collapse
+// ── Tier 0: Catastrophic — existential/mass-casualty events ─────────────────
 const SEV0 = [
-  'mass casualties','nuclear attack','emp attack','bioweapon','dirty bomb','radiological',
-  'nationwide infrastructure collapse','category 5 hurricane','category 4 hurricane',
-  'major earthquake','pandemic declared','global pandemic','national emergency declared',
+  'mass casualties','nuclear attack','emp attack','bioweapon attack','dirty bomb detonated',
+  'radiological attack','nationwide grid failure','nationwide infrastructure collapse',
+  'category 5 hurricane landfall','major earthquake magnitude 7','pandemic declared',
+  'global pandemic','national emergency declared for attack','martial law declared',
+  'chemical weapon attack','biological weapon release',
 ];
 
-// Tier 1: Critical — active attacks, major cyber incidents, catastrophic business disruption
-// Maps to THIRA Critical: Cyber Attack (36), Computer System Outage (36), Vendor Outage (36)
+// ── Tier 1: Crisis/Active — confirmed active attacks, major confirmed incidents ─
+// These are HAPPENING NOW or JUST CONFIRMED. Not threats or possibilities.
 const SEV1 = [
-  // Physical violence
-  'active shooter','mass shooting','terror attack','terrorist attack','bombing','bomb exploded',
-  'hostage situation','hostage taken','vehicle ramming','suicide bomber','armed attack',
-  'killed in attack','attack underway','chemical attack','biological attack','assassination',
-  // Cyber — nation-state / destructive
-  'nation-state attack','state-sponsored attack','destructive malware','cyber emergency',
-  'cisa emergency directive','power grid attack','critical infrastructure attack',
-  'advanced persistent threat','ransomware attack','data breach confirmed','systems compromised',
-  'major data breach','widespread outage','total outage',
-  // Physical / operational
-  'building evacuation','emergency evacuation','shelter in place order','lockdown order',
-  'major flooding','catastrophic flooding','dam failure',
+  // Active physical violence / confirmed attacks
+  'active shooter','mass shooting','terror attack','terrorist attack','bombing confirmed',
+  'bomb exploded','explosion confirmed','hostage situation','hostage rescue underway',
+  'vehicle ramming','suicide bomber','armed attack underway','assassination confirmed',
+  'chemical attack confirmed','biological attack confirmed',
+  // Active cyber attacks — confirmed destructive/critical
+  'nation-state attack confirmed','destructive malware deployed','power grid attack',
+  'critical infrastructure attack','ransomware attack confirmed','systems compromised',
+  'widespread data breach confirmed','cisa emergency directive issued',
+  'cyber attack confirmed','network taken down','major data breach at',
+  // Active natural disaster
+  'tornado on ground','dam failure','catastrophic flooding','major earthquake struck',
+  'building collapse','bridge collapse',
+  // Active operational emergencies
+  'emergency evacuation ordered','shelter in place order','lockdown in effect',
+  'active fire at','building evacuation underway',
+  // DTE / utility — active outage affecting data centers
+  'major power outage detroit','widespread outage michigan',
+  'dte energy major outage','power grid failure michigan',
 ];
 
-// Tier 2: High — credible threats, significant incidents, major regulatory actions
-// Maps to THIRA High: Terrorism (8), Active Shooter (8), Bomb Threat (9), Pandemic (8),
-// Severe Weather (8-9), and THIRA Critical fraud/financial risks
+// ── Tier 2: Major/Emerging — credible threats, significant incidents ─────────
+// Resilience team needs to know and may need to act or escalate monitoring.
+// Includes: terrorist threats, political unrest/demonstrations, major weather,
+// cyber advisories on in-use tech, Rocket entity mentions, infrastructure risks.
 const SEV2 = [
-  // Physical threats
-  'bomb threat','active threat','credible threat','armed standoff','armed robbery',
-  'shots fired','shooting','stabbing incident','workplace violence','civil unrest',
-  'riot','protest turns violent','burglary','theft at',
-  // Cyber / tech
-  'data breach','ransomware','cyberattack','cyber incident','malware','threat actor',
-  'vulnerability exploited','zero-day','network intrusion','unauthorized access',
-  'security breach','phishing campaign','credential theft','ddos attack',
-  // Infrastructure / operational
-  'major outage','service outage','extended outage','telecom outage','network outage',
-  'internet outage','cloud outage','platform outage','critical infrastructure',
-  'power outage','grid failure','widespread power','telecommunications failure',
-  // Weather — THIRA High threats
-  'blizzard warning','ice storm warning','winter storm warning','tornado warning',
+  // Terrorism / physical security threats
+  'bomb threat','credible threat','threat to','armed standoff','shots fired','shooting at',
+  'active threat','terrorist threat','extremist threat','assassination attempt',
+  'civil unrest','protest turns violent','riot','demonstration turns violent',
+  'mass demonstration','mass protest','political violence','insurrection',
+  // Cyber — significant but not confirmed destructive
+  'cyberattack','cyber attack','ransomware','data breach','malware','threat actor',
+  'zero-day exploited','network intrusion','unauthorized access confirmed',
+  'ddos attack','security breach','critical vulnerability exploited',
+  // Infrastructure / utility — significant risk to data centers
+  'power outage','major outage','extended outage','grid failure','widespread outage',
+  'service outage','internet outage','network outage','telecom outage',
+  'dte outage','detroit power outage','data center outage',
+  // Weather — warning level (imminent severe threat)
+  'tornado warning','blizzard warning','ice storm warning','winter storm warning',
   'hurricane warning','tropical storm warning','flash flood warning','flood warning',
   'severe thunderstorm warning','extreme heat warning','freeze warning',
-  'freezing temperatures','dangerous cold','wind chill warning',
-  // Financial / regulatory — THIRA Critical financial risks
-  'enforcement action','emergency order','cease and desist','license revoked',
-  'federal indictment','criminal charges','fraud charges','embezzlement',
-  'mortgage fraud','bank failure','market halt','trading suspended',
-  'emergency declaration','disaster declaration','federal disaster',
-  // Natural
-  'evacuation order','mandatory evacuation','building collapse','structure fire',
-  'hazmat','toxic spill','chemical leak',
+  'dangerous cold','wind chill warning',
+  // Political unrest
+  'mass demonstration','mass protest','march on washington','capitol breach',
+  'political unrest','civil emergency','curfew issued','national guard deployed',
+  'state of emergency declared','federal emergency declared',
+  // Financial — enforcement actions against Rocket entities or major sector risk
+  'enforcement action against','emergency order','cease and desist','license revoked',
+  'criminal charges filed','federal indictment','bank failure','market halt',
+  'trading suspended','emergency declaration',
+  // Natural disasters
+  'evacuation order','mandatory evacuation','hazmat incident','toxic spill',
+  'chemical leak','structural fire','large fire',
+  // Michigan State Police / City of Detroit emergency notices
+  'michigan state police alert','michigan emergency','detroit emergency',
+  'wayne county emergency',
 ];
 
-// Tier 3: Moderate — developing situations, advisories, routine regulatory/cyber news
+// ── Tier 3: Significant — developing situations and advisories ───────────────
+// Monitor and be aware. Not requiring immediate action. Includes watch-level
+// weather, cyber patch advisories, developing investigations relevant to Rocket.
 const SEV3 = [
-  // Weather advisories
-  'winter storm watch','winter weather advisory','ice storm watch','tornado watch',
-  'hurricane watch','tropical storm watch','flood watch','heat advisory','wind advisory',
-  'storm warning','severe weather','weather warning','weather alert',
-  // Tech / cyber advisories
-  'vulnerability','patch','security advisory','security update','cve-',
-  'service disruption','service degraded','planned outage','maintenance window',
-  'power restored','outage resolved',
+  // Weather — watch/advisory level (potential future threat)
+  'tornado watch','winter storm watch','ice storm watch','hurricane watch',
+  'tropical storm watch','flood watch','heat advisory','wind advisory',
+  'winter weather advisory','severe weather','weather warning','weather alert',
+  // Cyber advisories — patch and vulnerability guidance
+  'vulnerability','security advisory','security update','cve-','patch released',
+  'cisa advisory','fbi advisory','zero-day','critical patch',
   // Developing situations
-  'investigation','under investigation','developing story','breaking','emergency response',
-  'first responders','police presence','police activity','fire department',
-  // Financial / regulatory monitoring
-  'regulatory change','rule change','proposed rule','regulatory update','enforcement',
-  'settlement','fine','penalty','class action','lawsuit filed','subpoena',
-  'interest rate','rate hike','rate cut','fed decision','federal reserve',
-  'market volatility','stock decline','economic warning',
-  // Operational
-  'earthquake','aftershock','wildfire','wildfire warning','landslide','flooding',
-  'flash flood','high winds','tornado','hurricane','tropical storm',
+  'investigation underway','under investigation','breaking news','emergency response',
+  'first responders on scene','police activity','major incident',
+  // Power/utility advisories
+  'power restored','outage resolved','service disruption','service degraded',
+  'planned maintenance','michigan power','dte advisory',
+  // Financial — regulatory actions affecting mortgage/lending industry
+  'regulatory enforcement','mortgage enforcement','lending enforcement',
+  'cfpb action','sec investigation','fraud charges',
+  // Natural
+  'earthquake','aftershock','wildfire','wildfire warning','flooding',
+  'flash flood watch','high winds','winter storm',
 ];
 
-const ROCKET_NAMES = ['rocket companies','quicken loans','amrock','rocket mortgage','rocket money','rocket central'];
+// ── Rocket Companies and all affiliated entities ────────────────────────────
+// Any alert mentioning these gets boosted one tier more urgent (floor: 0)
+const ROCKET_NAMES = [
+  // Core / holding
+  'rocket companies','rocket limited partnership','rocket lp','rock central','rock holdings',
+  // Mortgage / lending
+  'rocket mortgage','quicken loans','amrock','rockloan','rocketloans','lmb mortgage',
+  'lendesk','rocket close',
+  // Fintech / consumer
+  'rocket money',
+  // Real estate
+  'rocket homes','redfin','forsalebyowner','for sale by owner',
+  // Automotive
+  'rocket auto',
+  // Title / insurance
+  'rocket title',
+  // Detroit real estate / development
+  'bedrock','bedrock detroit','bedrock management',
+  // Services / staffing
+  'rock connections','rock foc','rock foc technologies',
+  // International
+  'rocket india','lendesk technologies',
+  // Other
+  'sift enterprises','rocket community fund','core digital media',
+  'mr. cooper','mr cooper','cooper mortgage',
+  // Critical buildings — boosts proximity alerts
+  'first national building','one campus martius','chrysler house',
+  '1001 woodward','cypress waters','9800 hillwood','17785 center court',
+  'qube','611 woodward','800 tower drive','1401 rosa parks',
+];
 
-// Terror/threat detection for map plotting — broader than just scoring
+// ── Terror/threat detection for map plotting ─────────────────────────────────
 const PHYSICAL_TERROR = [
-  'terror','terrorist','active shooter','mass shooting','suicide bomber','ied','explosive device',
-  'hostage','domestic terror','vehicle attack','extremist','gunman','bomb blast','armed attack',
-  'bombing','assassination','chemical attack','biological attack','knife attack','vehicle ramming',
+  'terror','terrorist','active shooter','mass shooting','suicide bomber',
+  'ied','explosive device','hostage','domestic terror','vehicle attack',
+  'extremist','gunman','bomb blast','armed attack','bombing','assassination',
+  'chemical attack','biological attack','knife attack','vehicle ramming',
   'school shooting','church shooting','synagogue','mosque attack','nightclub shooting',
+  'domestic extremism','mass casualty',
 ];
 const CYBER_TERROR = [
   'nation-state','state-sponsored','power grid attack','critical infrastructure attack',
   'apt ','advanced persistent threat','sandworm','hafnium','volt typhoon','salt typhoon',
-  'destructive malware','cyber emergency','cisa emergency','ransomware attack on',
-  'cyber warfare','cyber espionage','electric grid','water treatment attack','pipeline attack',
+  'fancy bear','cozy bear','lazarus group','destructive malware','cyber emergency',
+  'cisa emergency directive','ransomware attack on critical','cyber warfare',
+  'cyber espionage','electric grid','water treatment attack','pipeline attack',
 ];
 
 function scoreItem(title, desc) {
@@ -157,8 +217,8 @@ function scoreItem(title, desc) {
   if (score > 0) for (const w of SEV1) if (text.includes(w)) { score = 1; break; }
   if (score > 1) for (const w of SEV2) if (text.includes(w)) { score = 2; break; }
   if (score > 2) for (const w of SEV3) if (text.includes(w)) { score = 3; break; }
-  // Boost score for direct Rocket mentions (move one tier more urgent, floor at 0)
-  for (const r of ROCKET_NAMES) if (text.includes(r)) { score = Math.max(0, score - 1); break; }
+  // Boost for direct Rocket entity mention — moves one tier more critical, floor 0
+  for (const r of ROCKET_NAMES) if (text.includes(r.toLowerCase())) { score = Math.max(0, score - 1); break; }
   return score;
 }
 
@@ -180,9 +240,15 @@ async function fetchRSS(source) {
     const feed = await parser.parseURL(source.url);
     const items = (feed.items || []).slice(0, 30).map(item => {
       const title = stripHtml(item.title || '').substring(0, 200);
-      const desc = stripHtml(item.contentSnippet || item.content || item.summary || '').substring(0, 500);
+      // Use full content for longer, richer descriptions
+      const rawDesc = item.content || item.contentSnippet || item.summary || '';
+      const desc = stripHtml(rawDesc).substring(0, 800);
       const severity = scoreItem(title, desc);
       const terror = detectTerror(title, desc);
+      // Detect ongoing/current vs historical
+      const isOngoing = /breaking|live|ongoing|now|developing|continues|update|alert|warning|watch|active|current/i.test(title + ' ' + desc.substring(0, 200));
+      // Detect government response
+      const hasGovResponse = /fema|white house|president|congress|senate|governor|mayor|national guard|federal|state emergency|dhs|fbi response|cisa|police response|deployed|emergency declared|responding/i.test(title + ' ' + desc);
       return {
         id: Buffer.from(title.substring(0, 40) + source.id).toString('base64').substring(0, 16),
         title,
@@ -195,6 +261,8 @@ async function fetchRSS(source) {
         region: source.region,
         severity,
         terror,
+        isOngoing,
+        hasGovResponse,
       };
     }).filter(i => i.title.length > 5 && i.severity <= (source.minSeverity ?? 4));
     console.log(`✓ ${source.name}: ${items.length} items`);
@@ -230,8 +298,10 @@ function parseJSONSource(data, source) {
     for (const f of (data.features || []).slice(0, 50)) {
       const p = f.properties || {};
       const title = p.headline || p.event || 'NWS Alert';
-      const desc = (p.description || p.instruction || '').substring(0, 500);
-      items.push({ id: `nws-${p.id || Math.random()}`.substring(0,20), title, description: desc, link: p['@id'] || '', pubDate: p.sent || '', sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: scoreItem(title, desc), terror: detectTerror(title, desc) });
+      const desc = ((p.description || '') + ' ' + (p.instruction || '')).substring(0, 800).trim();
+      const isOngoing = /warning|watch|active|ongoing|currently/i.test(title);
+      const hasGovResponse = /national weather service|emergency management|fema|governor/i.test(desc);
+      items.push({ id: `nws-${p.id || Math.random()}`.substring(0,20), title, description: desc, link: p['@id'] || '', pubDate: p.sent || '', sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: scoreItem(title, desc), terror: detectTerror(title, desc), isOngoing, hasGovResponse });
     }
   } else if (source.id === 'usgs') {
     for (const f of (data.features || []).slice(0, 100)) {
@@ -242,51 +312,30 @@ function parseJSONSource(data, source) {
       const eLat = coords[1], eLng = coords[0];
       if (eLat && eLng && (eLat < ROCKET_BBOX.minLat || eLat > ROCKET_BBOX.maxLat || eLng < ROCKET_BBOX.minLng || eLng > ROCKET_BBOX.maxLng)) continue;
       const title = `M${mag.toFixed(1)} Earthquake — ${p.place || 'Unknown'}`;
-      const desc = `Magnitude ${mag} earthquake near ${p.place}. Depth: ${coords[2]?.toFixed(1) || '?'} km.`;
-      items.push({ id: `usgs-${p.code || mag}`.substring(0,20), title, description: desc, link: p.url || '', pubDate: p.time ? new Date(p.time).toISOString() : '', sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, lat: eLat, lng: eLng, magnitude: mag, severity: scoreItem(title, desc), terror: null });
+      const desc = `Magnitude ${mag} earthquake near ${p.place}. Depth: ${coords[2]?.toFixed(1) || '?'} km. USGS status: ${p.status || 'reviewed'}. ${mag >= 5.0 ? 'SIGNIFICANT EARTHQUAKE — check for aftershocks and structural impact near Rocket offices.' : ''} ${p.tsunami === 1 ? 'TSUNAMI WARNING ISSUED.' : ''}`;
+      items.push({ id: `usgs-${p.code || mag}`.substring(0,20), title, description: desc, link: p.url || '', pubDate: p.time ? new Date(p.time).toISOString() : '', sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, lat: eLat, lng: eLng, magnitude: mag, severity: scoreItem(title, desc), terror: null, isOngoing: mag >= 4.5, hasGovResponse: mag >= 5.0 });
     }
   } else if (source.id === 'fema') {
     for (const d of (data.DisasterDeclarationsSummaries || []).slice(0, 30)) {
       const title = `FEMA DR-${d.disasterNumber}: ${d.incidentType} — ${d.designatedArea}, ${d.state}`;
-      const desc = `Federal disaster declaration. Type: ${d.incidentType}. State: ${d.state}. Date: ${(d.declarationDate || '').substring(0,10)}`;
-      items.push({ id: `fema-${d.disasterNumber}`, title, description: desc, link: `https://www.fema.gov/disaster/${d.disasterNumber}`, pubDate: d.declarationDate || '', sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: scoreItem(title, desc), terror: null });
+      const desc = `Federal disaster declaration active. Type: ${d.incidentType}. State: ${d.state}. Declared: ${(d.declarationDate || '').substring(0,10)}. Programs: ${[d.ihProgramDeclared && 'Individual Assistance', d.paProgramDeclared && 'Public Assistance', d.hmProgramDeclared && 'Hazard Mitigation'].filter(Boolean).join(', ') || 'See FEMA.gov'}. Government response is active — FEMA field teams mobilized.`;
+      items.push({ id: `fema-${d.disasterNumber}`, title, description: desc, link: `https://www.fema.gov/disaster/${d.disasterNumber}`, pubDate: d.declarationDate || '', sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: scoreItem(title, desc), terror: null, isOngoing: true, hasGovResponse: true });
     }
   } else if (source.id === 'cisa-kev') {
     for (const v of (data.vulnerabilities || []).slice(-20).reverse()) {
       const title = `CISA KEV: ${v.cveID} — ${v.vendorProject} ${v.product}`;
-      const desc = `${v.vulnerabilityName}. Required action: ${v.requiredAction || 'See CISA guidance'}. Due: ${v.dueDate || 'N/A'}`;
-      items.push({ id: v.cveID, title, description: desc, link: 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog', pubDate: v.dateAdded || '', sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: scoreItem(title, desc), terror: detectTerror(title, desc) });
+      const desc = `${v.vulnerabilityName}. This vulnerability is actively being exploited in the wild per CISA. Required action: ${v.requiredAction || 'See CISA guidance'}. Remediation due: ${v.dueDate || 'N/A'}. ${v.shortDescription || ''}. Government mandates federal agencies patch by due date; CISA strongly advises all organizations to follow.`;
+      items.push({ id: v.cveID, title, description: desc, link: 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog', pubDate: v.dateAdded || '', sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: scoreItem(title, desc), terror: detectTerror(title, desc), isOngoing: true, hasGovResponse: true });
     }
   } else if (source.id === 'salesforce') {
     const incidents = Array.isArray(data) ? data : (data.incidents || data.data || []);
     if (incidents.length === 0) {
-      items.push({ id: 'sf-ok', title: 'Salesforce: No active incidents', description: 'All Salesforce services operating normally.', link: 'https://status.salesforce.com/', pubDate: new Date().toISOString(), sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: 4, terror: null });
+      items.push({ id: 'sf-ok', title: 'Salesforce: No active incidents', description: 'All Salesforce services operating normally.', link: 'https://status.salesforce.com/', pubDate: new Date().toISOString(), sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: 4, terror: null, isOngoing: false, hasGovResponse: false });
     }
     for (const inc of incidents.slice(0, 15)) {
       const title = `Salesforce Incident: ${inc.message || inc.name || 'Active Incident'}`;
-      const desc = `Status: ${inc.status || 'Unknown'}`;
-      items.push({ id: `sf-${inc.id || Math.random()}`.substring(0,20), title, description: desc, link: 'https://status.salesforce.com/', pubDate: inc.createdAt || new Date().toISOString(), sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: scoreItem(title, desc), terror: null });
-    }
-  } else if (source.id === 'aws') {
-    const allEvents = [];
-    for (const [key, val] of Object.entries(data.current || {})) {
-      if (Array.isArray(val)) for (const e of val) allEvents.push({ ...e, service: key });
-    }
-    if (allEvents.length === 0) {
-      items.push({ id: 'aws-ok', title: 'AWS Services: All systems operational', description: 'No active AWS incidents.', link: 'https://status.aws.amazon.com/', pubDate: new Date().toISOString(), sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: 4, terror: null });
-    }
-    for (const e of allEvents.slice(0, 15)) {
-      const title = `AWS: ${e.service_name || e.service} — ${e.summary || 'Event'}`;
-      items.push({ id: `aws-${e.service}`.substring(0,20), title, description: e.message || e.summary || '', link: 'https://status.aws.amazon.com/', pubDate: e.date || new Date().toISOString(), sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: scoreItem(title, ''), terror: null });
-    }
-  } else if (source.id === 'azure') {
-    const impacted = (data.services || []).filter(s => s.status && !['available','normal'].includes(s.status.toLowerCase()));
-    if (impacted.length === 0) {
-      items.push({ id: 'azure-ok', title: 'Azure Services: All systems normal', description: 'No active Azure incidents.', link: 'https://azure.status.microsoft/', pubDate: new Date().toISOString(), sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: 4, terror: null });
-    }
-    for (const s of impacted.slice(0, 15)) {
-      const title = `Azure Disruption: ${s.displayName} — ${s.status}`;
-      items.push({ id: `azure-${s.id || s.displayName}`.substring(0,20), title, description: `Azure service impacted: ${s.displayName}. Status: ${s.status}`, link: 'https://azure.status.microsoft/', pubDate: new Date().toISOString(), sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: scoreItem(title, ''), terror: null });
+      const desc = `Status: ${inc.status || 'Unknown'}. Salesforce service disruption is ongoing. This may affect Rocket operations if Salesforce is in use. Monitor status.salesforce.com for real-time updates and estimated resolution time.`;
+      items.push({ id: `sf-${inc.id || Math.random()}`.substring(0,20), title, description: desc, link: 'https://status.salesforce.com/', pubDate: inc.createdAt || new Date().toISOString(), sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: scoreItem(title, desc), terror: null, isOngoing: true, hasGovResponse: false });
     }
   }
 
@@ -294,9 +343,6 @@ function parseJSONSource(data, source) {
 }
 
 // ─── WRITE OUTPUT FILE ────────────────────────────────────────────────────────
-// spin.rp.foc.zone is an internal Rocket URL not reachable from GitHub Actions.
-// Instead we write alerts.json to the repo; the workflow commits it back so the
-// dashboard can fetch it from the GitHub raw content URL.
 
 import { writeFileSync } from 'fs';
 
