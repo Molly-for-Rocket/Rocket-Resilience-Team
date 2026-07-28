@@ -244,6 +244,7 @@
   <button class="nav-tab" onclick="switchTab('dedup', this)">Dedup &amp; Filters</button>
   <button class="nav-tab" onclick="switchTab('logs', this)">Activity Log</button>
   <button class="nav-tab" onclick="switchTab('feedhealth', this)">Feed Health</button>
+  <button class="nav-tab" onclick="switchTab('keywords', this)">Keywords</button>
   <button class="nav-tab" onclick="switchTab('settings', this)">Settings</button>
 </nav>
 
@@ -1510,6 +1511,114 @@
 </div>
 
 <!-- ═══════════════ SETTINGS ═══════════════ -->
+<div id="tab-keywords" class="tab-content">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Keywords &amp; Filter Rules</div>
+      <div class="section-subtitle">View active scoring keywords by severity tier, add custom include/suppress terms, and align filtering with the CMP</div>
+    </div>
+  </div>
+
+  <!-- ── CMP Alignment note ── -->
+  <div class="card" style="margin-bottom:16px;background:rgba(124,58,237,.04);border-color:rgba(124,58,237,.2)">
+    <div style="font-size:12px;line-height:1.7;color:var(--text)">
+      <strong>How filtering works:</strong> Each incoming news item is scored by matching its title and description against keyword tiers below.
+      The highest-matching tier wins. Items scoring above a source's <code style="background:var(--border);padding:1px 4px;border-radius:3px">minSeverity</code> threshold are dropped before reaching the dashboard.
+      Per the CMP, the CMT activates for events causing <em>extended business disruption, multi-site impact, or decisions beyond local incident management</em> — the SEV 1/2 tiers reflect this.
+      <strong>Custom include keywords</strong> boost matched items to SEV 2 (Major). <strong>Suppress keywords</strong> force items to SEV 5 — effectively removing them from the dashboard.
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:16px">
+
+    <!-- ── Custom Include Keywords ── -->
+    <div class="card">
+      <div class="card-title" style="color:#C8102E"><span class="icon">&#43;</span> Custom Include Keywords <span style="font-size:10px;font-weight:400;color:var(--muted);margin-left:6px">matched items boosted to SEV 2</span></div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">
+        Add terms your team considers operationally significant that aren't in the built-in list.
+        Examples: a specific threat actor name, a regulatory body action keyword, a Rocket-adjacent company name.
+      </div>
+      <div id="custom-include-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:28px"></div>
+      <div style="display:flex;gap:8px">
+        <input id="custom-include-input" class="form-input" style="flex:1" placeholder='e.g. "volt typhoon" or "cfpb mortgage"' onkeydown="if(event.key==='Enter')addCustomKeyword('include')" />
+        <button class="btn btn-danger btn-sm" onclick="addCustomKeyword('include')">Add</button>
+      </div>
+    </div>
+
+    <!-- ── Suppress Keywords ── -->
+    <div class="card">
+      <div class="card-title" style="color:#6B7280"><span class="icon">&#8722;</span> Suppress Keywords <span style="font-size:10px;font-weight:400;color:var(--muted);margin-left:6px">matched items forced to SEV 5 / hidden</span></div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">
+        Add terms that consistently produce noise — things that sound relevant but aren't.
+        Examples: "presidential debate", "stock market", "opinion poll", "earnings report".
+      </div>
+      <div id="custom-suppress-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:28px"></div>
+      <div style="display:flex;gap:8px">
+        <input id="custom-suppress-input" class="form-input" style="flex:1" placeholder='e.g. "debate" or "earnings report"' onkeydown="if(event.key==='Enter')addCustomKeyword('suppress')" />
+        <button class="btn btn-sm" style="background:#6B7280;color:#fff" onclick="addCustomKeyword('suppress')">Add</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Built-in keyword reference by tier ── -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title"><span class="icon">&#128274;</span> Built-in Scoring Keywords <span style="font-size:10px;font-weight:400;color:var(--muted);margin-left:6px">read-only reference — edit fetch-feeds.js to change</span></div>
+
+    <!-- SEV 1 — Crisis -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span class="sev-badge tier-0">SEV 1 — Crisis</span>
+        <span style="font-size:11px;color:var(--muted)">Active confirmed attacks / catastrophic events — CMT activates immediately</span>
+      </div>
+      <div id="kw-sev1-list" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+    </div>
+
+    <!-- SEV 2 — Major -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span class="sev-badge tier-1">SEV 2 — Major</span>
+        <span style="font-size:11px;color:var(--muted)">Credible threats, significant incidents, mass protests — CMT likely</span>
+      </div>
+      <div id="kw-sev2-list" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+    </div>
+
+    <!-- SEV 3 — Significant -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span class="sev-badge tier-2">SEV 3 — Significant</span>
+        <span style="font-size:11px;color:var(--muted)">Developing situations, watch/advisory level — monitor and assess</span>
+      </div>
+      <div id="kw-sev3-list" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+    </div>
+
+    <!-- SEV 4 — Moderate (dashboard-side tier 3) -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span class="sev-badge tier-3">SEV 4 — Moderate</span>
+        <span style="font-size:11px;color:var(--muted)">Background monitoring — usually filtered by minSeverity thresholds</span>
+      </div>
+      <div id="kw-sev4-list" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+    </div>
+
+    <!-- Terror detection -->
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:10px;font-weight:700;background:#7C0000;color:#fff;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px">Terror / Physical Security</span>
+        <span style="font-size:11px;color:var(--muted)">Any match forces category = Terror and pins to dashboard regardless of tier</span>
+      </div>
+      <div id="kw-terror-list" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+    </div>
+  </div>
+
+  <!-- ── Rocket Entity Boost List ── -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127970;</span> Rocket Entity Boost List <span style="font-size:10px;font-weight:400;color:var(--muted);margin-left:6px">mentions of these names boost item one tier toward SEV 1</span></div>
+    <div id="kw-entities-list" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px"></div>
+    <div style="font-size:12px;color:var(--muted)">To add entities, update <code style="background:var(--border);padding:1px 4px;border-radius:3px">ROCKET_NAMES</code> in <code style="background:var(--border);padding:1px 4px;border-radius:3px">fetch-feeds.js</code> and the <code style="background:var(--border);padding:1px 4px;border-radius:3px">rocketEntities</code> array in the dashboard script.</div>
+  </div>
+</div>
+
 <div id="tab-settings" class="tab-content">
   <div class="section-header">
     <div>
@@ -1645,6 +1754,92 @@
     document.querySelectorAll('.nav-tab').forEach(function(t){ t.classList.remove('active'); });
     document.getElementById('tab-' + id).classList.add('active');
     if (el) el.classList.add('active');
+    if (id === 'keywords') {
+      setTimeout(function() {
+        renderBuiltinKeywordLists();
+        renderCustomKeywordTags();
+      }, 0);
+    }
+  }
+
+  /* ── Custom keyword system ──────────────────────────────────────────────────
+     Stored in localStorage under 'customKeywords'.
+     Structure: { include: ['term', ...], suppress: ['term', ...] }
+     Applied in scoreSeverity() below — include → SEV 2, suppress → SEV 5.
+  ── */
+
+  var CUSTOM_KW_KEY = 'rocketResilienceCustomKeywords';
+
+  function loadCustomKeywords() {
+    try { return JSON.parse(localStorage.getItem(CUSTOM_KW_KEY)) || {include:[], suppress:[]}; }
+    catch(e) { return {include:[], suppress:[]}; }
+  }
+
+  function saveCustomKeywords(kws) {
+    localStorage.setItem(CUSTOM_KW_KEY, JSON.stringify(kws));
+  }
+
+  function addCustomKeyword(type) {
+    var input = document.getElementById('custom-' + type + '-input');
+    var val = (input.value || '').trim().toLowerCase();
+    if (!val) return;
+    var kws = loadCustomKeywords();
+    if (kws[type].indexOf(val) === -1) {
+      kws[type].push(val);
+      saveCustomKeywords(kws);
+    }
+    input.value = '';
+    renderCustomKeywordTags();
+    renderAlerts(allItems);
+  }
+
+  function removeCustomKeyword(type, term) {
+    var kws = loadCustomKeywords();
+    kws[type] = kws[type].filter(function(k){ return k !== term; });
+    saveCustomKeywords(kws);
+    renderCustomKeywordTags();
+    renderAlerts(allItems);
+  }
+
+  function renderCustomKeywordTags() {
+    var kws = loadCustomKeywords();
+    ['include','suppress'].forEach(function(type) {
+      var el = document.getElementById('custom-' + type + '-tags');
+      if (!el) return;
+      var color = type === 'include' ? '#C8102E' : '#6B7280';
+      var bg = type === 'include' ? 'rgba(200,16,46,.1)' : 'rgba(107,114,128,.1)';
+      el.innerHTML = kws[type].map(function(k) {
+        return '<span style="display:inline-flex;align-items:center;gap:4px;background:' + bg + ';color:' + color + ';font-size:11px;font-weight:600;padding:3px 8px;border-radius:12px;border:1px solid ' + color + '30">'
+          + escHtml(k)
+          + '<button onclick="removeCustomKeyword(\'' + type + '\',\'' + escHtml(k).replace(/'/g,"\\'") + '\')" style="background:none;border:none;cursor:pointer;color:' + color + ';font-size:13px;padding:0;line-height:1;margin-left:2px">&times;</button>'
+          + '</span>';
+      }).join('') || '<span style="font-size:12px;color:var(--muted);font-style:italic">None added yet</span>';
+    });
+  }
+
+  function renderBuiltinKeywordLists() {
+    /* Built-in SEV tiers — sourced from KEYWORDS_TIER1–4 and KEYWORDS_TERROR defined below */
+    var tiers = [
+      { id: 'kw-sev1-list', arr: KEYWORDS_TIER1, color: '#7C0000', bg: 'rgba(124,0,0,.08)' },
+      { id: 'kw-sev2-list', arr: KEYWORDS_TIER2, color: '#C8102E', bg: 'rgba(200,16,46,.08)' },
+      { id: 'kw-sev3-list', arr: KEYWORDS_TIER3, color: '#EA580C', bg: 'rgba(234,88,12,.08)' },
+      { id: 'kw-sev4-list', arr: KEYWORDS_TIER4, color: '#D97706', bg: 'rgba(217,119,6,.08)' },
+      { id: 'kw-terror-list', arr: KEYWORDS_TERROR, color: '#7C0000', bg: 'rgba(124,0,0,.08)' },
+    ];
+    tiers.forEach(function(t) {
+      var el = document.getElementById(t.id);
+      if (!el) return;
+      el.innerHTML = (t.arr || []).map(function(k) {
+        return '<span style="display:inline-block;background:' + t.bg + ';color:' + t.color + ';font-size:11px;padding:2px 8px;border-radius:10px;border:1px solid ' + t.color + '25">' + escHtml(k) + '</span>';
+      }).join('');
+    });
+    /* Entity list */
+    var entEl = document.getElementById('kw-entities-list');
+    if (entEl && typeof rocketEntities !== 'undefined') {
+      entEl.innerHTML = rocketEntities.map(function(e) {
+        return '<span style="display:inline-block;background:rgba(37,99,235,.07);color:#2563EB;font-size:11px;padding:2px 8px;border-radius:10px;border:1px solid rgba(37,99,235,.2)">' + escHtml(e) + '</span>';
+      }).join('');
+    }
   }
 
   /* runSyncNow is defined in the live feed system below */
@@ -2392,12 +2587,17 @@
 
   function scoreSeverity(text) {
     var t = text.toLowerCase();
+    /* Custom suppress keywords — immediately force to tier 4 (filtered) */
+    var cKws = loadCustomKeywords();
+    if (cKws.suppress.some(function(k){ return t.indexOf(k) !== -1; })) return 4;
     var base;
     if (KEYWORDS_TIER1.some(function(k){ return t.indexOf(k) !== -1; })) base = 1;
     else if (KEYWORDS_TIER2.some(function(k){ return t.indexOf(k) !== -1; })) base = 2;
     else if (KEYWORDS_TIER3.some(function(k){ return t.indexOf(k) !== -1; })) base = 3;
     else if (KEYWORDS_TIER4.some(function(k){ return t.indexOf(k) !== -1; })) base = 4;
     else base = 4;
+    /* Custom include keywords — boost to tier 2 if matched */
+    if (cKws.include.some(function(k){ return t.indexOf(k) !== -1; })) base = Math.min(base, 2);
     /* Boost by 1 tier (lower number = more critical) if mentions a Rocket entity */
     if (containsRocketEntity(text) && base > 0) base = base - 1;
     return base;
@@ -3073,6 +3273,12 @@
         // Re-check terror keywords against existing terror detection
         var fullText = (a.title || '') + ' ' + (a.description || '');
         if (isTerrorItem(fullText)) cat = 'terror';
+
+        // Apply custom keyword rules on top of pre-computed severity
+        var cKws = loadCustomKeywords();
+        var ft = fullText.toLowerCase();
+        if (cKws.suppress.some(function(k){ return ft.indexOf(k) !== -1; })) sev = 4;
+        else if (cKws.include.some(function(k){ return ft.indexOf(k) !== -1; })) sev = Math.min(sev, 2);
 
         return {
           id:            a.id || Math.random().toString(36).substr(2,9),
