@@ -291,11 +291,11 @@
     </div>
   </div>
 
-  <div class="grid-2">
+  <div class="grid-2" style="align-items:stretch">
     <!-- ACTIVE CRITICAL/HIGH ALERTS -->
-    <div class="card">
+    <div class="card" style="display:flex;flex-direction:column">
       <div class="card-title"><span class="icon">&#128308;</span> Critical &amp; High Alerts <span id="dash-alert-count" style="font-size:11px;font-weight:700;background:rgba(200,16,46,.15);color:#C8102E;padding:1px 7px;border-radius:10px;margin-left:8px;display:none"></span> <span style="font-size:10px;font-weight:400;color:var(--muted);margin-left:4px">Updates automatically · newest on top</span></div>
-      <div class="alert-list scroll-panel" id="dashboard-alert-list">
+      <div class="alert-list" id="dashboard-alert-list" style="flex:1;overflow-y:auto">
         <!-- CURRENT RISK 1: Scattered Spider / UNC3944 targeting financial/mortgage sector — ACTIVE as of Jul 2026 -->
         <div class="alert-item" data-demo="1" style="border-left-color:#C8102E" onclick="toggleAlert(this)">
           <div class="alert-item-header">
