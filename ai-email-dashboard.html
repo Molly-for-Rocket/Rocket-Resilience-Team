@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Email Alert System — Dashboard</title>
+  <title>Rocket Resilience Monitor</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -49,8 +49,8 @@
     .topbar-right { display:flex; align-items:center; gap:16px; }
     .status-dot { width:8px; height:8px; border-radius:50%; background:var(--green); display:inline-block; }
     .status-text { font-size:12px; color:var(--muted); }
-    .nav-tabs { display:flex; gap:2px; background:var(--surface); border-bottom:1px solid var(--border); padding:0 24px; overflow-x:auto; }
-    .nav-tab { padding:12px 20px; cursor:pointer; font-size:13px; font-weight:500; color:var(--muted); border-bottom:2px solid transparent; white-space:nowrap; transition:all .2s; background:none; border-top:none; border-left:none; border-right:none; }
+    .nav-tabs { display:flex; gap:0; background:var(--surface); border-bottom:1px solid var(--border); padding:0 16px; overflow-x:hidden; }
+    .nav-tab { padding:10px 13px; cursor:pointer; font-size:12px; font-weight:500; color:var(--muted); border-bottom:2px solid transparent; white-space:nowrap; transition:all .2s; background:none; border-top:none; border-left:none; border-right:none; flex:1; text-align:center; }
     .nav-tab:hover { color:var(--text); }
     .nav-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
     .main { padding:24px; max-width:1600px; margin:0 auto; }
@@ -221,7 +221,7 @@
 <!-- TOP BAR -->
 <header class="topbar">
   <div class="topbar-left">
-    <div class="logo"><span style="color:var(--accent)">Rocket</span><span style="color:var(--text)">Flow · AI Alert</span></div>
+    <div class="logo"><span style="color:var(--accent)">Rocket</span><span style="color:var(--text)"> Resilience Monitor</span></div>
     <span class="badge-live">Live</span>
   </div>
   <div class="topbar-right">
@@ -241,8 +241,6 @@
   <button class="nav-tab" onclick="switchTab('locations', this); setTimeout(function(){initMap(); if(map) map.invalidateSize(); renderLocationTable();}, 50)">Locations</button>
   <button class="nav-tab" onclick="switchTab('critical-buildings', this); loadCriticalBuildings()">Critical Buildings</button>
   <button class="nav-tab" onclick="switchTab('dedup', this)">Dedup &amp; Filters</button>
-  <button class="nav-tab" onclick="switchTab('schedule', this)">Schedule</button>
-  <button class="nav-tab" onclick="switchTab('action-items', this)">Action Items</button>
   <button class="nav-tab" onclick="switchTab('logs', this)">Activity Log</button>
   <button class="nav-tab" onclick="switchTab('feedhealth', this)">Feed Health</button>
   <button class="nav-tab" onclick="switchTab('settings', this)">Settings</button>
@@ -554,131 +552,129 @@
   <div class="section-header">
     <div>
       <div class="section-title">Data Sources</div>
-      <div class="section-subtitle">Every feed actively pulling into this dashboard — organized by coverage area</div>
+      <div class="section-subtitle">Every feed actively pulling into this dashboard — fetched every 15 minutes by GitHub Actions and cached in alerts.json</div>
     </div>
   </div>
 
   <!-- LEGEND -->
   <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;align-items:center">
-    <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-right:4px">Connection type:</span>
-    <span style="display:flex;align-items:center;gap:5px;font-size:12px"><span class="tag tag-api" style="margin:0">API</span> Direct — no proxy needed, always reliable</span>
-    <span style="display:flex;align-items:center;gap:5px;font-size:12px"><span class="tag tag-rss" style="margin:0">RSS</span> Via allorigins.win proxy — works most of the time, not guaranteed</span>
-    <span style="display:flex;align-items:center;gap:5px;font-size:12px"><span class="tag tag-scrape" style="margin:0">BLOCKED</span> Confirmed blocked — returns 0 items, listed for awareness only</span>
+    <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-right:4px">Feed type:</span>
+    <span style="display:flex;align-items:center;gap:5px;font-size:12px"><span class="tag tag-api" style="margin:0">API</span> Direct JSON API — most reliable</span>
+    <span style="display:flex;align-items:center;gap:5px;font-size:12px"><span class="tag tag-rss" style="margin:0">RSS</span> RSS/Atom feed — fetched server-side by GitHub Action</span>
+    <span style="display:flex;align-items:center;gap:5px;font-size:12px"><span class="tag tag-scrape" style="margin:0">FAILING</span> Feed attempted but returning errors — 0 items currently</span>
   </div>
 
-  <!-- NATIONAL / ALL STATES -->
-  <div style="margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 2px">&#127758; National — Applies to All Locations</div>
+  <!-- FEDERAL / GOV -->
+  <div style="margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 2px">&#127961; Federal &amp; Government</div>
   <div class="grid-2" style="margin-bottom:20px">
     <div class="card">
-      <div class="card-title">&#128737; Cybersecurity</div>
+      <div class="card-title">&#127780; Weather &amp; Disasters</div>
       <table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead><tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Source</th><th style="padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Type</th><th style="padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Status</th></tr></thead>
         <tbody>
-          <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank" style="color:var(--accent);font-weight:600">CISA Known Exploited Vulnerabilities (KEV)</a><div style="font-size:10px;color:var(--muted)">Top 10 actively exploited CVEs</div></td><td style="padding:7px 8px;text-align:center"><span class="tag tag-api">API</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://api.weather.gov/alerts/active" target="_blank" style="color:var(--accent);font-weight:600">NWS Active Alerts</a><div style="font-size:10px;color:var(--muted)">Severe weather · 18 Rocket states</div></td><td style="padding:7px 8px;text-align:center"><span class="tag tag-api">API</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson" target="_blank" style="color:var(--accent);font-weight:600">USGS Earthquakes</a><div style="font-size:10px;color:var(--muted)">M2.5+ earthquakes in US bounding box</div></td><td style="padding:7px 8px;text-align:center"><span class="tag tag-api">API</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+          <tr><td style="padding:7px 8px"><a href="https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries" target="_blank" style="color:var(--accent);font-weight:600">FEMA Disaster Declarations</a><div style="font-size:10px;color:var(--muted)">Federal disaster declarations · latest 50</div></td><td style="padding:7px 8px;text-align:center"><span class="tag tag-api">API</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
         </tbody>
       </table>
     </div>
     <div class="card">
-      <div class="card-title">&#127774; Weather &amp; Disasters</div>
+      <div class="card-title">&#128737; Cybersecurity &amp; Financial</div>
       <table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead><tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Source</th><th style="padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Type</th><th style="padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Status</th></tr></thead>
         <tbody>
-          <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://api.weather.gov/alerts/active" target="_blank" style="color:var(--accent);font-weight:600">NWS Weather Alerts API</a><div style="font-size:10px;color:var(--muted)">Severe events only · filtered to 29 Rocket states</div></td><td style="padding:7px 8px;text-align:center"><span class="tag tag-api">API</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
-          <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.fema.gov/api/open/v2/disasterDeclarationsSummaries" target="_blank" style="color:var(--accent);font-weight:600">FEMA OpenFEMA Disaster Declarations</a><div style="font-size:10px;color:var(--muted)">Federal disaster declarations · filtered to Rocket states</div></td><td style="padding:7px 8px;text-align:center"><span class="tag tag-api">API</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
-          <tr><td style="padding:7px 8px"><a href="https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson" target="_blank" style="color:var(--accent);font-weight:600">USGS Earthquake Feed</a><div style="font-size:10px;color:var(--muted)">M2.5+ earthquakes past 24hrs</div></td><td style="padding:7px 8px;text-align:center"><span class="tag tag-api">API</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json" target="_blank" style="color:var(--accent);font-weight:600">CISA Known Exploited Vulns</a><div style="font-size:10px;color:var(--muted)">Latest 20 actively exploited CVEs</div></td><td style="padding:7px 8px;text-align:center"><span class="tag tag-api">API</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://isc.sans.edu/rssfeed_full.xml" target="_blank" style="color:var(--accent);font-weight:600">SANS Internet Storm Center</a><div style="font-size:10px;color:var(--muted)">Daily handler diaries &amp; threat intel</div></td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.consumerfinance.gov/about-us/newsroom/feed/" target="_blank" style="color:var(--accent);font-weight:600">CFPB Newsroom</a><div style="font-size:10px;color:var(--muted)">Consumer Financial Protection Bureau</div></td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.sec.gov/news/pressreleases.rss" target="_blank" style="color:var(--accent);font-weight:600">SEC Press Releases</a><div style="font-size:10px;color:var(--muted)">Securities and Exchange Commission</div></td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.fbi.gov/feeds/fbi-in-the-news/rss.xml" target="_blank" style="color:var(--accent);font-weight:600">FBI Press Releases</a><div style="font-size:10px;color:var(--muted)">FBI news &amp; enforcement actions</div></td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+          <tr style="background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">ATF Press Releases</span><div style="font-size:10px">atf.gov — HTTP 403</div></td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">FAILING</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Error</span></td></tr>
+          <tr style="background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">DHS News</span><div style="font-size:10px">dhs.gov — HTTP 404</div></td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">FAILING</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Error</span></td></tr>
+          <tr style="background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">SEC Enforcement</span><div style="font-size:10px">sec.gov EDGAR atom — HTTP 403</div></td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">FAILING</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Error</span></td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- MICHIGAN -->
-  <div style="margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 2px">&#127968; Michigan — Detroit Campus (5 Critical Buildings) + Grand Rapids, Novi</div>
+  <!-- NATIONAL NEWS -->
+  <div style="margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 2px">&#127758; National News</div>
   <div class="card" style="margin-bottom:20px">
     <table style="width:100%;border-collapse:collapse;font-size:12px">
       <thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Source</th><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Coverage</th><th style="padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Type</th><th style="padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Status</th></tr></thead>
       <tbody>
-        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.detroitnews.com/arcio/rss/" target="_blank" style="color:var(--accent);font-weight:600">Detroit News</a></td><td style="padding:7px 8px;color:var(--muted)">Detroit metro, Wayne County</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
-        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://rssfeeds.freep.com/~/t/0/0/freep/home/~" target="_blank" style="color:var(--accent);font-weight:600">Detroit Free Press</a></td><td style="padding:7px 8px;color:var(--muted)">Detroit metro, statewide MI</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
-        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.mlive.com/arc/outbound/rss/category/news/" target="_blank" style="color:var(--accent);font-weight:600">MLive Michigan</a></td><td style="padding:7px 8px;color:var(--muted)">Statewide MI — all offices</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
-        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.wxyz.com/rss/3843177" target="_blank" style="color:var(--accent);font-weight:600">WXYZ Detroit (ABC 7)</a></td><td style="padding:7px 8px;color:var(--muted)">Detroit metro breaking news</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
-        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://windsorstar.com/feed" target="_blank" style="color:var(--accent);font-weight:600">Windsor Star</a></td><td style="padding:7px 8px;color:var(--muted)">Windsor ON — cross-border office</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
-        <tr style="border-bottom:1px solid var(--border);background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">Michigan.gov Newsfeed</span></td><td style="padding:7px 8px;color:var(--muted)">State government alerts</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">BLOCKED</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Blocked</span></td></tr>
-        <tr style="background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">Michigan State Police RSS</span></td><td style="padding:7px 8px;color:var(--muted)">MSP emergency alerts</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">BLOCKED</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Blocked</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.cbsnews.com/latest/rss/main" target="_blank" style="color:var(--accent);font-weight:600">CBS News National</a></td><td style="padding:7px 8px;color:var(--muted)">Breaking national news</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://feeds.nbcnews.com/nbcnews/public/news" target="_blank" style="color:var(--accent);font-weight:600">NBC News</a></td><td style="padding:7px 8px;color:var(--muted)">Breaking national news</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://moxie.foxnews.com/google-publisher/latest.xml" target="_blank" style="color:var(--accent);font-weight:600">Fox News</a></td><td style="padding:7px 8px;color:var(--muted)">Breaking national news</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="http://rss.cnn.com/rss/cnn_topstories.rss" target="_blank" style="color:var(--accent);font-weight:600">CNN Top Stories</a></td><td style="padding:7px 8px;color:var(--muted)">Breaking national news</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://feeds.npr.org/1001/rss.xml" target="_blank" style="color:var(--accent);font-weight:600">NPR News</a></td><td style="padding:7px 8px;color:var(--muted)">Breaking national news</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://feeds.abcnews.com/abcnews/usheadlines" target="_blank" style="color:var(--accent);font-weight:600">ABC News US</a></td><td style="padding:7px 8px;color:var(--muted)">Breaking national news</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr><td style="padding:7px 8px"><a href="https://thehill.com/feed/" target="_blank" style="color:var(--accent);font-weight:600">The Hill</a></td><td style="padding:7px 8px;color:var(--muted)">Political &amp; policy news</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
       </tbody>
     </table>
   </div>
 
-  <!-- CALIFORNIA -->
-  <div style="margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 2px">&#127774; California — Cerritos (Critical Building) + Carlsbad, Corona, Irvine, Folsom, others</div>
+  <!-- MICHIGAN / DETROIT -->
+  <div style="margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 2px">&#127968; Michigan — Detroit HQ + Grand Rapids, Novi</div>
   <div class="card" style="margin-bottom:20px">
     <table style="width:100%;border-collapse:collapse;font-size:12px">
       <thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Source</th><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Coverage</th><th style="padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Type</th><th style="padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Status</th></tr></thead>
       <tbody>
-        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://abc7.com/feed/" target="_blank" style="color:var(--accent);font-weight:600">ABC7 Los Angeles</a></td><td style="padding:7px 8px;color:var(--muted)">LA Metro — covers Cerritos area directly</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
-        <tr><td style="padding:7px 8px"><a href="https://www.dailybreeze.com/feed" target="_blank" style="color:var(--accent);font-weight:600">Daily Breeze (South Bay)</a></td><td style="padding:7px 8px;color:var(--muted)">Cerritos/South Bay local paper</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://wdet.org/feed/" target="_blank" style="color:var(--accent);font-weight:600">WDET Detroit Public Radio</a></td><td style="padding:7px 8px;color:var(--muted)">Detroit metro, Wayne County</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.bridgemi.com/feed/" target="_blank" style="color:var(--accent);font-weight:600">Bridge Michigan</a></td><td style="padding:7px 8px;color:var(--muted)">Statewide MI investigative news</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border);background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">Michigan Radio (NPR)</span><div style="font-size:10px">michiganradio.org — HTTP 404</div></td><td style="padding:7px 8px;color:var(--muted)">Statewide MI public radio</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">FAILING</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Error</span></td></tr>
+        <tr style="background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">ClickOnDetroit (WDIV)</span><div style="font-size:10px">clickondetroit.com — HTTP 404</div></td><td style="padding:7px 8px;color:var(--muted)">Detroit metro breaking news</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">FAILING</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Error</span></td></tr>
       </tbody>
     </table>
   </div>
 
-  <!-- TEXAS -->
-  <div style="margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 2px">&#11088; Texas — Cypress Waters Coppell (Critical) + Fort Worth Hillwood (Critical) + Carrollton, Frisco, Longview, El Paso</div>
+  <!-- REGIONAL -->
+  <div style="margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 2px">&#127961; Regional — Other Rocket Office Areas</div>
+  <div class="card" style="margin-bottom:20px">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Source</th><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">State / City</th><th style="padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Type</th><th style="padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Status</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.latimes.com/local/rss2.0.xml" target="_blank" style="color:var(--accent);font-weight:600">LA Times</a></td><td style="padding:7px 8px;color:var(--muted)">CA — Cerritos, Carlsbad, Corona, Irvine</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://abc7.com/feed/" target="_blank" style="color:var(--accent);font-weight:600">ABC7 LA</a></td><td style="padding:7px 8px;color:var(--muted)">CA — LA metro breaking news</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.nbcdfw.com/news/local/feed/" target="_blank" style="color:var(--accent);font-weight:600">NBC5 DFW Local</a></td><td style="padding:7px 8px;color:var(--muted)">TX — Coppell, Fort Worth, Carrollton, Frisco</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.nbcdfw.com/feed/" target="_blank" style="color:var(--accent);font-weight:600">NBC5 DFW Top Stories</a></td><td style="padding:7px 8px;color:var(--muted)">TX — DFW metro top news</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.wfaa.com/feeds/syndication/rss/news" target="_blank" style="color:var(--accent);font-weight:600">WFAA Dallas</a></td><td style="padding:7px 8px;color:var(--muted)">TX — DFW metro breaking news</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://wtop.com/feed/" target="_blank" style="color:var(--accent);font-weight:600">WTOP News DC</a></td><td style="padding:7px 8px;color:var(--muted)">DC/VA/MD — Washington DC, Falls Church</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://wamu.org/feed/" target="_blank" style="color:var(--accent);font-weight:600">WAMU 88.5 DC</a></td><td style="padding:7px 8px;color:var(--muted)">DC/VA/MD — DC public radio</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.post-gazette.com/rss/all" target="_blank" style="color:var(--accent);font-weight:600">Pittsburgh Post-Gazette</a></td><td style="padding:7px 8px;color:var(--muted)">PA — Coraopolis, Philadelphia, Pittsburgh</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://windsorstar.com/feed/" target="_blank" style="color:var(--accent);font-weight:600">Windsor Star</a></td><td style="padding:7px 8px;color:var(--muted)">Canada — Windsor ON, cross-border office</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://fox8.com/feed/" target="_blank" style="color:var(--accent);font-weight:600">Fox 8 Cleveland (WJW)</a></td><td style="padding:7px 8px;color:var(--muted)">OH — Cleveland, Cincinnati, Worthington</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.ktar.com/feed/" target="_blank" style="color:var(--accent);font-weight:600">KTAR Phoenix News</a></td><td style="padding:7px 8px;color:var(--muted)">AZ — Chandler, Tempe, Flagstaff, Tucson</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <!-- Failing regional -->
+        <tr style="border-bottom:1px solid var(--border);background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">WCNC Charlotte (NBC)</span><div style="font-size:10px">wcnc.com — HTTP 404</div></td><td style="padding:7px 8px;color:var(--muted)">NC — Charlotte, Durham</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">FAILING</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Error</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border);background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">WSOC Charlotte (ABC)</span><div style="font-size:10px">wsoctv.com — HTTP 404</div></td><td style="padding:7px 8px;color:var(--muted)">NC — Charlotte, Durham</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">FAILING</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Error</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border);background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">WTAE Pittsburgh</span><div style="font-size:10px">wtae.com — HTTP 404</div></td><td style="padding:7px 8px;color:var(--muted)">PA — Pittsburgh area</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">FAILING</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Error</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border);background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">News 5 Cleveland</span><div style="font-size:10px">news5cleveland.com — HTTP 404</div></td><td style="padding:7px 8px;color:var(--muted)">OH — Cleveland area</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">FAILING</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Error</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border);background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">AZFamily CBS5 Phoenix</span><div style="font-size:10px">azfamily.com — HTTP 404</div></td><td style="padding:7px 8px;color:var(--muted)">AZ — Phoenix area</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">FAILING</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Error</span></td></tr>
+        <tr style="background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">CBC Windsor</span><div style="font-size:10px">cbc.ca — HTTP 406</div></td><td style="padding:7px 8px;color:var(--muted)">Canada — Windsor ON</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">FAILING</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Error</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- INFRASTRUCTURE -->
+  <div style="margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 2px">&#9729; Infrastructure &amp; Cloud Services</div>
   <div class="card" style="margin-bottom:20px">
     <table style="width:100%;border-collapse:collapse;font-size:12px">
       <thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Source</th><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Coverage</th><th style="padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Type</th><th style="padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Status</th></tr></thead>
       <tbody>
-        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.dallasnews.com/arc/outbound/rss/" target="_blank" style="color:var(--accent);font-weight:600">Dallas Morning News</a></td><td style="padding:7px 8px;color:var(--muted)">DFW metro — Coppell, Carrollton, Frisco</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
-        <tr><td style="padding:7px 8px"><a href="https://www.star-telegram.com/news/?outputType=rss" target="_blank" style="color:var(--accent);font-weight:600">Fort Worth Star-Telegram</a></td><td style="padding:7px 8px;color:var(--muted)">Fort Worth — Hillwood corridor direct</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://api.status.salesforce.com/v1/incidents" target="_blank" style="color:var(--accent);font-weight:600">Salesforce Status</a><div style="font-size:10px;color:var(--muted)">Active incidents across all Salesforce services</div></td><td style="padding:7px 8px;color:var(--muted)">Salesforce platform</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-api">API</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Live</span></td></tr>
+        <tr style="border-bottom:1px solid var(--border);background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">AWS Service Health</span><div style="font-size:10px">status.aws.amazon.com — JSON parse error</div></td><td style="padding:7px 8px;color:var(--muted)">AWS cloud services</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">FAILING</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Error</span></td></tr>
+        <tr style="background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">Azure Status</span><div style="font-size:10px">azure.status.microsoft — HTTP 404</div></td><td style="padding:7px 8px;color:var(--muted)">Microsoft Azure services</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">FAILING</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Error</span></td></tr>
       </tbody>
     </table>
   </div>
 
-  <!-- OTHER STATES -->
-  <div style="margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 2px">&#127961; Other Office States</div>
-  <div class="card" style="margin-bottom:20px">
-    <table style="width:100%;border-collapse:collapse;font-size:12px">
-      <thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Source</th><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">State / Offices Covered</th><th style="padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Type</th><th style="padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Status</th></tr></thead>
-      <tbody>
-        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.charlotteobserver.com/arc/outbound/rss/" target="_blank" style="color:var(--accent);font-weight:600">Charlotte Observer</a></td><td style="padding:7px 8px;color:var(--muted)">NC — Charlotte (2 offices), Durham</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
-        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.cleveland.com/arc/outbound/rss/" target="_blank" style="color:var(--accent);font-weight:600">Cleveland.com</a></td><td style="padding:7px 8px;color:var(--muted)">OH — Cleveland, Cincinnati, Worthington</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
-        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://rssfeeds.azcentral.com/rss/money" target="_blank" style="color:var(--accent);font-weight:600">AZ Central (azcentral.com)</a></td><td style="padding:7px 8px;color:var(--muted)">AZ — Chandler (2 offices), Tempe, Flagstaff, Tucson</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
-        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://wtop.com/feed/" target="_blank" style="color:var(--accent);font-weight:600">WTOP News</a></td><td style="padding:7px 8px;color:var(--muted)">DC/VA/MD — Washington DC, Falls Church, Baltimore, Rockville</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
-        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.post-gazette.com/rss/homepage" target="_blank" style="color:var(--accent);font-weight:600">Pittsburgh Post-Gazette</a></td><td style="padding:7px 8px;color:var(--muted)">PA — Coraopolis, Philadelphia, Pittsburgh</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- TERROR / PHYSICAL SECURITY FEEDS -->
-  <div style="margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 2px">&#9888; Physical Security &amp; Terror — National (All US + Windsor/Ontario)</div>
-  <div class="card" style="margin-bottom:20px;border-left:3px solid #7C0000">
-    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.6">Items from these feeds are <strong style="color:var(--text)">filtered to terror/violence keywords only</strong> before entering the dashboard — non-terror national news is discarded. Every matching item is labeled <span style="background:#7C0000;color:#fff;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700">TERROR / PHYSICAL</span> and appears on the dashboard at any criticality level. FBI RSS is confirmed blocked — the four national news feeds below carry equivalent breaking-incident coverage.</div>
-    <table style="width:100%;border-collapse:collapse;font-size:12px">
-      <thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Source</th><th style="text-align:left;padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Coverage</th><th style="padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Type</th><th style="padding:6px 8px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Status</th></tr></thead>
-      <tbody>
-        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://feeds.nbcnews.com/nbcnews/public/news" target="_blank" style="color:var(--accent);font-weight:600">NBC News</a></td><td style="padding:7px 8px;color:var(--muted)">National USA breaking news</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
-        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://abcnews.com/abcnews/topstories" target="_blank" style="color:var(--accent);font-weight:600">ABC News</a></td><td style="padding:7px 8px;color:var(--muted)">National USA breaking news</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
-        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://www.cbsnews.com/latest/rss/main" target="_blank" style="color:var(--accent);font-weight:600">CBS News</a></td><td style="padding:7px 8px;color:var(--muted)">National USA breaking news</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
-        <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px"><a href="https://feeds.npr.org/1001/rss.xml" target="_blank" style="color:var(--accent);font-weight:600">NPR News</a></td><td style="padding:7px 8px;color:var(--muted)">National USA — strong on domestic incidents</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
-        <tr style="border-bottom:2px solid var(--border)"><td style="padding:7px 8px"><a href="https://moxie.foxnews.com/google-publisher/latest.xml" target="_blank" style="color:var(--accent);font-weight:600">Fox News — Breaking</a></td><td style="padding:7px 8px;color:var(--muted)">National USA breaking news</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-rss">RSS</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#D97706;font-size:11px;font-weight:700">&#9888; Proxy</span></td></tr>
-        <!-- Blocked terror sources -->
-        <tr style="background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">FBI Press Releases RSS</span><div style="font-size:10px">fbi.gov — returns empty via proxy; NBC/ABC/CBS/NPR cover same incidents</div></td><td style="padding:7px 8px;color:var(--muted)">FBI official statements</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">BLOCKED</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Blocked</span></td></tr>
-        <tr style="background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">DHS News RSS</span><div style="font-size:10px">dhs.gov — returns HTML page instead of RSS feed</div></td><td style="padding:7px 8px;color:var(--muted)">Homeland Security bulletins</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">BLOCKED</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Blocked</span></td></tr>
-        <tr style="background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">ATF Press Releases RSS</span><div style="font-size:10px">atf.gov — returns 403 Access Denied</div></td><td style="padding:7px 8px;color:var(--muted)">ATF enforcement actions</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">BLOCKED</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Blocked</span></td></tr>
-        <tr style="background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">DOJ News RSS</span><div style="font-size:10px">justice.gov — feed URL returns 404</div></td><td style="padding:7px 8px;color:var(--muted)">DOJ press releases</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">BLOCKED</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Blocked</span></td></tr>
-        <tr style="background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">AP News RSS</span><div style="font-size:10px">feeds.apnews.com — returns empty via proxy (AP blocks hotlinking)</div></td><td style="padding:7px 8px;color:var(--muted)">AP wire service</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">BLOCKED</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Blocked</span></td></tr>
-        <tr style="background:rgba(200,16,46,.03)"><td style="padding:7px 8px;color:var(--muted)"><span style="text-decoration:line-through">Reuters RSS</span><div style="font-size:10px">feeds.reuters.com — returns empty via proxy (Reuters blocks hotlinking)</div></td><td style="padding:7px 8px;color:var(--muted)">Reuters wire service</td><td style="padding:7px 8px;text-align:center"><span class="tag tag-scrape">BLOCKED</span></td><td style="padding:7px 8px;text-align:center"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Blocked</span></td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- BLOCKED SOURCES NOTE -->
-  <div style="padding:14px 16px;background:rgba(200,16,46,.04);border:1px solid rgba(200,16,46,.15);border-radius:8px;font-size:12px">
-    <div style="font-weight:700;color:#C8102E;margin-bottom:6px">&#10007; Other Confirmed Blocked Sources — Not Feeding Into Dashboard</div>
+  <!-- HOW IT WORKS -->
+  <div style="padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px">
+    <div style="font-weight:700;color:var(--text);margin-bottom:6px">&#128196; How feeds are collected</div>
     <div style="color:var(--muted);line-height:1.8">
-      <strong style="color:var(--text)">US Treasury RSS</strong> (home.treasury.gov/press-releases.xml) — server rejects cross-origin requests &nbsp;·&nbsp;
-      <strong style="color:var(--text)">Michigan.gov Newsfeed</strong> — server blocks proxy &nbsp;·&nbsp;
-      <strong style="color:var(--text)">Michigan State Police RSS</strong> — server blocks proxy &nbsp;·&nbsp;
-      <strong style="color:var(--text)">FEMA RSS Feed</strong> (old feed, not the API) — server forbids incoming requests<br>
-      <span style="color:var(--muted);font-size:11px;margin-top:4px;display:block">These sources work in Power Automate or a backend server but cannot be fetched from a browser. See Version 2 roadmap for the Azure-hosted solution that bypasses this.</span>
+      A <strong style="color:var(--text)">GitHub Actions workflow</strong> runs every 15 minutes, fetches all 42 feeds server-side (no CORS issues), and writes the results to <code style="background:var(--border);padding:1px 4px;border-radius:3px">alerts.json</code> in the repo.
+      This dashboard reads that cached file — so all data is at most 15 minutes old. The status bar shows the exact fetch timestamp.
+      <span style="color:var(--muted);font-size:11px;margin-top:4px;display:block">Currently 29/42 feeds healthy. Failing feeds have their RSS URLs returning HTTP errors — they will recover automatically if the source fixes their feed.</span>
     </div>
   </div>
 
@@ -1250,32 +1246,29 @@
   <div id="cb-subtab-sources" style="display:none">
     <div class="card" style="margin-bottom:16px">
       <div class="card-title">&#127760; Live Feed Sources for Critical Buildings</div>
-      <p style="font-size:12px;color:var(--muted);margin-bottom:16px">These are the sources actively queried when you open this tab. Each building pulls from sources relevant to its city and risk profile.</p>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px">All feeds are fetched server-side by a GitHub Action every 15 minutes and cached in alerts.json — no browser proxy involved. Status reflects the last Action run.</p>
       <table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead><tr style="border-bottom:2px solid var(--border)">
           <th style="text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Source</th>
           <th style="text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Type</th>
           <th style="text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Applies To</th>
-          <th style="text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">CORS</th>
+          <th style="text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Status</th>
         </tr></thead>
         <tbody>
-          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>NWS Weather.gov API</strong><br><span style="color:var(--muted)">api.weather.gov/alerts/active</span></td><td style="padding:8px 12px"><span class="tag tag-api">API</span></td><td style="padding:8px 12px">All buildings (MI, CA, TX)</td><td style="padding:8px 12px"><span style="color:var(--green)">&#10003; Direct</span></td></tr>
-          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>FEMA OpenFEMA API</strong><br><span style="color:var(--muted)">fema.gov/api/open/v2</span></td><td style="padding:8px 12px"><span class="tag tag-api">API</span></td><td style="padding:8px 12px">All buildings</td><td style="padding:8px 12px"><span style="color:var(--green)">&#10003; Direct</span></td></tr>
-          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>CISA KEV Catalog</strong><br><span style="color:var(--muted)">cisa.gov/known-exploited-vulnerabilities.json</span></td><td style="padding:8px 12px"><span class="tag tag-api">API</span></td><td style="padding:8px 12px">All buildings (Cyber)</td><td style="padding:8px 12px"><span style="color:var(--yellow)">&#9888; Proxy</span></td></tr>
-          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>MLive Michigan</strong><br><span style="color:var(--muted)">mlive.com/arc/outbound/rss/category/news/</span></td><td style="padding:8px 12px"><span class="tag tag-rss">RSS</span></td><td style="padding:8px 12px">Detroit buildings (5)</td><td style="padding:8px 12px"><span style="color:var(--yellow)">&#9888; Proxy</span></td></tr>
-          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>Detroit News</strong><br><span style="color:var(--muted)">detroitnews.com/arcio/rss/</span></td><td style="padding:8px 12px"><span class="tag tag-rss">RSS</span></td><td style="padding:8px 12px">Detroit buildings (5)</td><td style="padding:8px 12px"><span style="color:var(--yellow)">&#9888; Proxy</span></td></tr>
-          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>WXYZ Detroit</strong><br><span style="color:var(--muted)">wxyz.com/rss/3843177</span></td><td style="padding:8px 12px"><span class="tag tag-rss">RSS</span></td><td style="padding:8px 12px">Detroit buildings (5)</td><td style="padding:8px 12px"><span style="color:var(--yellow)">&#9888; Proxy</span></td></tr>
-          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>Dallas Morning News</strong><br><span style="color:var(--muted)">dallasnews.com/arc/outbound/rss/</span></td><td style="padding:8px 12px"><span class="tag tag-rss">RSS</span></td><td style="padding:8px 12px">Cypress Waters, Fort Worth</td><td style="padding:8px 12px"><span style="color:var(--yellow)">&#9888; Proxy</span></td></tr>
-          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>ABC7 Los Angeles</strong><br><span style="color:var(--muted)">abc7.com/feed/</span></td><td style="padding:8px 12px"><span class="tag tag-rss">RSS</span></td><td style="padding:8px 12px">Cerritos (LA Metro)</td><td style="padding:8px 12px"><span style="color:var(--yellow)">&#9888; Proxy</span></td></tr>
-          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>Daily Breeze</strong><br><span style="color:var(--muted)">dailybreeze.com/feed</span></td><td style="padding:8px 12px"><span class="tag tag-rss">RSS</span></td><td style="padding:8px 12px">Cerritos (South Bay local)</td><td style="padding:8px 12px"><span style="color:var(--yellow)">&#9888; Proxy</span></td></tr>
-          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>Fort Worth Star-Telegram</strong><br><span style="color:var(--muted)">star-telegram.com/news/?outputType=rss</span></td><td style="padding:8px 12px"><span class="tag tag-rss">RSS</span></td><td style="padding:8px 12px">Fort Worth 9800 Hillwood</td><td style="padding:8px 12px"><span style="color:var(--yellow)">&#9888; Proxy</span></td></tr>
-          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>USGS Earthquake Feed</strong><br><span style="color:var(--muted)">earthquake.usgs.gov/earthquakes/feed/v1.0</span></td><td style="padding:8px 12px"><span class="tag tag-api">API</span></td><td style="padding:8px 12px">Cerritos (seismic zone)</td><td style="padding:8px 12px"><span style="color:var(--green)">&#10003; Direct</span></td></tr>
-          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>NOAA National Hurricane Center</strong><br><span style="color:var(--muted)">nhc.noaa.gov (historical + active)</span></td><td style="padding:8px 12px"><span class="tag tag-api">API</span></td><td style="padding:8px 12px">TX buildings (hurricane corridor)</td><td style="padding:8px 12px"><span style="color:var(--green)">&#10003; Direct</span></td></tr>
-          <tr><td style="padding:8px 12px"><strong>Historical Risk Data</strong><br><span style="color:var(--muted)">FEMA historical declarations, NOAA storm archives, FBI UCR crime data, EPA flood maps</span></td><td style="padding:8px 12px"><span class="tag tag-scrape">Curated</span></td><td style="padding:8px 12px">All buildings</td><td style="padding:8px 12px"><span style="color:var(--green)">&#10003; Built-in</span></td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>NWS Active Alerts</strong><br><span style="color:var(--muted)">api.weather.gov/alerts/active</span></td><td style="padding:8px 12px"><span class="tag tag-api">API</span></td><td style="padding:8px 12px">All buildings</td><td style="padding:8px 12px"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>FEMA Disaster Declarations</strong><br><span style="color:var(--muted)">fema.gov/api/open/v2</span></td><td style="padding:8px 12px"><span class="tag tag-api">API</span></td><td style="padding:8px 12px">All buildings</td><td style="padding:8px 12px"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>CISA Known Exploited Vulns</strong><br><span style="color:var(--muted)">cisa.gov/known-exploited-vulnerabilities.json</span></td><td style="padding:8px 12px"><span class="tag tag-api">API</span></td><td style="padding:8px 12px">All buildings (Cyber)</td><td style="padding:8px 12px"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>USGS Earthquakes</strong><br><span style="color:var(--muted)">earthquake.usgs.gov/earthquakes/feed/v1.0</span></td><td style="padding:8px 12px"><span class="tag tag-api">API</span></td><td style="padding:8px 12px">Cerritos (seismic zone)</td><td style="padding:8px 12px"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>WDET Detroit Public Radio</strong><br><span style="color:var(--muted)">wdet.org/feed/</span></td><td style="padding:8px 12px"><span class="tag tag-rss">RSS</span></td><td style="padding:8px 12px">Detroit buildings</td><td style="padding:8px 12px"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>Bridge Michigan</strong><br><span style="color:var(--muted)">bridgemi.com/feed/</span></td><td style="padding:8px 12px"><span class="tag tag-rss">RSS</span></td><td style="padding:8px 12px">Detroit buildings</td><td style="padding:8px 12px"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>ABC7 Los Angeles</strong><br><span style="color:var(--muted)">abc7.com/feed/</span></td><td style="padding:8px 12px"><span class="tag tag-rss">RSS</span></td><td style="padding:8px 12px">Cerritos (LA Metro)</td><td style="padding:8px 12px"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px"><strong>NBC5 DFW / WFAA Dallas</strong><br><span style="color:var(--muted)">nbcdfw.com, wfaa.com</span></td><td style="padding:8px 12px"><span class="tag tag-rss">RSS</span></td><td style="padding:8px 12px">Cypress Waters, Fort Worth</td><td style="padding:8px 12px"><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+          <tr style="border-bottom:1px solid var(--border);background:rgba(200,16,46,.03)"><td style="padding:8px 12px;color:var(--muted)"><span style="text-decoration:line-through">ClickOnDetroit (WDIV)</span><br><span style="color:var(--muted);font-size:10px">clickondetroit.com — HTTP 404</span></td><td style="padding:8px 12px"><span class="tag tag-rss">RSS</span></td><td style="padding:8px 12px;color:var(--muted)">Detroit buildings</td><td style="padding:8px 12px"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Failing</span></td></tr>
+          <tr style="background:rgba(200,16,46,.03)"><td style="padding:8px 12px;color:var(--muted)"><span style="text-decoration:line-through">Michigan Radio (NPR)</span><br><span style="color:var(--muted);font-size:10px">michiganradio.org — HTTP 404</span></td><td style="padding:8px 12px"><span class="tag tag-rss">RSS</span></td><td style="padding:8px 12px;color:var(--muted)">Detroit buildings</td><td style="padding:8px 12px"><span style="color:#C8102E;font-size:11px;font-weight:700">&#10007; Failing</span></td></tr>
         </tbody>
       </table>
       <div style="margin-top:14px;padding:10px 12px;background:var(--surface2);border-radius:6px;font-size:11px;color:var(--muted)">
-        <strong>About CORS Proxy:</strong> Sources marked "Proxy" route through <code>api.allorigins.win</code> — a free public relay service. These work most of the time but have no uptime guarantee. Sources marked "Direct" connect to government APIs that allow browser access natively and are always reliable.
+        All feeds are collected by a GitHub Actions workflow running every 15 minutes — no browser proxy. Data shown here is from the cached alerts.json file, at most 15 minutes old.
       </div>
     </div>
   </div>
@@ -1372,262 +1365,6 @@
 </div>
 
 <!-- ═══════════════ SCHEDULE ═══════════════ -->
-<div id="tab-schedule" class="tab-content">
-  <div class="section-header">
-    <div>
-      <div class="section-title">Send Schedule</div>
-      <div class="section-subtitle">Weekly cadence + instant trigger logic</div>
-    </div>
-  </div>
-  <div class="grid-2">
-    <div class="card">
-      <div class="card-title"><span class="icon">&#128197;</span> Delivery Matrix</div>
-      <table class="sched-table">
-        <thead>
-          <tr><th>Type</th><th>Trigger</th><th>Frequency</th><th>Recipients</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>Weekly Digest</strong></td>
-            <td>Scheduled (Mon 7AM ET)</td>
-            <td><span style="color:var(--green)">Weekly</span></td>
-            <td>All subscribers</td>
-          </tr>
-          <tr>
-            <td><strong>Instant Alert</strong></td>
-            <td>Trigger keyword match</td>
-            <td><span style="color:var(--red)">Immediate</span></td>
-            <td>CISO + CTO + On-Call</td>
-          </tr>
-          <tr>
-            <td><strong>Tier 1 &mdash; Critical</strong></td>
-            <td>Criticality = Tier 1 or higher</td>
-            <td><span style="color:var(--orange)">Within 15 min</span></td>
-            <td>Security + Leadership</td>
-          </tr>
-          <tr>
-            <td><strong>Weather Alert</strong></td>
-            <td>NWS Watch/Warning in monitored zone</td>
-            <td><span style="color:var(--yellow)">Within 30 min</span></td>
-            <td>Operations team</td>
-          </tr>
-          <tr>
-            <td><strong>Infra Alert</strong></td>
-            <td>DTE / ISP outage detected</td>
-            <td><span style="color:var(--orange)">Immediate</span></td>
-            <td>IT Ops + On-Call</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="card">
-      <div class="card-title"><span class="icon">&#9889;</span> Instant Trigger Configuration</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Any feed item matching these phrases will bypass the weekly schedule and send immediately.</div>
-      <div style="display:flex;flex-direction:column;gap:6px">
-        <div class="ind-row">
-          <div class="ind-dot" style="background:var(--tier1)"></div>
-          <div style="flex:1;font-size:13px">"terrorist attack in US"</div>
-          <span class="sev-badge tier-1" style="font-size:10px">Active</span>
-        </div>
-        <div class="ind-row">
-          <div class="ind-dot" style="background:var(--tier1)"></div>
-          <div style="flex:1;font-size:13px">"threat actor attack on tech institutions in north america"</div>
-          <span class="sev-badge tier-1" style="font-size:10px">Active</span>
-        </div>
-        <div class="ind-row">
-          <div class="ind-dot" style="background:var(--tier2)"></div>
-          <div style="flex:1;font-size:13px">"political unrest in US"</div>
-          <span class="sev-badge tier-2" style="font-size:10px">Active</span>
-        </div>
-        <div class="ind-row">
-          <div class="ind-dot" style="background:var(--tier2)"></div>
-          <div style="flex:1;font-size:13px">"mass demonstrations"</div>
-          <span class="sev-badge tier-2" style="font-size:10px">Active</span>
-        </div>
-        <div class="ind-row">
-          <div class="ind-dot" style="background:var(--tier2)"></div>
-          <div style="flex:1;font-size:13px">"data center outage" + [Detroit/Michigan location]</div>
-          <span class="sev-badge tier-2" style="font-size:10px">Active</span>
-        </div>
-        <div class="ind-row">
-          <div class="ind-dot" style="background:var(--tier2)"></div>
-          <div style="flex:1;font-size:13px">"critical infrastructure attack"</div>
-          <span class="sev-badge tier-2" style="font-size:10px">Active</span>
-        </div>
-      </div>
-      <hr class="divider" />
-      <div style="display:flex;gap:8px">
-        <input class="form-input" placeholder="Add instant trigger phrase..." />
-        <button class="btn btn-danger">Add</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="card mt16">
-    <div class="card-title"><span class="icon">&#128236;</span> Upcoming Scheduled Sends</div>
-    <table class="sched-table">
-      <thead>
-        <tr><th>Date/Time</th><th>Type</th><th>Est. Items</th><th>Status</th><th>Action</th></tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>July 21, 2026 &mdash; 07:00 ET</td>
-          <td>Weekly Digest</td>
-          <td>~16 alerts</td>
-          <td><span style="color:var(--yellow)">Scheduled</span></td>
-          <td><button class="btn btn-ghost btn-sm">Preview</button></td>
-        </tr>
-        <tr>
-          <td>July 28, 2026 &mdash; 07:00 ET</td>
-          <td>Weekly Digest (Launch)</td>
-          <td>&mdash;</td>
-          <td><span style="color:var(--accent)">Target Launch</span></td>
-          <td><button class="btn btn-ghost btn-sm">Edit</button></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!-- ═══════════════ ACTION ITEMS ═══════════════ -->
-<div id="tab-action-items" class="tab-content">
-  <div class="section-header">
-    <div>
-      <div class="section-title">Action Items</div>
-      <div class="section-subtitle">Outstanding tasks to complete before full system launch</div>
-    </div>
-  </div>
-
-  <div class="grid-2">
-    <div class="card">
-      <div class="card-title"><span class="icon">&#9989;</span> Setup Action Items</div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-
-        <div class="action-item-row">
-          <div class="action-item-num">1</div>
-          <div class="action-item-body">
-            <div class="action-item-title">FEMA Hazus GIS Authorization</div>
-            <div class="action-item-desc">Contact GIS team to confirm RocketFlow GIS account covers Hazus platform access. Required before enabling the FEMA Hazus weather mapping feed.</div>
-          </div>
-          <span class="action-status status-pending">Pending</span>
-        </div>
-
-        <div class="action-item-row">
-          <div class="action-item-num">2</div>
-          <div class="action-item-body">
-            <div class="action-item-title">Fix DTE Energy Outage Map Scraper</div>
-            <div class="action-item-desc">DTE site structure changed on July 13. Scraper is returning errors. IT Ops needs to update the CSS selectors or switch to the DTE API endpoint.</div>
-          </div>
-          <span class="action-status status-fix">Needs Fix</span>
-        </div>
-
-        <div class="action-item-row">
-          <div class="action-item-num">3</div>
-          <div class="action-item-body">
-            <div class="action-item-title">Verify All Local Michigan RSS Feed URLs</div>
-            <div class="action-item-desc">Test and confirm live RSS feed URLs for: WXYZ-TV, WDIV-TV, Detroit News, WOOD-TV, WZZM-TV, MLive Grand Rapids, WLNS-TV, WILX-TV, Lansing State Journal, MLive Ann Arbor, Ann Arbor News, Bridge Michigan, Michigan Radio.</div>
-          </div>
-          <span class="action-status status-todo">To Do</span>
-        </div>
-
-        <div class="action-item-row">
-          <div class="action-item-num">4</div>
-          <div class="action-item-body">
-            <div class="action-item-title">Verify NWS API Geo-Filter Zones</div>
-            <div class="action-item-desc">Confirm that the NWS alert geo-filter is configured with the correct county FIPS codes for all four Michigan office locations (Wayne, Ingham, Kent, Washtenaw Counties).</div>
-          </div>
-          <span class="action-status status-active">Active</span>
-        </div>
-
-        <div class="action-item-row">
-          <div class="action-item-num">5</div>
-          <div class="action-item-body">
-            <div class="action-item-title">Configure SMTP Credentials</div>
-            <div class="action-item-desc">Enter SMTP host, port, username, and app password in the Email Config tab. Send a test email to confirm delivery before launch.</div>
-          </div>
-          <span class="action-status status-pending">Pending</span>
-        </div>
-
-        <div class="action-item-row">
-          <div class="action-item-num">6</div>
-          <div class="action-item-body">
-            <div class="action-item-title">Configure Claude AI API Key</div>
-            <div class="action-item-desc">Add the Anthropic API key to the backend settings file. Required for AI relevance scoring, deduplication, categorization, and report generation.</div>
-          </div>
-          <span class="action-status status-pending">Pending</span>
-        </div>
-
-      </div>
-    </div>
-
-    <div style="display:flex;flex-direction:column;gap:16px">
-      <div class="card">
-        <div class="card-title"><span class="icon">&#128203;</span> Platform Access Status</div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <div class="ind-row">
-            <div class="ind-dot" style="background:var(--yellow)"></div>
-            <div style="flex:1;font-size:13px">FEMA Hazus &mdash; Requires GIS team authorization</div>
-            <span style="font-size:11px;color:var(--yellow)">Pending</span>
-          </div>
-          <div class="ind-row">
-            <div class="ind-dot" style="background:var(--red)"></div>
-            <div style="flex:1;font-size:13px">DTE Energy scraper &mdash; Site structure changed, needs fix</div>
-            <span style="font-size:11px;color:var(--red)">Error</span>
-          </div>
-          <div class="ind-row">
-            <div class="ind-dot" style="background:var(--yellow)"></div>
-            <div style="flex:1;font-size:13px">Local RSS Feeds &mdash; URLs need verification testing</div>
-            <span style="font-size:11px;color:var(--yellow)">To Verify</span>
-          </div>
-          <div class="ind-row">
-            <div class="ind-dot" style="background:var(--green)"></div>
-            <div style="flex:1;font-size:13px">CISA RSS Feeds &mdash; No auth required</div>
-            <span style="font-size:11px;color:var(--green)">Active</span>
-          </div>
-          <div class="ind-row">
-            <div class="ind-dot" style="background:var(--green)"></div>
-            <div style="flex:1;font-size:13px">FEMA OpenFEMA API &mdash; Public, no auth</div>
-            <span style="font-size:11px;color:var(--green)">Active</span>
-          </div>
-          <div class="ind-row">
-            <div class="ind-dot" style="background:var(--green)"></div>
-            <div style="flex:1;font-size:13px">NWS API (weather.gov) &mdash; Public</div>
-            <span style="font-size:11px;color:var(--green)">Active</span>
-          </div>
-          <div class="ind-row">
-            <div class="ind-dot" style="background:var(--green)"></div>
-            <div style="flex:1;font-size:13px">FBI / Treasury / MSP &mdash; RSS feeds</div>
-            <span style="font-size:11px;color:var(--green)">Active</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="card col-span-1">
-        <div class="card-title"><span class="icon">&#128273;</span> AI Pipeline Architecture</div>
-        <div class="info-box">
-          <div class="info-box-icon">&#128161;</div>
-          <div class="info-box-text"><strong>How the AI pipeline works:</strong> RSS/API feeds &#8594; raw item ingestion &#8594; AI relevance scoring (Claude) &#8594; deduplication &#8594; category classification into 4 buckets &#8594; criticality ranking (5-level) &#8594; AI narrative synthesis &#8594; HTML email generation. Estimated weekly token usage: ~50,000&#8211;150,000 tokens depending on feed volume and report length.</div>
-        </div>
-        <div class="grid-3" style="margin-top:8px">
-          <div style="padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
-            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Step 1: Ingest</div>
-            <div style="font-size:12px">RSS polling + API calls &#8594; raw JSON items stored per source</div>
-          </div>
-          <div style="padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
-            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Step 2: AI Filter</div>
-            <div style="font-size:12px">AI scores relevance, classifies category, assigns criticality level, deduplicates</div>
-          </div>
-          <div style="padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
-            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Step 3: Report</div>
-            <div style="font-size:12px">AI synthesizes filtered items into categorized email with plain-English summaries</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- ═══════════════ ACTIVITY LOG ═══════════════ -->
 <div id="tab-logs" class="tab-content">
   <div class="section-header">
@@ -1667,141 +1404,87 @@
   <div class="section-header">
     <div>
       <div class="section-title">Feed Health</div>
-      <div class="section-subtitle">What is connecting directly, what is using a proxy, and how to change it</div>
+      <div class="section-subtitle">29/42 feeds working — fetched every 15 min by GitHub Actions, no browser proxy</div>
     </div>
-    <button class="btn btn-primary btn-sm" onclick="runSyncNow()">&#8635; Re-check All Feeds</button>
+    <button class="btn btn-primary btn-sm" onclick="runSyncNow()">&#8635; Reload alerts.json</button>
   </div>
 
-  <!-- DIRECT FEEDS -->
+  <!-- WORKING FEEDS -->
   <div class="card" style="margin-bottom:16px">
-    <div class="card-title"><span class="icon">&#9989;</span> Direct Feeds — No Proxy Required</div>
+    <div class="card-title"><span class="icon">&#9989;</span> Working Feeds — 29/42</div>
     <div class="callout-info" style="margin-bottom:14px">
-      <strong>These feeds connect directly from your browser to the source.</strong> No middleman required. These are government APIs that are specifically designed to be publicly accessible from any browser.
+      All feeds are fetched server-side by a GitHub Actions workflow every 15 minutes. No browser proxy is used. The dashboard reads the cached <code>alerts.json</code> file from GitHub.
     </div>
     <table class="sched-table">
       <thead>
-        <tr><th>Feed Name</th><th>Source</th><th>Status</th><th>Items This Session</th></tr>
+        <tr><th>Feed Name</th><th>Source</th><th>Category</th><th>Status</th></tr>
       </thead>
       <tbody>
-        <tr>
-          <td><strong>NWS Weather Alerts</strong></td>
-          <td style="font-size:11px;color:var(--muted)">api.weather.gov</td>
-          <td><span id="health-nws" class="ind-dot" style="background:#CBD5E1;display:inline-block"></span> <span id="health-nws-txt" style="font-size:11px;color:var(--muted)">Pending</span></td>
-          <td id="health-nws-count" style="font-size:12px">—</td>
-        </tr>
-        <tr>
-          <td><strong>FEMA OpenFEMA API</strong></td>
-          <td style="font-size:11px;color:var(--muted)">fema.gov/api/open/v2 (direct, CORS-open)</td>
-          <td><span id="health-fema" class="ind-dot" style="background:#CBD5E1;display:inline-block"></span> <span id="health-fema-txt" style="font-size:11px;color:var(--muted)">Pending</span></td>
-          <td id="health-fema-count" style="font-size:12px">—</td>
-        </tr>
-        <tr>
-          <td><strong>CISA Known Exploited Vulnerabilities</strong></td>
-          <td style="font-size:11px;color:var(--muted)">cisa.gov</td>
-          <td><span id="health-cisa" class="ind-dot" style="background:#CBD5E1;display:inline-block"></span> <span id="health-cisa-txt" style="font-size:11px;color:var(--muted)">Pending</span></td>
-          <td id="health-cisa-count" style="font-size:12px">—</td>
-        </tr>
-        <tr>
-          <td><strong>USGS Earthquake Feed</strong></td>
-          <td style="font-size:11px;color:var(--muted)">earthquake.usgs.gov</td>
-          <td><span id="health-usgs" class="ind-dot" style="background:#CBD5E1;display:inline-block"></span> <span id="health-usgs-txt" style="font-size:11px;color:var(--muted)">Pending</span></td>
-          <td id="health-usgs-count" style="font-size:12px">—</td>
-        </tr>
+        <tr><td><strong>NWS Active Alerts</strong></td><td style="font-size:11px;color:var(--muted)">api.weather.gov</td><td>Natural</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>USGS Earthquakes</strong></td><td style="font-size:11px;color:var(--muted)">earthquake.usgs.gov</td><td>Natural</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>FEMA Disaster Declarations</strong></td><td style="font-size:11px;color:var(--muted)">fema.gov/api/open/v2</td><td>Natural</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>CISA Known Exploited Vulns</strong></td><td style="font-size:11px;color:var(--muted)">cisa.gov</td><td>Cyber</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>SANS Internet Storm Center</strong></td><td style="font-size:11px;color:var(--muted)">isc.sans.edu</td><td>Cyber</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>FBI Press Releases</strong></td><td style="font-size:11px;color:var(--muted)">fbi.gov</td><td>Terror</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>CFPB Newsroom</strong></td><td style="font-size:11px;color:var(--muted)">consumerfinance.gov</td><td>Financial</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>SEC Press Releases</strong></td><td style="font-size:11px;color:var(--muted)">sec.gov</td><td>Financial</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>Salesforce Status</strong></td><td style="font-size:11px;color:var(--muted)">api.status.salesforce.com</td><td>Infrastructure</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>CBS News National</strong></td><td style="font-size:11px;color:var(--muted)">cbsnews.com</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>NBC News</strong></td><td style="font-size:11px;color:var(--muted)">nbcnews.com</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>Fox News</strong></td><td style="font-size:11px;color:var(--muted)">foxnews.com</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>CNN Top Stories</strong></td><td style="font-size:11px;color:var(--muted)">rss.cnn.com</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>NPR News</strong></td><td style="font-size:11px;color:var(--muted)">feeds.npr.org</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>ABC News US</strong></td><td style="font-size:11px;color:var(--muted)">feeds.abcnews.com</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>The Hill</strong></td><td style="font-size:11px;color:var(--muted)">thehill.com</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>WDET Detroit Public Radio</strong></td><td style="font-size:11px;color:var(--muted)">wdet.org</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>Bridge Michigan</strong></td><td style="font-size:11px;color:var(--muted)">bridgemi.com</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>LA Times</strong></td><td style="font-size:11px;color:var(--muted)">latimes.com</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>ABC7 LA</strong></td><td style="font-size:11px;color:var(--muted)">abc7.com</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>NBC5 DFW Local</strong></td><td style="font-size:11px;color:var(--muted)">nbcdfw.com</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>NBC5 DFW Top Stories</strong></td><td style="font-size:11px;color:var(--muted)">nbcdfw.com</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>WFAA Dallas</strong></td><td style="font-size:11px;color:var(--muted)">wfaa.com</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>WTOP News DC</strong></td><td style="font-size:11px;color:var(--muted)">wtop.com</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>WAMU 88.5 DC</strong></td><td style="font-size:11px;color:var(--muted)">wamu.org</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>Pittsburgh Post-Gazette</strong></td><td style="font-size:11px;color:var(--muted)">post-gazette.com</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>Windsor Star</strong></td><td style="font-size:11px;color:var(--muted)">windsorstar.com</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>Fox 8 Cleveland (WJW)</strong></td><td style="font-size:11px;color:var(--muted)">fox8.com</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
+        <tr><td><strong>KTAR Phoenix News</strong></td><td style="font-size:11px;color:var(--muted)">ktar.com</td><td>General</td><td><span style="color:#16A34A;font-size:11px;font-weight:700">&#10003; Working</span></td></tr>
       </tbody>
     </table>
   </div>
 
-  <!-- PROXY FEEDS -->
+  <!-- FAILING FEEDS -->
   <div class="card" style="margin-bottom:16px">
-    <div class="card-title"><span class="icon">&#128257;</span> Proxy Feeds — Using corsproxy.io</div>
+    <div class="card-title"><span class="icon">&#10007;</span> Failing Feeds — 13/42</div>
     <div class="callout" style="margin-bottom:14px">
-      <strong>Why a proxy?</strong> These source websites block direct browser requests for their own security reasons (called CORS restrictions). To get around this, your browser sends the request through <strong>corsproxy.io</strong> — a free public middleman service. The path is: <em>Your Browser → corsproxy.io → Source Website → back to your browser</em>. corsproxy.io does not store or log your content.
+      These feeds are attempted every 15 minutes but returning HTTP errors from the source. They will recover automatically if the news site fixes their RSS feed URL.
     </div>
     <table class="sched-table">
       <thead>
-        <tr><th>Feed Name</th><th>Source</th><th>Status</th><th>Items This Session</th></tr>
+        <tr><th>Feed Name</th><th>Source</th><th>Error</th></tr>
       </thead>
       <tbody>
-        <tr>
-          <td><strong>US Treasury / OFAC</strong></td>
-          <td style="font-size:11px;color:var(--muted)">treasury.gov</td>
-          <td><span id="health-treasury" class="ind-dot" style="background:#CBD5E1;display:inline-block"></span> <span id="health-treasury-txt" style="font-size:11px;color:var(--muted)">Pending</span></td>
-          <td id="health-treasury-count" style="font-size:12px">—</td>
-        </tr>
-        <tr>
-          <td><strong>Michigan.gov News Feed</strong></td>
-          <td style="font-size:11px;color:var(--muted)">michigan.gov</td>
-          <td><span id="health-michigan" class="ind-dot" style="background:#CBD5E1;display:inline-block"></span> <span id="health-michigan-txt" style="font-size:11px;color:var(--muted)">Pending</span></td>
-          <td id="health-michigan-count" style="font-size:12px">—</td>
-        </tr>
-        <tr>
-          <td><strong>Detroit News</strong></td>
-          <td style="font-size:11px;color:var(--muted)">detroitnews.com</td>
-          <td><span id="health-detroitnews" class="ind-dot" style="background:#CBD5E1;display:inline-block"></span> <span id="health-detroitnews-txt" style="font-size:11px;color:var(--muted)">Pending</span></td>
-          <td id="health-detroitnews-count" style="font-size:12px">—</td>
-        </tr>
-        <tr>
-          <td><strong>Detroit Free Press</strong></td>
-          <td style="font-size:11px;color:var(--muted)">freep.com</td>
-          <td><span id="health-freep" class="ind-dot" style="background:#CBD5E1;display:inline-block"></span> <span id="health-freep-txt" style="font-size:11px;color:var(--muted)">Pending</span></td>
-          <td id="health-freep-count" style="font-size:12px">—</td>
-        </tr>
-        <tr>
-          <td><strong>MSP Emergency Alerts</strong></td>
-          <td style="font-size:11px;color:var(--muted)">michigan.gov/msp</td>
-          <td><span id="health-msp" class="ind-dot" style="background:#CBD5E1;display:inline-block"></span> <span id="health-msp-txt" style="font-size:11px;color:var(--muted)">Pending</span></td>
-          <td id="health-msp-count" style="font-size:12px">—</td>
-        </tr>
+        <tr><td><strong>ATF Press Releases</strong></td><td style="font-size:11px;color:var(--muted)">atf.gov</td><td><span style="color:#C8102E;font-size:11px">HTTP 403</span></td></tr>
+        <tr><td><strong>DHS News</strong></td><td style="font-size:11px;color:var(--muted)">dhs.gov</td><td><span style="color:#C8102E;font-size:11px">HTTP 404</span></td></tr>
+        <tr><td><strong>SEC Enforcement</strong></td><td style="font-size:11px;color:var(--muted)">sec.gov EDGAR</td><td><span style="color:#C8102E;font-size:11px">HTTP 403</span></td></tr>
+        <tr><td><strong>Michigan Radio (NPR)</strong></td><td style="font-size:11px;color:var(--muted)">michiganradio.org</td><td><span style="color:#C8102E;font-size:11px">HTTP 404</span></td></tr>
+        <tr><td><strong>ClickOnDetroit (WDIV)</strong></td><td style="font-size:11px;color:var(--muted)">clickondetroit.com</td><td><span style="color:#C8102E;font-size:11px">HTTP 404</span></td></tr>
+        <tr><td><strong>WCNC Charlotte (NBC)</strong></td><td style="font-size:11px;color:var(--muted)">wcnc.com</td><td><span style="color:#C8102E;font-size:11px">HTTP 404</span></td></tr>
+        <tr><td><strong>WSOC Charlotte (ABC)</strong></td><td style="font-size:11px;color:var(--muted)">wsoctv.com</td><td><span style="color:#C8102E;font-size:11px">HTTP 404</span></td></tr>
+        <tr><td><strong>WTAE Pittsburgh</strong></td><td style="font-size:11px;color:var(--muted)">wtae.com</td><td><span style="color:#C8102E;font-size:11px">HTTP 404</span></td></tr>
+        <tr><td><strong>News 5 Cleveland</strong></td><td style="font-size:11px;color:var(--muted)">news5cleveland.com</td><td><span style="color:#C8102E;font-size:11px">HTTP 404</span></td></tr>
+        <tr><td><strong>AZFamily CBS5 Phoenix</strong></td><td style="font-size:11px;color:var(--muted)">azfamily.com</td><td><span style="color:#C8102E;font-size:11px">HTTP 404</span></td></tr>
+        <tr><td><strong>CBC Windsor</strong></td><td style="font-size:11px;color:var(--muted)">cbc.ca</td><td><span style="color:#C8102E;font-size:11px">HTTP 406</span></td></tr>
+        <tr><td><strong>AWS Service Health</strong></td><td style="font-size:11px;color:var(--muted)">status.aws.amazon.com</td><td><span style="color:#C8102E;font-size:11px">JSON parse error</span></td></tr>
+        <tr><td><strong>Azure Status</strong></td><td style="font-size:11px;color:var(--muted)">azure.status.microsoft</td><td><span style="color:#C8102E;font-size:11px">HTTP 404</span></td></tr>
       </tbody>
     </table>
-  </div>
-
-  <!-- HOW TO CHANGE THE PROXY -->
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-title"><span class="icon">&#9881;&#65039;</span> How to Change or Remove the Proxy</div>
-    <div class="callout-info" style="margin-bottom:16px">
-      <strong>The proxy setting is one line in this file.</strong> Search for <code style="background:rgba(37,99,235,.1);padding:1px 5px;border-radius:3px;font-size:12px">const CORS_PROXY</code> in the script section at the bottom of this HTML file. Change that one value to switch proxies or remove the dependency entirely.
-    </div>
-
-    <div style="display:flex;flex-direction:column;gap:14px">
-
-      <div style="padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">
-        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">&#49;&#65039;&#8419; Option 1 — Switch to a different free proxy</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:8px">Find <code style="background:rgba(0,0,0,.06);padding:1px 5px;border-radius:3px">const CORS_PROXY = 'https://corsproxy.io/?'</code> in the script and replace the URL with one of these alternatives:</div>
-        <div style="font-size:12px;font-family:monospace;background:#1A1A2E;color:#a5f3fc;padding:10px 14px;border-radius:6px;line-height:2">
-          https://api.allorigins.win/raw?url=<br>
-          https://corsproxy.io/?<br>
-          https://proxy.cors.sh/
-        </div>
-      </div>
-
-      <div style="padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">
-        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">&#50;&#65039;&#8419; Option 2 — Remove proxy dependency entirely (recommended long-term)</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.6">The cleanest long-term solution is to set up <strong>Power Automate</strong> to fetch these RSS feeds server-side (once IT enables the RSS connector) and write the results into a <strong>SharePoint list</strong>. This dashboard would then read from SharePoint instead of directly from RSS feeds — no proxy needed, no CORS issues, and it runs 24/7 even when this page is closed. This is the recommended path once Power Automate access is fully enabled.</div>
-      </div>
-
-      <div style="padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px">
-        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">&#51;&#65039;&#8419; Option 3 — Self-host your own proxy inside Rocket's network</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.6">If IT can deploy a small internal server (Node.js or Python, takes about 30 minutes to set up), it can act as your own CORS proxy entirely within Rocket's network. No external dependency at all. Ask IT about deploying a lightweight CORS proxy on an internal server — the code is open source and takes minimal resources.</div>
-      </div>
-
-    </div>
-
-    <div style="margin-top:16px">
-      <div class="form-label" style="margin-bottom:8px">Notes about your proxy setup (editable)</div>
-      <textarea class="form-textarea" id="proxy-notes" style="min-height:100px" placeholder="Use this space to document your proxy decisions, IT contact names, or notes for whoever takes over this project after you...">Current proxy: corsproxy.io (free, no account needed)
-Set up by: [your name] — [date]
-Reason: Rocket Power Automate account has RSS connector restricted by IT policy.
-Next step: Request IT to enable RSS connector in Power Automate, then migrate to Option 2 above.
-IT contact for Power Automate permissions: [add contact here]
-Account that should own these flows after handoff: [add name here]</textarea>
-    </div>
   </div>
 
   <!-- SESSION ACTIVITY LOG -->
   <div class="card">
     <div class="card-title"><span class="icon">&#128196;</span> Live Session Activity Log</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Updates in real time as feeds are fetched each sync cycle.</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Updates in real time as alerts.json is loaded each sync cycle.</div>
     <div id="feed-health-log" style="font-family:monospace;font-size:12px;max-height:280px;overflow-y:auto">
       <div class="log-line"><span class="log-time">--:--:--</span> <span style="color:var(--muted)">[INIT]</span> Feed health monitor ready — waiting for first sync…</div>
     </div>
@@ -1875,15 +1558,18 @@ Account that should own these flows after handoff: [add name here]</textarea>
         <tr><th>Name</th><th>URL</th><th>Type</th><th>Category</th><th>Action</th></tr>
       </thead>
       <tbody>
-        <tr><td><strong>NWS Weather Alerts</strong></td><td style="font-size:11px;color:var(--muted)">api.weather.gov (direct)</td><td><span class="tag tag-api">Direct API</span></td><td>Natural</td><td><button class="btn btn-ghost btn-sm" disabled>Core</button></td></tr>
-        <tr><td><strong>FEMA OpenFEMA</strong></td><td style="font-size:11px;color:var(--muted)">fema.gov/api/open/v2</td><td><span class="tag tag-api">Direct API</span></td><td>Natural</td><td><button class="btn btn-ghost btn-sm" disabled>Core</button></td></tr>
-        <tr><td><strong>CISA KEV</strong></td><td style="font-size:11px;color:var(--muted)">cisa.gov (via proxy)</td><td><span class="tag tag-scrape">CORS Proxy</span></td><td>Tech</td><td><button class="btn btn-ghost btn-sm" disabled>Core</button></td></tr>
-        <tr><td><strong>USGS Earthquakes</strong></td><td style="font-size:11px;color:var(--muted)">earthquake.usgs.gov</td><td><span class="tag tag-api">Direct API</span></td><td>Natural</td><td><button class="btn btn-ghost btn-sm" disabled>Core</button></td></tr>
-        <tr><td><strong>US Treasury</strong></td><td style="font-size:11px;color:var(--muted)">treasury.gov (via proxy)</td><td><span class="tag tag-scrape">CORS Proxy</span></td><td>Financial</td><td><button class="btn btn-danger btn-sm">Remove</button></td></tr>
-        <tr><td><strong>Michigan.gov News</strong></td><td style="font-size:11px;color:var(--muted)">michigan.gov (via proxy)</td><td><span class="tag tag-scrape">CORS Proxy</span></td><td>Human</td><td><button class="btn btn-danger btn-sm">Remove</button></td></tr>
-        <tr><td><strong>Detroit News</strong></td><td style="font-size:11px;color:var(--muted)">detroitnews.com (via proxy)</td><td><span class="tag tag-scrape">CORS Proxy</span></td><td>Human</td><td><button class="btn btn-danger btn-sm">Remove</button></td></tr>
-        <tr><td><strong>Detroit Free Press</strong></td><td style="font-size:11px;color:var(--muted)">freep.com (via proxy)</td><td><span class="tag tag-scrape">CORS Proxy</span></td><td>Human</td><td><button class="btn btn-danger btn-sm">Remove</button></td></tr>
-        <tr><td><strong>MSP Emergency Alerts</strong></td><td style="font-size:11px;color:var(--muted)">michigan.gov/msp (via proxy)</td><td><span class="tag tag-scrape">CORS Proxy</span></td><td>Human</td><td><button class="btn btn-danger btn-sm">Remove</button></td></tr>
+        <tr><td><strong>NWS Active Alerts</strong></td><td style="font-size:11px;color:var(--muted)">api.weather.gov</td><td><span class="tag tag-api">GitHub Action</span></td><td>Natural</td><td><button class="btn btn-ghost btn-sm" disabled>Core</button></td></tr>
+        <tr><td><strong>FEMA Disaster Declarations</strong></td><td style="font-size:11px;color:var(--muted)">fema.gov/api/open/v2</td><td><span class="tag tag-api">GitHub Action</span></td><td>Natural</td><td><button class="btn btn-ghost btn-sm" disabled>Core</button></td></tr>
+        <tr><td><strong>USGS Earthquakes</strong></td><td style="font-size:11px;color:var(--muted)">earthquake.usgs.gov</td><td><span class="tag tag-api">GitHub Action</span></td><td>Natural</td><td><button class="btn btn-ghost btn-sm" disabled>Core</button></td></tr>
+        <tr><td><strong>CISA Known Exploited Vulns</strong></td><td style="font-size:11px;color:var(--muted)">cisa.gov</td><td><span class="tag tag-api">GitHub Action</span></td><td>Cyber</td><td><button class="btn btn-ghost btn-sm" disabled>Core</button></td></tr>
+        <tr><td><strong>SANS Internet Storm Center</strong></td><td style="font-size:11px;color:var(--muted)">isc.sans.edu</td><td><span class="tag tag-rss">GitHub Action</span></td><td>Cyber</td><td><button class="btn btn-ghost btn-sm" disabled>Core</button></td></tr>
+        <tr><td><strong>FBI Press Releases</strong></td><td style="font-size:11px;color:var(--muted)">fbi.gov</td><td><span class="tag tag-rss">GitHub Action</span></td><td>Terror</td><td><button class="btn btn-ghost btn-sm" disabled>Core</button></td></tr>
+        <tr><td><strong>CFPB Newsroom</strong></td><td style="font-size:11px;color:var(--muted)">consumerfinance.gov</td><td><span class="tag tag-rss">GitHub Action</span></td><td>Financial</td><td><button class="btn btn-ghost btn-sm" disabled>Core</button></td></tr>
+        <tr><td><strong>SEC Press Releases</strong></td><td style="font-size:11px;color:var(--muted)">sec.gov</td><td><span class="tag tag-rss">GitHub Action</span></td><td>Financial</td><td><button class="btn btn-ghost btn-sm" disabled>Core</button></td></tr>
+        <tr><td><strong>Salesforce Status</strong></td><td style="font-size:11px;color:var(--muted)">api.status.salesforce.com</td><td><span class="tag tag-api">GitHub Action</span></td><td>Infrastructure</td><td><button class="btn btn-ghost btn-sm" disabled>Core</button></td></tr>
+        <tr><td><strong>National News (CBS/NBC/Fox/CNN/NPR/ABC/The Hill)</strong></td><td style="font-size:11px;color:var(--muted)">7 RSS feeds</td><td><span class="tag tag-rss">GitHub Action</span></td><td>General</td><td><button class="btn btn-ghost btn-sm" disabled>Core</button></td></tr>
+        <tr><td><strong>Detroit (WDET / Bridge Michigan)</strong></td><td style="font-size:11px;color:var(--muted)">2 RSS feeds</td><td><span class="tag tag-rss">GitHub Action</span></td><td>General</td><td><button class="btn btn-ghost btn-sm" disabled>Core</button></td></tr>
+        <tr><td><strong>Regional (LA/TX/DC/PA/OH/AZ/Canada)</strong></td><td style="font-size:11px;color:var(--muted)">11 RSS feeds</td><td><span class="tag tag-rss">GitHub Action</span></td><td>General</td><td><button class="btn btn-ghost btn-sm" disabled>Core</button></td></tr>
       </tbody>
     </table>
     <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
