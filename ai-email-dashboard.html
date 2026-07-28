@@ -266,13 +266,12 @@
     <button class="sidenav-item active" id="snav-dashboard" onclick="snavClick('dashboard','snav-dashboard',function(){setTimeout(initMiniMap,50)})"><span class="sidenav-icon">&#128202;</span><span class="sidenav-label">Dashboard</span></button>
     <button class="sidenav-item" id="snav-alerts" onclick="snavClick('alerts','snav-alerts')"><span class="sidenav-icon">&#128308;</span><span class="sidenav-label">Alert Feed</span></button>
     <button class="sidenav-item" id="snav-sources" onclick="snavClick('sources','snav-sources')"><span class="sidenav-icon">&#128240;</span><span class="sidenav-label">Data Sources</span></button>
-    <div class="sidenav-section">Analysis</div>
-    <button class="sidenav-item" id="snav-ai" onclick="snavClick('ai','snav-ai')"><span class="sidenav-icon">&#129302;</span><span class="sidenav-label">AI Report</span></button>
-    <button class="sidenav-item" id="snav-appmonitoring" onclick="snavClick('appmonitoring','snav-appmonitoring')"><span class="sidenav-icon">&#128187;</span><span class="sidenav-label">App Monitoring</span></button>
     <div class="sidenav-section">Locations</div>
     <button class="sidenav-item" id="snav-locations" onclick="snavClick('locations','snav-locations',function(){setTimeout(function(){initMap();if(map)map.invalidateSize();renderLocationTable();},50)})"><span class="sidenav-icon">&#127760;</span><span class="sidenav-label">Locations</span></button>
     <button class="sidenav-item" id="snav-critical-buildings" onclick="snavClick('critical-buildings','snav-critical-buildings',loadCriticalBuildings)"><span class="sidenav-icon">&#9670;</span><span class="sidenav-label">Critical Buildings</span></button>
     <div class="sidenav-section">Config</div>
+    <button class="sidenav-item" id="snav-ai" onclick="snavClick('ai','snav-ai')"><span class="sidenav-icon">&#129302;</span><span class="sidenav-label">AI Report</span></button>
+    <button class="sidenav-item" id="snav-appmonitoring" onclick="snavClick('appmonitoring','snav-appmonitoring')"><span class="sidenav-icon">&#128187;</span><span class="sidenav-label">App Monitoring</span></button>
     <button class="sidenav-item" id="snav-keywords" onclick="snavClick('keywords','snav-keywords')"><span class="sidenav-icon">&#128274;</span><span class="sidenav-label">Keywords</span></button>
     <button class="sidenav-item" id="snav-dedup" onclick="snavClick('dedup','snav-dedup')"><span class="sidenav-icon">&#128203;</span><span class="sidenav-label">Dedup &amp; Filters</span></button>
     <button class="sidenav-item" id="snav-feedhealth" onclick="snavClick('feedhealth','snav-feedhealth')"><span class="sidenav-icon">&#9989;</span><span class="sidenav-label">Feed Health</span></button>
