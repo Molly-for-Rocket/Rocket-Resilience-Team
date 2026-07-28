@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rocket Companies — Threat Intelligence Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0A0E1A;
+    --panel: #111827;
+    --card-border: #1E2A3A;
+    --rocket-red: #C8102E;
+    --text-primary: #E2E8F0;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+    --accent-blue: #3B82F6;
+    --sev0-bg: #7B0000; --sev0-text: #FF4444;
+    --sev1: #C8102E;
+    --sev2: #EA580C;
+    --sev3: #D97706;
+    --sev4: #6B7280;
+    --cat-cyber: #3B82F6;
+    --cat-terror: #DC2626;
+    --cat-natural: #16A34A;
+    --cat-financial: #0D9488;
+    --cat-infra: #7C3AED;
+    --cat-general: #64748B;
+    --radius: 12px;
+  }
+  html, body { height: 100%; font-family: 'Nunito Sans', sans-serif; background: var(--bg); color: var(--text-primary); font-size: 14px; }
+
+  /* HEADER */
+  #app-header {
+    background: #050810;
+    border-bottom: 2px solid var(--rocket-red);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .header-logo {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.04em;
+  }
+  .header-logo span { color: var(--rocket-red); }
+  .header-subtitle {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-left: 1px solid #1E2A3A;
+    padding-left: 16px;
+  }
+  .header-right { display: flex; align-items: center; gap: 20px; }
+  #health-bar {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: #0D2208;
+    border: 1px solid #16A34A;
+    color: #4ADE80;
+  }
+  #health-bar.degraded { background: #1C1208; border-color: #D97706; color: #FCD34D; }
+  #health-bar.critical-health { background: #1C0808; border-color: #C8102E; color: #FCA5A5; }
+  #countdown-display {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #countdown-display .timer { font-weight: 800; color: var(--text-primary); font-size: 13px; }
+  #refresh-btn {
+    background: var(--rocket-red);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  #refresh-btn:hover { background: #a80d26; }
+  #refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* LOADING OVERLAY */
+  #loading-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(10,14,26,0.92);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px;
+  }
+  #loading-overlay.hidden { display: none; }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid #1E2A3A;
+    border-top-color: var(--rocket-red);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 14px; color: var(--text-secondary); font-weight: 600; }
+  #loading-progress { font-size: 12px; color: var(--text-muted); }
+
+  /* TAB NAV */
+  #tab-nav {
+    background: #0D1323;
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    padding: 0 24px;
+    gap: 2px;
+  }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text-primary); }
+  .tab-btn.active { color: #fff; border-bottom-color: var(--rocket-red); }
+  .tab-count {
+    display: inline-block;
+    background: var(--rocket-red);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 10px;
+    padding: 1px 6px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  /* MAIN CONTENT */
+  #main-content { padding: 20px 24px 40px; max-width: 1600px; margin: 0 auto; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--panel);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: default;
+  }
+  .stat-card.clickable { cursor: pointer; transition: transform 0.15s, border-color 0.15s; }
+  .stat-card.clickable:hover { transform: translateY(-2px); border-color: #2E3A4E; }
+  .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .stat-value { font-size: 28px; font-weight: 800; line-height: 1; }
+  .stat-sub { font-size: 11px; color: var(--text-muted); }
+  .stat-value.red { color: var(--rocket-red); }
+  .stat-value.orange { color: var(--sev2); }
+  .stat-value.amber { color: var(--sev3); }
+  .stat-value.blue { color: var(--cat-cyber); }
+  .stat-value.teal { color: var(--cat-financial); }
+  .stat-value.green { color: var(--cat-natural); }
+
+  /* MINI MAP AREA */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  #mini-map-wrapper {
+    background: var(--panel);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    height: 320px;
+  }
+  #mini-map-wrapper:hover::after {
+    content: 'Click to open full map';
+    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.75); color: #fff;
+    font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px;
+    pointer-events: none;
+  }
+  #mini-map { height: 100%; width: 100%; }
+  .mini-map-label {
+    position: absolute; top: 10px; left: 10px; z-index: 500;
+    background: rgba(10,14,26,0.85);
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    pointer-events: none;
+  }
+
+  /* TOP ALERTS */
+  .top-alerts-panel {
+    background: var(--panel);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .panel-title { font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
+  .panel-subtitle { font-size: 11px; color: var(--text-muted); }
+  .alerts-list { overflow-y: auto; max-height: 272px; }
+
+  /* ALERT ITEM */
+  .alert-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--card-border);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .alert-item:last-child { border-bottom: none; }
+  .alert-item:hover { background: rgba(255,255,255,0.03); }
+  .sev-badge {
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900;
+    margin-top: 1px;
+  }
+  .sev-badge.s0 { background: var(--sev0-bg); color: var(--sev0-text); }
+  .sev-badge.s1 { background: rgba(200,16,46,0.2); color: var(--sev1); }
+  .sev-badge.s2 { background: rgba(234,88,12,0.2); color: var(--sev2); }
+  .sev-badge.s3 { background: rgba(217,119,6,0.2); color: var(--sev3); }
+  .sev-badge.s4 { background: rgba(107,114,128,0.15); color: var(--sev4); }
+  .alert-body { flex: 1; min-width: 0; }
+  .alert-title {
+    font-size: 13px; font-weight: 700;
+    color: var(--text-primary);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    margin-bottom: 3px;
+  }
+  .alert-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .cat-badge {
+    font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 4px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .cat-badge.cyber { background: rgba(59,130,246,0.2); color: var(--cat-cyber); }
+  .cat-badge.terror { background: rgba(220,38,38,0.2); color: var(--cat-terror); }
+  .cat-badge.natural { background: rgba(22,163,74,0.2); color: var(--cat-natural); }
+  .cat-badge.financial { background: rgba(13,148,136,0.2); color: var(--cat-financial); }
+  .cat-badge.infrastructure { background: rgba(124,58,237,0.2); color: var(--cat-infra); }
+  .cat-badge.general { background: rgba(107,114,128,0.15); color: var(--cat-general); }
+  .terror-badge {
+    font-size: 10px; font-weight: 800;
+    padding: 2px 7px; border-radius: 4px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .terror-badge.physical { background: rgba(220,38,38,0.3); color: #FF4444; border: 1px solid rgba(220,38,38,0.5); }
+  .terror-badge.cyber-t { background: rgba(234,88,12,0.3); color: #FB923C; border: 1px solid rgba(234,88,12,0.5); }
+  .alert-source { font-size: 11px; color: var(--text-muted); }
+  .alert-time { font-size: 11px; color: var(--text-muted); margin-left: auto; white-space: nowrap; }
+
+  /* ALERT FEED (Tab 2) */
+  .filter-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-select, .filter-input {
+    background: var(--panel);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .filter-select:focus, .filter-input:focus { border-color: #2E3A5E; }
+  .filter-input { flex: 1; min-width: 200px; }
+  .filter-label { font-size: 12px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+
+  /* EXPANDABLE ALERT CARD */
+  .alert-card {
+    background: var(--panel);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .alert-card:hover { border-color: #2E3A4E; }
+  .alert-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+  }
+  .alert-card-title { flex: 1; font-size: 14px; font-weight: 700; color: var(--text-primary); }
+  .expand-chevron { color: var(--text-muted); font-size: 16px; transition: transform 0.2s; }
+  .alert-card.expanded .expand-chevron { transform: rotate(180deg); }
+  .alert-card-body {
+    display: none;
+    padding: 0 16px 16px;
+    border-top: 1px solid var(--card-border);
+  }
+  .alert-card.expanded .alert-card-body { display: block; }
+  .alert-description {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 12px 0;
+  }
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .detail-block-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .detail-block-value { font-size: 13px; color: var(--text-primary); }
+  .sev-scale {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    margin: 4px 0;
+  }
+  .sev-pip {
+    height: 8px;
+    flex: 1;
+    border-radius: 4px;
+    background: #1E2A3A;
+  }
+  .sev-pip.active.s0 { background: var(--sev0-text); }
+  .sev-pip.active.s1 { background: var(--sev1); }
+  .sev-pip.active.s2 { background: var(--sev2); }
+  .sev-pip.active.s3 { background: var(--sev3); }
+  .sev-pip.active.s4 { background: var(--sev4); }
+  .impact-box {
+    background: rgba(200,16,46,0.07);
+    border: 1px solid rgba(200,16,46,0.2);
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 8px;
+  }
+  .impact-box-label { font-size: 11px; font-weight: 800; color: var(--rocket-red); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .impact-box-text { font-size: 13px; color: var(--text-primary); line-height: 1.6; }
+  .source-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-blue);
+    text-decoration: none;
+    margin-top: 8px;
+  }
+  .source-link:hover { text-decoration: underline; }
+
+  /* LOCATIONS MAP TAB */
+  #locations-map { height: 600px; border-radius: 0 0 var(--radius) var(--radius); }
+  .map-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--panel);
+    border: 1px solid var(--card-border);
+    border-bottom: none;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .map-btn {
+    background: #1E2A3A;
+    border: 1px solid var(--card-border);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .map-btn:hover { background: #2E3A4E; }
+  .map-legend {
+    display: flex;
+    gap: 16px;
+    margin-left: auto;
+    flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .legend-diamond { width: 10px; height: 10px; transform: rotate(45deg); }
+
+  /* CRITICAL BUILDINGS TAB */
+  .buildings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .building-card {
+    background: var(--panel);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .building-card-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .building-icon {
+    width: 40px; height: 40px;
+    background: rgba(200,16,46,0.15);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .building-name { font-size: 15px; font-weight: 800; color: var(--text-primary); margin-bottom: 2px; }
+  .building-address { font-size: 12px; color: var(--text-muted); }
+  .building-desc { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+  .building-card-body { padding: 14px 16px; }
+  .risk-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .risk-chip {
+    font-size: 11px; font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+    background: rgba(200,16,46,0.1);
+    border: 1px solid rgba(200,16,46,0.2);
+    color: #FCA5A5;
+  }
+  .building-alerts-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .building-alerts-list { max-height: 180px; overflow-y: auto; }
+  .building-alert-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(30,42,58,0.6);
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .building-alert-row:last-child { border-bottom: none; }
+  .building-alert-row .sev-badge { width: 22px; height: 22px; font-size: 10px; border-radius: 4px; }
+
+  /* DATA SOURCES TAB */
+  .sources-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .source-section-header {
+    grid-column: 1 / -1;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 8px 0 4px;
+    border-bottom: 1px solid var(--card-border);
+    margin-top: 8px;
+  }
+  .source-card {
+    background: var(--panel);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .source-card-top { display: flex; align-items: center; justify-content: space-between; }
+  .source-name { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+  .source-status { font-size: 11px; font-weight: 700; }
+  .source-status.ok { color: #4ADE80; }
+  .source-status.error { color: #F87171; }
+  .source-status.loading { color: var(--sev3); }
+  .source-type { font-size: 11px; color: var(--text-muted); }
+  .source-items { font-size: 11px; color: var(--text-secondary); }
+  .source-checked { font-size: 10px; color: var(--text-muted); }
+
+  /* MODAL */
+  #alert-modal {
+    display: none;
+    position: fixed; inset: 0; z-index: 2000;
+    background: rgba(0,0,0,0.7);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #alert-modal.open { display: flex; }
+  .modal-box {
+    background: var(--panel);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    max-width: 640px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+  .modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--card-border);
+    gap: 12px;
+  }
+  .modal-title { font-size: 16px; font-weight: 800; color: var(--text-primary); flex: 1; }
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 2px;
+    flex-shrink: 0;
+  }
+  .modal-close:hover { color: var(--text-primary); }
+  .modal-body { padding: 18px 20px; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px;
+    color: var(--text-muted);
+    gap: 8px;
+    font-size: 13px;
+  }
+  .empty-icon { font-size: 32px; opacity: 0.4; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #1E2A3A; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #2E3A4E; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .stats-row { grid-template-columns: repeat(3, 1fr); }
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .buildings-grid { grid-template-columns: 1fr; }
+    .sources-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .leaflet-container { background: #0D1323; }
+  .custom-marker-label { font-family: 'Nunito Sans', sans-serif; font-size: 11px; font-weight: 700; }
+  .no-alerts-msg { font-size: 12px; color: var(--text-muted); font-style: italic; padding: 8px 0; }
+
+  .section-break { height: 24px; }
+
+  /* ACTIVITY LOG */
+  .activity-log-panel {
+    background: var(--panel);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    margin-top: 24px;
+  }
+  .activity-log-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--card-border);
+    font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .activity-log-clear {
+    background: transparent; border: 1px solid var(--card-border); color: var(--text-muted);
+    font-family: inherit; font-size: 11px; font-weight: 600; padding: 3px 10px;
+    border-radius: 4px; cursor: pointer; transition: all 0.15s;
+  }
+  .activity-log-clear:hover { border-color: var(--rocket-red); color: var(--rocket-red); }
+  #activity-log-entries {
+    max-height: 280px; overflow-y: auto;
+    font-size: 11px; font-family: 'Courier New', monospace;
+  }
+  .log-row {
+    display: grid; grid-template-columns: 70px 18px 1fr 2fr;
+    gap: 6px; align-items: center;
+    padding: 4px 16px;
+    border-bottom: 1px solid rgba(30,42,58,0.4);
+  }
+  .log-row:hover { background: rgba(255,255,255,0.02); }
+  .log-time { color: var(--text-muted); }
+  .log-icon { font-weight: 700; }
+  .log-source { color: var(--text-secondary); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .log-detail { color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .log-ok .log-icon { color: #4ADE80; }
+  .log-error .log-icon { color: var(--rocket-red); }
+  .log-error .log-source { color: #FCA5A5; }
+  .log-info .log-icon { color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Fetching threat intelligence...</div>
+  <div id="loading-progress">Initializing data sources</div>
+</div>
+
+<!-- ALERT MODAL -->
+<div id="alert-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title"></div>
+      <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header id="app-header">
+  <div class="header-left">
+    <div class="header-logo"><span>ROCKET</span> COMPANIES</div>
+    <div class="header-subtitle">Threat Intelligence Dashboard</div>
+  </div>
+  <div class="header-right">
+    <div id="health-bar">-- / -- SOURCES</div>
+    <div id="countdown-display">
+      Refresh in <span class="timer" id="countdown-timer">15:00</span>
+    </div>
+    <button id="refresh-btn" onclick="manualRefresh()">&#x21bb; Refresh</button>
+  </div>
+</header>
+
+<!-- TAB NAV -->
+<nav id="tab-nav">
+  <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard', this)">
+    Dashboard
+  </button>
+  <button class="tab-btn" data-tab="feed" onclick="switchTab('feed', this)">
+    Alert Feed <span class="tab-count" id="tab-count-feed">0</span>
+  </button>
+  <button class="tab-btn" data-tab="locations" onclick="switchTab('locations', this)">
+    Locations
+  </button>
+  <button class="tab-btn" data-tab="buildings" onclick="switchTab('buildings', this)">
+    Critical Buildings
+  </button>
+  <button class="tab-btn" data-tab="sources" onclick="switchTab('sources', this)">
+    Data Sources
+  </button>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div id="main-content">
+
+  <!-- TAB 1: DASHBOARD -->
+  <div class="tab-panel active" id="tab-dashboard">
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Alerts</div>
+        <div class="stat-value" id="stat-total">--</div>
+        <div class="stat-sub">All sources</div>
+      </div>
+      <div class="stat-card clickable" onclick="filterFeedAndSwitch('terror')">
+        <div class="stat-label">Terror / Active</div>
+        <div class="stat-value red" id="stat-terror">--</div>
+        <div class="stat-sub">Physical &amp; Cyber</div>
+      </div>
+      <div class="stat-card clickable" onclick="filterFeedAndSwitch('cyber')">
+        <div class="stat-label">Cybersecurity</div>
+        <div class="stat-value" style="color:var(--cat-cyber)" id="stat-cyber">--</div>
+        <div class="stat-sub">Threats &amp; Vulns</div>
+      </div>
+      <div class="stat-card clickable" onclick="filterFeedAndSwitch('natural')">
+        <div class="stat-label">Natural Events</div>
+        <div class="stat-value green" id="stat-natural">--</div>
+        <div class="stat-sub">Weather &amp; Geo</div>
+      </div>
+      <div class="stat-card clickable" onclick="filterFeedAndSwitch('financial')">
+        <div class="stat-label">Financial / Reg</div>
+        <div class="stat-value teal" id="stat-financial">--</div>
+        <div class="stat-sub">Regulatory &amp; Markets</div>
+      </div>
+      <div class="stat-card clickable" onclick="filterFeedAndSwitch('infrastructure')">
+        <div class="stat-label">Infrastructure</div>
+        <div class="stat-value" style="color:var(--cat-infra)" id="stat-infra">--</div>
+        <div class="stat-sub">Cloud &amp; Systems</div>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      <div id="mini-map-wrapper" onclick="switchTab('locations', document.querySelector('[data-tab=locations]'))">
+        <div class="mini-map-label">Office Locations &amp; Threats</div>
+        <div id="mini-map"></div>
+      </div>
+
+      <div class="top-alerts-panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Top Critical Alerts</div>
+            <div class="panel-subtitle">Severity 0–2 + all terror events</div>
+          </div>
+        </div>
+        <div class="alerts-list" id="top-alerts-list">
+          <div class="empty-state"><div class="empty-icon">&#x26a0;</div>Loading alerts...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: ALERT FEED -->
+  <div class="tab-panel" id="tab-feed">
+    <div class="filter-row">
+      <span class="filter-label">Filter:</span>
+      <select class="filter-select" id="filter-category" onchange="renderAlertFeed()">
+        <option value="">All Categories</option>
+        <option value="terror">Terror / Active Threat</option>
+        <option value="cyber">Cybersecurity</option>
+        <option value="natural">Natural Events</option>
+        <option value="financial">Financial / Regulatory</option>
+        <option value="infrastructure">Infrastructure</option>
+        <option value="general">General News</option>
+      </select>
+      <select class="filter-select" id="filter-severity" onchange="renderAlertFeed()">
+        <option value="">All Severities</option>
+        <option value="0">0 - Catastrophic</option>
+        <option value="1">1 - Critical</option>
+        <option value="2">2 - Serious</option>
+        <option value="3">3 - Moderate</option>
+        <option value="4">4 - Minor</option>
+      </select>
+      <input class="filter-input" id="filter-search" type="text" placeholder="Search alerts..." oninput="renderAlertFeed()">
+      <select class="filter-select" id="filter-region" onchange="renderAlertFeed()">
+        <option value="">All Regions</option>
+        <option value="detroit">Detroit / Michigan</option>
+        <option value="socal">Los Angeles / SoCal</option>
+        <option value="dfw">Dallas / Fort Worth</option>
+        <option value="dc">Washington DC / Virginia</option>
+        <option value="pittsburgh">Pittsburgh</option>
+        <option value="carolina">Charlotte / NC</option>
+        <option value="ohio">Cleveland / Ohio</option>
+        <option value="arizona">Phoenix / Arizona</option>
+        <option value="national">National</option>
+      </select>
+    </div>
+    <div id="feed-results-count" style="font-size:12px;color:var(--text-muted);margin-bottom:10px;"></div>
+    <div id="alert-feed-container"></div>
+  </div>
+
+  <!-- TAB 3: LOCATIONS -->
+  <div class="tab-panel" id="tab-locations">
+    <div class="map-controls">
+      <button class="map-btn" onclick="resetMapView()">&#x25CE; Reset View</button>
+      <div class="map-legend">
+        <div class="legend-item">
+          <div class="legend-diamond" style="background:#FFD700;"></div> Critical Building
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#C8102E;"></div> HQ Office
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#16A34A;"></div> Standard Office
+        </div>
+        <div class="legend-item">
+          <div style="width:12px;height:12px;border-radius:2px;background:rgba(200,16,46,0.4);border:1px solid rgba(200,16,46,0.8);"></div> Critical Threat
+        </div>
+        <div class="legend-item">
+          <div style="width:12px;height:12px;border-radius:2px;background:rgba(234,88,12,0.3);border:1px solid rgba(234,88,12,0.7);"></div> Serious Threat
+        </div>
+        <div class="legend-item">
+          <div style="width:12px;height:12px;border-radius:2px;background:rgba(217,119,6,0.25);border:1px solid rgba(217,119,6,0.6);"></div> Moderate Threat
+        </div>
+      </div>
+    </div>
+    <div id="locations-map"></div>
+  </div>
+
+  <!-- TAB 4: CRITICAL BUILDINGS -->
+  <div class="tab-panel" id="tab-buildings">
+    <div class="buildings-grid" id="buildings-grid"></div>
+  </div>
+
+  <!-- TAB 5: DATA SOURCES -->
+  <div class="tab-panel" id="tab-sources">
+    <div class="sources-grid" id="sources-grid"></div>
+    <div class="activity-log-panel">
+      <div class="activity-log-header">
+        <span>Fetch Activity Log</span>
+        <button class="activity-log-clear" onclick="document.getElementById('activity-log-entries').innerHTML='';activityLog=[];">Clear</button>
+      </div>
+      <div id="activity-log-entries">
+        <div class="log-row log-info"><span class="log-time">--:--:--</span><span class="log-icon">◌</span><span class="log-source">System</span><span class="log-detail">Activity log initialized — fetch attempts will appear here</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+// ─── OFFICE & BUILDING DATA ───────────────────────────────────────────────────
+
+const ROCKET_OFFICES = [
+  { id: 'qube', name: 'The Qube', address: '611 Woodward Ave, Detroit, MI', city: 'Detroit', state: 'MI', lat: 42.3315, lng: -83.0457, type: 'critical', region: 'detroit' },
+  { id: 'first-national', name: 'First National Building', address: '660 Woodward Ave, Detroit, MI', city: 'Detroit', state: 'MI', lat: 42.3322, lng: -83.0461, type: 'critical', region: 'detroit' },
+  { id: 'one-campus', name: 'One Campus Martius', address: '1 Campus Martius, Detroit, MI', city: 'Detroit', state: 'MI', lat: 42.3313, lng: -83.0475, type: 'critical', region: 'detroit' },
+  { id: 'chrysler-house', name: 'Chrysler House', address: '719 Griswold St, Detroit, MI', city: 'Detroit', state: 'MI', lat: 42.3307, lng: -83.0460, type: 'critical', region: 'detroit' },
+  { id: '1001-woodward', name: '1001 Woodward', address: '1001 Woodward Ave, Detroit, MI', city: 'Detroit', state: 'MI', lat: 42.3298, lng: -83.0451, type: 'critical', region: 'detroit' },
+  { id: 'cerritos', name: 'Rocket Mortgage - Cerritos', address: '17785 Center Court Dr, Cerritos, CA', city: 'Cerritos', state: 'CA', lat: 33.8670, lng: -118.0715, type: 'critical', region: 'socal' },
+  { id: 'cypress-waters', name: 'Cypress Waters Campus', address: 'Cypress Waters Blvd, Coppell, TX', city: 'Coppell', state: 'TX', lat: 32.9546, lng: -97.0089, type: 'critical', region: 'dfw' },
+  { id: 'hillwood', name: 'Hillwood Parkway Office', address: 'Hillwood Pkwy, Fort Worth, TX', city: 'Fort Worth', state: 'TX', lat: 32.8206, lng: -97.3913, type: 'critical', region: 'dfw' },
+  { id: 'detroit-hq', name: 'Rocket Companies HQ', address: 'Detroit, MI', city: 'Detroit', state: 'MI', lat: 42.3320, lng: -83.0480, type: 'hq', region: 'detroit' },
+  { id: 'grand-rapids', name: 'Grand Rapids Office', address: 'Grand Rapids, MI', city: 'Grand Rapids', state: 'MI', lat: 42.9634, lng: -85.6681, type: 'office', region: 'michigan' },
+  { id: 'lansing', name: 'Lansing Office', address: 'Lansing, MI', city: 'Lansing', state: 'MI', lat: 42.7325, lng: -84.5555, type: 'office', region: 'michigan' },
+  { id: 'ann-arbor', name: 'Ann Arbor Office', address: 'Ann Arbor, MI', city: 'Ann Arbor', state: 'MI', lat: 42.2808, lng: -83.7430, type: 'office', region: 'michigan' },
+  { id: 'southfield', name: 'Southfield Office', address: 'Southfield, MI', city: 'Southfield', state: 'MI', lat: 42.4734, lng: -83.2219, type: 'office', region: 'michigan' },
+  { id: 'troy', name: 'Troy Office', address: 'Troy, MI', city: 'Troy', state: 'MI', lat: 42.6064, lng: -83.1498, type: 'office', region: 'michigan' },
+  { id: 'los-angeles', name: 'Los Angeles Office', address: 'Los Angeles, CA', city: 'Los Angeles', state: 'CA', lat: 34.0522, lng: -118.2437, type: 'office', region: 'socal' },
+  { id: 'san-diego', name: 'San Diego Office', address: 'San Diego, CA', city: 'San Diego', state: 'CA', lat: 32.7157, lng: -117.1611, type: 'office', region: 'california' },
+  { id: 'austin', name: 'Austin Office', address: 'Austin, TX', city: 'Austin', state: 'TX', lat: 30.2672, lng: -97.7431, type: 'office', region: 'texas' },
+  { id: 'san-antonio', name: 'San Antonio Office', address: 'San Antonio, TX', city: 'San Antonio', state: 'TX', lat: 29.4241, lng: -98.4936, type: 'office', region: 'texas' },
+  { id: 'houston', name: 'Houston Office', address: 'Houston, TX', city: 'Houston', state: 'TX', lat: 29.7604, lng: -95.3698, type: 'office', region: 'texas' },
+  { id: 'dallas', name: 'Dallas Office', address: 'Dallas, TX', city: 'Dallas', state: 'TX', lat: 32.7767, lng: -96.7970, type: 'office', region: 'dfw' },
+  { id: 'cleveland', name: 'Cleveland Office', address: 'Cleveland, OH', city: 'Cleveland', state: 'OH', lat: 41.4993, lng: -81.6944, type: 'office', region: 'ohio' },
+  { id: 'columbus', name: 'Columbus Office', address: 'Columbus, OH', city: 'Columbus', state: 'OH', lat: 39.9612, lng: -82.9988, type: 'office', region: 'ohio' },
+  { id: 'charlotte', name: 'Charlotte Office', address: 'Charlotte, NC', city: 'Charlotte', state: 'NC', lat: 35.2271, lng: -80.8431, type: 'office', region: 'carolina' },
+  { id: 'pittsburgh', name: 'Pittsburgh Office', address: 'Pittsburgh, PA', city: 'Pittsburgh', state: 'PA', lat: 40.4406, lng: -79.9959, type: 'office', region: 'pennsylvania' },
+  { id: 'phoenix', name: 'Phoenix Office', address: 'Phoenix, AZ', city: 'Phoenix', state: 'AZ', lat: 33.4484, lng: -112.0740, type: 'office', region: 'arizona' },
+  { id: 'scottsdale', name: 'Scottsdale Office', address: 'Scottsdale, AZ', city: 'Scottsdale', state: 'AZ', lat: 33.4942, lng: -111.9261, type: 'office', region: 'arizona' },
+  { id: 'arlington', name: 'Arlington VA Office', address: 'Arlington, VA', city: 'Arlington', state: 'VA', lat: 38.8799, lng: -77.1067, type: 'office', region: 'dc' },
+  { id: 'mclean', name: 'McLean VA Office', address: 'McLean, VA', city: 'McLean', state: 'VA', lat: 38.9339, lng: -77.1773, type: 'office', region: 'dc' },
+  { id: 'indianapolis', name: 'Indianapolis Office', address: 'Indianapolis, IN', city: 'Indianapolis', state: 'IN', lat: 39.7684, lng: -86.1581, type: 'office', region: 'indiana' },
+  { id: 'chicago', name: 'Chicago Office', address: 'Chicago, IL', city: 'Chicago', state: 'IL', lat: 41.8781, lng: -87.6298, type: 'office', region: 'illinois' },
+  { id: 'tampa', name: 'Tampa Office', address: 'Tampa, FL', city: 'Tampa', state: 'FL', lat: 27.9506, lng: -82.4572, type: 'office', region: 'florida' },
+  { id: 'orlando', name: 'Orlando Office', address: 'Orlando, FL', city: 'Orlando', state: 'FL', lat: 28.5383, lng: -81.3792, type: 'office', region: 'florida' },
+  { id: 'atlanta', name: 'Atlanta Office', address: 'Atlanta, GA', city: 'Atlanta', state: 'GA', lat: 33.7490, lng: -84.3880, type: 'office', region: 'georgia' },
+  { id: 'denver', name: 'Denver Office', address: 'Denver, CO', city: 'Denver', state: 'CO', lat: 39.7392, lng: -104.9903, type: 'office', region: 'colorado' },
+  { id: 'las-vegas', name: 'Las Vegas Office', address: 'Las Vegas, NV', city: 'Las Vegas', state: 'NV', lat: 36.1699, lng: -115.1398, type: 'office', region: 'nevada' },
+  { id: 'seattle', name: 'Seattle Office', address: 'Seattle, WA', city: 'Seattle', state: 'WA', lat: 47.6062, lng: -122.3321, type: 'office', region: 'washington' },
+  { id: 'minneapolis', name: 'Minneapolis Office', address: 'Minneapolis, MN', city: 'Minneapolis', state: 'MN', lat: 44.9778, lng: -93.2650, type: 'office', region: 'minnesota' },
+  { id: 'windsor', name: 'Windsor Ontario Office', address: 'Windsor, ON, Canada', city: 'Windsor', state: 'ON', lat: 42.3149, lng: -83.0364, type: 'office', region: 'canada' },
+];
+
+const CRITICAL_BUILDINGS = [
+  { id: 'qube', name: 'The Qube', address: '611 Woodward Ave, Detroit, MI 48226', lat: 42.3315, lng: -83.0457, description: 'HQ building - highest priority', icon: '🏢', risks: ['Physical Security', 'Civil Unrest', 'Weather Events', 'Financial Regulation', 'Cyberattack'], region: 'detroit', radiusMiles: 1 },
+  { id: 'first-national', name: 'First National Building', address: '660 Woodward Ave, Detroit, MI 48226', lat: 42.3322, lng: -83.0461, description: 'Historic CBD building', icon: '🏛️', risks: ['Physical Security', 'Civil Unrest', 'Weather Events', 'Infrastructure Disruption'], region: 'detroit', radiusMiles: 1 },
+  { id: 'one-campus', name: 'One Campus Martius', address: '1 Campus Martius, Detroit, MI 48226', lat: 42.3313, lng: -83.0475, description: 'Primary Quicken Loans HQ', icon: '🏗️', risks: ['Physical Security', 'Civil Unrest', 'Weather Events', 'Financial Regulation'], region: 'detroit', radiusMiles: 1 },
+  { id: 'chrysler-house', name: 'Chrysler House', address: '719 Griswold St, Detroit, MI 48226', lat: 42.3307, lng: -83.0460, description: 'Downtown Detroit office', icon: '🏙️', risks: ['Physical Security', 'Civil Unrest', 'Weather Events'], region: 'detroit', radiusMiles: 1 },
+  { id: '1001-woodward', name: '1001 Woodward', address: '1001 Woodward Ave, Detroit, MI 48226', lat: 42.3298, lng: -83.0451, description: 'Office tower in Detroit CBD', icon: '🗼', risks: ['Physical Security', 'Civil Unrest', 'Weather Events'], region: 'detroit', radiusMiles: 1 },
+  { id: 'cerritos', name: 'Rocket Mortgage - Cerritos', address: '17785 Center Court Dr, Cerritos, CA 90703', lat: 33.8670, lng: -118.0715, description: 'Southern California operations center', icon: '🌴', risks: ['Earthquake', 'Wildfire', 'Traffic/Logistics Disruption', 'Utility Outage'], region: 'socal', radiusMiles: 10 },
+  { id: 'cypress-waters', name: 'Cypress Waters Campus', address: 'Cypress Waters Blvd, Coppell, TX 75019', lat: 32.9546, lng: -97.0089, description: 'Texas operations campus', icon: '🌪️', risks: ['Tornado/Severe Weather', 'Texas Power Grid (ERCOT)', 'Hail/Ice Storms'], region: 'dfw', radiusMiles: 5 },
+  { id: 'hillwood', name: 'Hillwood Parkway Office', address: 'Hillwood Pkwy, Fort Worth, TX 76177', lat: 32.8206, lng: -97.3913, description: 'Fort Worth office - airport proximity', icon: '✈️', risks: ['Tornado/Severe Weather', 'Texas Power Grid (ERCOT)', 'Airport Proximity Incidents'], region: 'dfw', radiusMiles: 5 },
+];
+
+// ─── DATA SOURCES CONFIG ──────────────────────────────────────────────────────
+
+const DATA_SOURCES = [
+  // Federal JSON (no CORS proxy needed)
+  { id: 'nws', name: 'NWS Active Alerts', type: 'JSON', category: 'natural', region: 'national', url: 'https://api.weather.gov/alerts/active?area=MI,CA,TX,DC,VA,MD,PA,NC,OH,AZ,IN,IL,FL,GA,CO,NV,WA,MN', method: 'direct' },
+  { id: 'fema', name: 'FEMA Disaster Declarations', type: 'JSON', category: 'natural', region: 'national', url: 'https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?%24orderby=declarationDate%20desc&%24top=50', method: 'proxy-json' },
+  { id: 'usgs', name: 'USGS Earthquakes', type: 'JSON', category: 'natural', region: 'national', url: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson', method: 'direct' },
+  { id: 'cisa-kev', name: 'CISA Known Exploited Vulns', type: 'JSON', category: 'cyber', region: 'national', url: 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json', method: 'proxy-json' },
+  // Federal RSS
+  { id: 'sans', name: 'SANS Internet Storm Center', type: 'RSS', category: 'cyber', region: 'national', url: 'https://isc.sans.edu/rssfeed_full.xml', method: 'proxy' },
+  { id: 'fbi', name: 'FBI Press Releases', type: 'RSS', category: 'terror', region: 'national', url: 'https://www.fbi.gov/feeds/fbi-in-the-news/rss.xml', method: 'proxy' },
+  { id: 'dhs', name: 'DHS News', type: 'RSS', category: 'terror', region: 'national', url: 'https://www.dhs.gov/sites/default/files/feeds/news_releases.rss', method: 'proxy' },
+  { id: 'atf', name: 'ATF Press Releases', type: 'RSS', category: 'terror', region: 'national', url: 'https://www.atf.gov/feeds/news', method: 'proxy' },
+  // National News
+  { id: 'cbs', name: 'CBS News National', type: 'RSS', category: 'general', region: 'national', url: 'https://www.cbsnews.com/latest/rss/main', method: 'proxy' },
+  { id: 'thehill', name: 'The Hill', type: 'RSS', category: 'general', region: 'national', url: 'https://thehill.com/feed/', method: 'proxy' },
+  { id: 'nbc', name: 'NBC News', type: 'RSS', category: 'general', region: 'national', url: 'https://feeds.nbcnews.com/nbcnews/public/news', method: 'proxy' },
+  { id: 'abc', name: 'ABC News US', type: 'RSS', category: 'general', region: 'national', url: 'https://feeds.abcnews.com/abcnews/usheadlines', method: 'proxy' },
+  { id: 'npr', name: 'NPR News', type: 'RSS', category: 'general', region: 'national', url: 'https://feeds.npr.org/1001/rss.xml', method: 'proxy' },
+  { id: 'fox', name: 'Fox News', type: 'RSS', category: 'general', region: 'national', url: 'https://moxie.foxnews.com/google-publisher/latest.xml', method: 'proxy' },
+  { id: 'cnn', name: 'CNN Top Stories', type: 'RSS', category: 'general', region: 'national', url: 'http://rss.cnn.com/rss/cnn_topstories.rss', method: 'proxy' },
+  // Detroit — Gannett/McClatchy chains block proxies; use open-feed alternatives
+  { id: 'bridgemi', name: 'Bridge Michigan', type: 'RSS', category: 'general', region: 'detroit', url: 'https://www.bridgemi.com/feed/', method: 'proxy' },
+  { id: 'michiganradio', name: 'Michigan Radio (NPR)', type: 'RSS', category: 'general', region: 'detroit', url: 'https://www.michiganradio.org/rss.xml', method: 'proxy' },
+  { id: 'wdet', name: 'WDET Detroit Public Radio', type: 'RSS', category: 'general', region: 'detroit', url: 'https://wdet.org/feed/', method: 'proxy' },
+  { id: 'wdiv', name: 'ClickOnDetroit (WDIV)', type: 'RSS', category: 'general', region: 'detroit', url: 'https://www.clickondetroit.com/feed/', method: 'proxy' },
+  // LA
+  { id: 'latimes', name: 'LA Times', type: 'RSS', category: 'general', region: 'socal', url: 'https://www.latimes.com/local/rss2.0.xml', method: 'proxy' },
+  { id: 'abc7la', name: 'ABC7 LA', type: 'RSS', category: 'general', region: 'socal', url: 'https://abc7.com/feed/', method: 'proxy' },
+  // DFW — NBC5 DFW confirmed working, covers full DFW metroplex
+  { id: 'nbcdfw', name: 'NBC5 DFW Local', type: 'RSS', category: 'general', region: 'dfw', url: 'https://www.nbcdfw.com/news/local/feed/', method: 'proxy' },
+  { id: 'nbcdfw2', name: 'NBC5 DFW Top Stories', type: 'RSS', category: 'general', region: 'dfw', url: 'https://www.nbcdfw.com/feed/', method: 'proxy' },
+  { id: 'wfaa', name: 'WFAA Dallas', type: 'RSS', category: 'general', region: 'dfw', url: 'https://www.wfaa.com/feeds/syndication/rss/news', method: 'proxy' },
+  // DC
+  { id: 'wtop', name: 'WTOP News DC', type: 'RSS', category: 'general', region: 'dc', url: 'https://wtop.com/feed/', method: 'proxy' },
+  { id: 'wamu', name: 'WAMU 88.5 DC', type: 'RSS', category: 'general', region: 'dc', url: 'https://wamu.org/feed/', method: 'proxy' },
+  // Pittsburgh — confirmed working URL
+  { id: 'pgpostgazette', name: 'Pittsburgh Post-Gazette', type: 'RSS', category: 'general', region: 'pennsylvania', url: 'https://www.post-gazette.com/rss/all', method: 'proxy' },
+  { id: 'wtae', name: 'WTAE Pittsburgh', type: 'RSS', category: 'general', region: 'pennsylvania', url: 'https://www.wtae.com/feeds/syndication/rss/news', method: 'proxy' },
+  // Windsor — CTV eliminated local RSS; use Windsor Star + CBC Windsor
+  { id: 'windsorstar', name: 'Windsor Star', type: 'RSS', category: 'general', region: 'canada', url: 'https://windsorstar.com/feed/', method: 'proxy' },
+  { id: 'cbcwindsor', name: 'CBC Windsor', type: 'RSS', category: 'general', region: 'canada', url: 'https://www.cbc.ca/cmlink/rss-canada-windsor', method: 'proxy' },
+  // Charlotte — WCNC confirmed (redirect chain)
+  { id: 'wcnc', name: 'WCNC Charlotte (NBC)', type: 'RSS', category: 'general', region: 'carolina', url: 'https://www.wcnc.com/feed/', method: 'proxy' },
+  { id: 'wsoc', name: 'WSOC Charlotte (ABC)', type: 'RSS', category: 'general', region: 'carolina', url: 'https://www.wsoctv.com/feed/', method: 'proxy' },
+  // Cleveland — Fox 8 confirmed working
+  { id: 'fox8cleveland', name: 'Fox 8 Cleveland (WJW)', type: 'RSS', category: 'general', region: 'ohio', url: 'https://fox8.com/feed/', method: 'proxy' },
+  { id: 'news5cleveland', name: 'News 5 Cleveland', type: 'RSS', category: 'general', region: 'ohio', url: 'https://www.news5cleveland.com/feed/', method: 'proxy' },
+  // Phoenix — KTAR confirmed working
+  { id: 'ktar', name: 'KTAR Phoenix News', type: 'RSS', category: 'general', region: 'arizona', url: 'https://www.ktar.com/feed/', method: 'proxy' },
+  { id: 'azfamily', name: 'AZFamily CBS5 Phoenix', type: 'RSS', category: 'general', region: 'arizona', url: 'https://www.azfamily.com/feed/', method: 'proxy' },
+  // Financial — confirmed correct URLs
+  { id: 'cfpb', name: 'CFPB Newsroom', type: 'RSS', category: 'financial', region: 'national', url: 'https://www.consumerfinance.gov/about-us/newsroom/feed/', method: 'proxy' },
+  { id: 'sec', name: 'SEC Press Releases', type: 'RSS', category: 'financial', region: 'national', url: 'https://www.sec.gov/news/pressreleases.rss', method: 'proxy' },
+  { id: 'sec-enforce', name: 'SEC Enforcement', type: 'RSS', category: 'financial', region: 'national', url: 'https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=&dateb=&owner=include&count=40&search_text=&action=getcurrent&output=atom', method: 'proxy' },
+  // Cloud
+  { id: 'aws', name: 'AWS Service Health', type: 'JSON', category: 'infrastructure', region: 'national', url: 'https://status.aws.amazon.com/data.json', method: 'proxy-json' },
+  { id: 'azure', name: 'Azure Status', type: 'JSON', category: 'infrastructure', region: 'national', url: 'https://azure.status.microsoft/api/v2/status.json', method: 'proxy-json' },
+  { id: 'salesforce', name: 'Salesforce Status', type: 'JSON', category: 'infrastructure', region: 'national', url: 'https://api.status.salesforce.com/v1/incidents', method: 'direct' },
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+
+let allAlerts = [];
+let feedHealth = {};
+let activityLog = [];
+let countdownSeconds = 900;
+let countdownInterval = null;
+let refreshInterval = null;
+let miniMap = null;
+let fullMap = null;
+let fullMapInitialized = false;
+let miniMapInitialized = false;
+let mapThreatLayers = [];
+let mapMarkerLayers = [];
+
+function logActivity(sourceId, sourceName, status, detail) {
+  const entry = { ts: new Date().toISOString(), sourceId, sourceName, status, detail };
+  activityLog.unshift(entry);
+  if (activityLog.length > 200) activityLog.length = 200;
+  const el = document.getElementById('activity-log-entries');
+  if (el) {
+    const cls = status === 'ok' ? 'log-ok' : status === 'error' ? 'log-error' : 'log-info';
+    const icon = status === 'ok' ? '✓' : status === 'error' ? '✗' : '↻';
+    const time = entry.ts.substring(11, 19);
+    const row = document.createElement('div');
+    row.className = `log-row ${cls}`;
+    row.innerHTML = `<span class="log-time">${time}</span><span class="log-icon">${icon}</span><span class="log-source">${escapeHtml(sourceName)}</span><span class="log-detail">${escapeHtml(detail)}</span>`;
+    el.insertBefore(row, el.firstChild);
+    if (el.children.length > 200) el.removeChild(el.lastChild);
+  }
+}
+
+// ─── UTILITY ─────────────────────────────────────────────────────────────────
+
+function haversineDistanceMiles(lat1, lon1, lat2, lon2) {
+  const R = 3958.8;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function findNearbyOffices(lat, lng, radiusMiles) {
+  if (!lat || !lng) return [];
+  return ROCKET_OFFICES.filter(o => haversineDistanceMiles(lat, lng, o.lat, o.lng) <= radiusMiles);
+}
+
+function formatTimeAgo(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return '';
+  const diff = Date.now() - d.getTime();
+  if (diff < 60000) return 'Just now';
+  if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+  if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
+  return Math.floor(diff/86400000) + 'd ago';
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function stripHtml(html) {
+  if (!html) return '';
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+}
+
+function deduplicateAlerts(alerts) {
+  const seen = new Map();
+  const result = [];
+  for (const alert of alerts) {
+    const key = alert.title.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 60);
+    if (!seen.has(key)) {
+      seen.set(key, true);
+      result.push(alert);
+    }
+  }
+  return result;
+}
+
+// ─── SEVERITY SCORING ─────────────────────────────────────────────────────────
+
+const SEV0_WORDS = ['mass casualties','nuclear','emp attack','bioweapon mass','nationwide infrastructure collapse','category 5'];
+const SEV1_WORDS = ['active shooter','terror attack','bombing','hostage','nation-state attack','active attack','mass shooting','chemical attack','biological attack','attack underway','suicide bomber','vehicle ramming','killed in attack'];
+const SEV2_WORDS = ['bomb threat','data breach','ransomware','federal disaster','evacuation','armed standoff','credible threat','major outage','cyberattack','malware','threat actor','critical infrastructure','emergency declaration','disaster declaration','active investigation'];
+const SEV3_WORDS = ['weather warning','tornado watch','tornado warning','hurricane warning','winter storm warning','flood warning','watch','advisory','service disruption','power outage','developing','investigation','vulnerability','patch','earthquake','wildfire','shooting','explosion'];
+const ROCKET_NAMES = ['rocket companies','quicken loans','amrock','rocket mortgage','rocketmortgage'];
+const PHYSICAL_TERROR = ['terror','terrorist','active shooter','mass shooting','suicide bomber','ied','explosive device','hostage','domestic terror','lone wolf','vehicle attack','radicalized','attack on civilians','jihad','extremist attack','gunman','stabbing attack','bomb blast','detonation','armed attack'];
+const CYBER_TERROR = ['nation-state','state-sponsored','power grid attack','critical infrastructure attack','apt ','advanced persistent threat','voltzite','sandworm','hafnium','destructive malware','cyber emergency','cisa emergency','hospital systems attack','water treatment attack','colonial pipeline','ransomware attack on','cyber warfare'];
+
+function scoreItem(item) {
+  const text = ((item.title || '') + ' ' + (item.description || '')).toLowerCase();
+  let score = 4;
+
+  for (const w of SEV0_WORDS) { if (text.includes(w)) { score = 0; break; } }
+  if (score > 0) { for (const w of SEV1_WORDS) { if (text.includes(w)) { score = 1; break; } } }
+  if (score > 1) { for (const w of SEV2_WORDS) { if (text.includes(w)) { score = 2; break; } } }
+  if (score > 2) { for (const w of SEV3_WORDS) { if (text.includes(w)) { score = 3; break; } } }
+
+  // Boost if Rocket Companies mentioned
+  for (const r of ROCKET_NAMES) {
+    if (text.includes(r)) { score = Math.max(0, score - 1); break; }
+  }
+
+  return score;
+}
+
+function detectTerror(item) {
+  const text = ((item.title || '') + ' ' + (item.description || '')).toLowerCase();
+  for (const w of CYBER_TERROR) { if (text.includes(w)) return 'cyber'; }
+  for (const w of PHYSICAL_TERROR) { if (text.includes(w)) return 'physical'; }
+  return null;
+}
+
+function categorizeItem(item) {
+  const text = ((item.title || '') + ' ' + (item.description || '')).toLowerCase();
+  const src = (item.sourceId || '').toLowerCase();
+
+  if (['cisa-kev','sans','aws','azure','salesforce'].includes(src)) return 'cyber';
+  if (src.startsWith('sec') || src === 'cfpb') return 'financial';
+  if (['nws','fema','usgs'].includes(src)) return 'natural';
+  if (['fbi','dhs','atf'].includes(src)) return 'terror';
+
+  if (/ransomware|malware|phishing|cve-|exploit|vulnerability|cybersecurity|hacker|breach|apt|intrusion|ddos/.test(text)) return 'cyber';
+  if (/earthquake|tornado|hurricane|wildfire|flood|tsunami|blizzard|storm|weather|seismic|drought|fire spread/.test(text)) return 'natural';
+  if (/sec |cfpb|fdic|occ |finra|mortgage|regulation|compliance|enforcement action|fine |penalty|fraud investigation/.test(text)) return 'financial';
+  if (/outage|cloud|service down|aws|azure|salesforce|infrastructure|power grid/.test(text)) return 'infrastructure';
+  if (/terror|shooter|attack|bomb|threat|hostage|explosion|shooting|killed|stabbed|threat level/.test(text)) return 'terror';
+  return 'general';
+}
+
+// ─── IMPACT ASSESSMENT ────────────────────────────────────────────────────────
+
+function generateRocketImpact(item) {
+  const category = item.category;
+  const terror = item.terror;
+  const lat = item.lat;
+  const lng = item.lng;
+  const title = item.title || '';
+  const region = item.region || '';
+
+  let nearbyOffices = [];
+  if (lat && lng) {
+    nearbyOffices = findNearbyOffices(lat, lng, 50);
+  } else {
+    // Match by region/state keyword
+    const text = (title + ' ' + (item.description || '')).toLowerCase();
+    nearbyOffices = ROCKET_OFFICES.filter(o => {
+      const state = o.state.toLowerCase();
+      const city = o.city.toLowerCase();
+      return text.includes(city) || text.includes(state) || (o.region && text.includes(o.region));
+    }).slice(0, 5);
+  }
+
+  const officeNames = nearbyOffices.length > 0
+    ? nearbyOffices.slice(0,5).map(o => o.name).join(', ')
+    : null;
+
+  // Identify specific infrastructure type for cyber threat context
+  const titleLower = title.toLowerCase();
+  const descLower = (item.description || '').toLowerCase();
+  const combinedText = titleLower + ' ' + descLower;
+  let cyberInfraType = 'general IT infrastructure';
+  let rocketDependencies = 'Rocket.com, MyQL, Rocket Pro TPO, Encompass, internal LDAP/SSO';
+  if (/power grid|electric|utilities|scada|ics/.test(combinedText)) { cyberInfraType = 'power grid / industrial control systems'; rocketDependencies = 'Detroit HQ power systems, Texas ERCOT-dependent campuses'; }
+  else if (/water|water treatment/.test(combinedText)) { cyberInfraType = 'water treatment / municipal infrastructure'; rocketDependencies = 'Detroit HQ facilities, Michigan office campus systems'; }
+  else if (/hospital|healthcare|medical/.test(combinedText)) { cyberInfraType = 'healthcare infrastructure'; rocketDependencies = 'Employee benefit systems, health plan integrations'; }
+  else if (/financial|bank|swift|payment|atm/.test(combinedText)) { cyberInfraType = 'financial sector infrastructure'; rocketDependencies = 'Rocket Mortgage payment processing, ACH/wire transfers, banking integrations'; }
+  else if (/aws|amazon|cloud/.test(combinedText)) { cyberInfraType = 'AWS cloud infrastructure'; rocketDependencies = 'Rocket.com hosting, MyQL platform, data lake, CI/CD pipelines'; }
+  else if (/azure|microsoft|office 365|m365/.test(combinedText)) { cyberInfraType = 'Microsoft Azure / M365 infrastructure'; rocketDependencies = 'Email, Teams, Azure AD/SSO, SharePoint, Rocket internal tools'; }
+  else if (/salesforce/.test(combinedText)) { cyberInfraType = 'Salesforce CRM infrastructure'; rocketDependencies = 'Rocket mortgage origination CRM, customer data, loan officer tools'; }
+  else if (/dns|bgp|routing|telecom|isp/.test(combinedText)) { cyberInfraType = 'DNS / BGP / telecom backbone'; rocketDependencies = 'Rocket.com availability, MyQL API routing, all external-facing services'; }
+  else if (/ransomware/.test(combinedText)) { cyberInfraType = 'ransomware / enterprise malware'; rocketDependencies = 'All Rocket endpoints, network shares, loan origination systems, document vault'; }
+
+  if ((terror === 'physical' || terror === 'cyber') && officeNames) {
+    if (terror === 'cyber') {
+      return `⚠️ CYBER TERROR — Infrastructure type: ${cyberInfraType}. Rocket platform dependencies at risk: ${rocketDependencies}. Offices with personnel at risk: ${officeNames}. Actions: (1) Notify CISO + CIRT immediately, (2) Activate Cyber Incident Response Plan, (3) Isolate affected systems per IR playbook, (4) Assess IOCs in SIEM against Rocket environment, (5) Coordinate with DHS CISA if critical infrastructure overlap`;
+    }
+    return `⚠️ OFFICES POTENTIALLY AFFECTED: ${officeNames}. Immediate actions: (1) Contact local security team, (2) Account for all employees in affected location(s), (3) Consider WFH guidance, (4) Monitor situation — escalate to BCR leadership if incident is within 1 mile`;
+  } else if (terror === 'physical') {
+    return `No Rocket offices identified in immediate area. Monitor for employee travel advisories. Review BCR emergency protocols. Brief security team on situation.`;
+  } else if (terror === 'cyber') {
+    return `⚠️ CYBER TERROR — Infrastructure type: ${cyberInfraType}. Rocket platform dependencies at risk: ${rocketDependencies}. Actions: (1) Notify CISO + CIRT immediately, (2) Activate Cyber Incident Response Plan, (3) Assess IOCs in SIEM, (4) Check for exposure across Rocket production systems`;
+  } else if (category === 'cyber') {
+    return `Rocket Technology Risk: Security team should assess relevance to Rocket's systems. Actions: (1) Review vulnerability details in vulnerability management platform, (2) Assess ${title.substring(0,40)} impact on Rocket infrastructure, (3) Notify CISO if relevant, (4) Apply patches per SLA`;
+  } else if (category === 'natural') {
+    const affected = officeNames || 'Potentially affected region';
+    return `Rocket offices in affected area: ${affected}. Actions: (1) Contact office managers in impacted states, (2) Enable WFH if needed, (3) Check employee travel plans, (4) Coordinate with BCR team, (5) Monitor NWS/USGS for updates`;
+  } else if (category === 'financial') {
+    return `Direct mortgage industry impact. Actions: (1) Legal and compliance review required, (2) Assess regulatory exposure for Rocket Mortgage operations, (3) Brief executive team, (4) Review customer communication requirements, (5) Engage Government Affairs if needed`;
+  } else if (category === 'infrastructure') {
+    return `Rocket platform dependency risk. Actions: (1) Check Rocket.com, MyQL, Rocket Pro TPO status, (2) Notify engineering leadership, (3) Activate vendor incident response, (4) Prepare customer communication if impacted, (5) Review SLA/business continuity posture`;
+  } else if (officeNames) {
+    return `Rocket offices in proximity: ${officeNames}. Review with BCR team for employee safety and business continuity impact. Monitor situation for escalation.`;
+  }
+  return `Monitor situation for Rocket Companies relevance. No immediate action required. BCR team should assess if escalation criteria are met.`;
+}
+
+// ─── RSS PARSING ──────────────────────────────────────────────────────────────
+
+function parseRSSXML(xmlString, source) {
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(xmlString, 'text/xml');
+    const isAtom = !!doc.querySelector('feed');
+    const items = isAtom
+      ? Array.from(doc.querySelectorAll('entry'))
+      : Array.from(doc.querySelectorAll('item'));
+
+    return items.slice(0, 30).map(item => {
+      let title = item.querySelector('title')?.textContent?.trim() || '';
+      let link = '';
+      if (isAtom) {
+        link = item.querySelector('link')?.getAttribute('href') || item.querySelector('link')?.textContent?.trim() || '';
+      } else {
+        link = item.querySelector('link')?.textContent?.trim() || item.querySelector('link')?.nextSibling?.textContent?.trim() || '';
+      }
+      let description = item.querySelector('description')?.textContent?.trim()
+        || item.querySelector('summary')?.textContent?.trim()
+        || item.querySelector('content')?.textContent?.trim() || '';
+      let pubDate = item.querySelector('pubDate')?.textContent?.trim()
+        || item.querySelector('published')?.textContent?.trim()
+        || item.querySelector('updated')?.textContent?.trim() || '';
+
+      description = stripHtml(description).substring(0, 500);
+      title = stripHtml(title).substring(0, 200);
+
+      return { title, link, description, pubDate, sourceId: source.id, sourceName: source.name, region: source.region };
+    }).filter(i => i.title.length > 5);
+  } catch(e) {
+    return [];
+  }
+}
+
+// ─── DATA CACHE ──────────────────────────────────────────────────────────────
+// GitHub Action fetches all feeds every 15 min and commits alerts.json to the
+// repo. Dashboard reads that raw file directly — no CORS, no proxy needed.
+const ALERTS_URL = 'https://raw.githubusercontent.com/Molly-for-Rocket/Rocket-Resilience-Team/main/alerts.json';
+
+function parseJSONSource(data, source) {
+  const items = [];
+
+  if (source.id === 'nws') {
+    const features = data.features || [];
+    for (const f of features.slice(0, 50)) {
+      const props = f.properties || {};
+      items.push({
+        title: props.headline || props.event || 'NWS Alert',
+        description: props.description ? props.description.substring(0, 500) : props.instruction || '',
+        link: props['@id'] || '',
+        pubDate: props.sent || props.onset || '',
+        sourceId: source.id,
+        sourceName: source.name,
+        region: source.region,
+        lat: f.geometry?.coordinates ? null : null,
+        nwsArea: props.areaDesc || '',
+        nwsEvent: props.event || '',
+        nwsSeverity: props.severity || '',
+      });
+    }
+  } else if (source.id === 'fema') {
+    const declarations = data.DisasterDeclarationsSummaries || data.DisasterDeclarations || [];
+    for (const d of declarations.slice(0, 30)) {
+      items.push({
+        title: `FEMA DR-${d.disasterNumber}: ${d.incidentType} — ${d.designatedArea}, ${d.state}`,
+        description: `Federal disaster declaration for ${d.declarationTitle}. Incident: ${d.incidentType}. State: ${d.state}. Declaration date: ${d.declarationDate?.substring(0,10) || 'N/A'}`,
+        link: `https://www.fema.gov/disaster/${d.disasterNumber}`,
+        pubDate: d.declarationDate || '',
+        sourceId: source.id,
+        sourceName: source.name,
+        region: source.region,
+        femaState: d.state,
+      });
+    }
+  } else if (source.id === 'usgs') {
+    const features = data.features || [];
+    // Bounding box covering all Rocket Companies office states (MI, CA, TX, DC, VA, MD, PA, NC, OH, AZ, IN, IL, FL, GA, CO, NV, WA, MN, ON)
+    const ROCKET_BBOX = { minLat: 24.5, maxLat: 49.5, minLng: -125, maxLng: -66 };
+    for (const f of features.slice(0, 100)) {
+      const props = f.properties || {};
+      const coords = f.geometry?.coordinates || [];
+      const mag = props.mag || 0;
+      if (mag < 2.5) continue;
+      const eLat = coords[1], eLng = coords[0];
+      // Only include earthquakes within or near the continental US / Canada coverage area
+      if (eLat && eLng && (eLat < ROCKET_BBOX.minLat || eLat > ROCKET_BBOX.maxLat || eLng < ROCKET_BBOX.minLng || eLng > ROCKET_BBOX.maxLng)) continue;
+      items.push({
+        title: `M${mag.toFixed(1)} Earthquake — ${props.place || 'Unknown location'}`,
+        description: `Magnitude ${mag} earthquake. Location: ${props.place}. Depth: ${coords[2] ? coords[2].toFixed(1) : '?'} km. Status: ${props.status}. Tsunami: ${props.tsunami ? 'Yes' : 'No'}`,
+        link: props.url || '',
+        pubDate: props.time ? new Date(props.time).toISOString() : '',
+        sourceId: source.id,
+        sourceName: source.name,
+        region: source.region,
+        lat: coords[1] || null,
+        lng: coords[0] || null,
+        magnitude: mag,
+      });
+    }
+  } else if (source.id === 'cisa-kev') {
+    const vulns = (data.vulnerabilities || []).slice(-20).reverse();
+    for (const v of vulns) {
+      items.push({
+        title: `CISA KEV: ${v.cveID} — ${v.vendorProject} ${v.product}`,
+        description: `${v.vulnerabilityName}. ${v.shortDescription || ''} Required action: ${v.requiredAction || 'See CISA guidance'}. Due: ${v.dueDate || 'N/A'}`,
+        link: `https://www.cisa.gov/known-exploited-vulnerabilities-catalog`,
+        pubDate: v.dateAdded || '',
+        sourceId: source.id,
+        sourceName: source.name,
+        region: source.region,
+        cveId: v.cveID,
+      });
+    }
+  } else if (source.id === 'aws') {
+    const current = data.current || {};
+    const archive = data.archive || [];
+    // Combine current events with recent archive
+    const allEvents = [];
+    for (const [key, val] of Object.entries(current)) {
+      if (Array.isArray(val)) {
+        for (const event of val) {
+          allEvents.push({ ...event, service: key });
+        }
+      }
+    }
+    for (const event of (archive || []).slice(0, 10)) {
+      allEvents.push(event);
+    }
+    for (const event of allEvents.slice(0, 20)) {
+      items.push({
+        title: `AWS Status: ${event.service_name || event.service || 'Service'} — ${event.summary || 'Event'}`,
+        description: event.message || event.detail || event.summary || '',
+        link: 'https://status.aws.amazon.com/',
+        pubDate: event.date || '',
+        sourceId: source.id,
+        sourceName: source.name,
+        region: source.region,
+      });
+    }
+    if (allEvents.length === 0) {
+      items.push({
+        title: 'AWS Services: All systems operational',
+        description: 'No active AWS incidents at this time.',
+        link: 'https://status.aws.amazon.com/',
+        pubDate: new Date().toISOString(),
+        sourceId: source.id,
+        sourceName: source.name,
+        region: source.region,
+      });
+    }
+  } else if (source.id === 'azure') {
+    const status = data.status || {};
+    const services = data.services || [];
+    const impacted = services.filter(s => s.status && s.status.toLowerCase() !== 'available' && s.status.toLowerCase() !== 'normal');
+    if (impacted.length > 0) {
+      for (const svc of impacted.slice(0, 15)) {
+        items.push({
+          title: `Azure Disruption: ${svc.displayName} — ${svc.status}`,
+          description: `Azure service impacted: ${svc.displayName}. Current status: ${svc.status}. Regions: ${svc.regions ? svc.regions.join(', ') : 'Multiple'}`,
+          link: 'https://azure.status.microsoft/',
+          pubDate: new Date().toISOString(),
+          sourceId: source.id,
+          sourceName: source.name,
+          region: source.region,
+        });
+      }
+    } else {
+      items.push({
+        title: `Azure Services: ${status.description || 'All systems normal'}`,
+        description: 'No active Azure incidents detected.',
+        link: 'https://azure.status.microsoft/',
+        pubDate: new Date().toISOString(),
+        sourceId: source.id,
+        sourceName: source.name,
+        region: source.region,
+      });
+    }
+  } else if (source.id === 'salesforce') {
+    const incidents = Array.isArray(data) ? data : (data.incidents || data.data || []);
+    for (const inc of incidents.slice(0, 15)) {
+      items.push({
+        title: `Salesforce Incident: ${inc.message || inc.name || inc.incidentId || 'Active Incident'}`,
+        description: `Status: ${inc.status || 'Unknown'}. Affected: ${inc.affectedComponents ? inc.affectedComponents.map(c => c.name).join(', ') : 'Multiple services'}`,
+        link: 'https://status.salesforce.com/',
+        pubDate: inc.createdAt || inc.startTime || new Date().toISOString(),
+        sourceId: source.id,
+        sourceName: source.name,
+        region: source.region,
+      });
+    }
+    if (incidents.length === 0) {
+      items.push({
+        title: 'Salesforce: No active incidents',
+        description: 'All Salesforce services operating normally.',
+        link: 'https://status.salesforce.com/',
+        pubDate: new Date().toISOString(),
+        sourceId: source.id,
+        sourceName: source.name,
+        region: source.region,
+      });
+    }
+  }
+
+  return items;
+}
+
+// ─── PROCESS ALERTS ──────────────────────────────────────────────────────────
+
+function processAlerts(rawItems) {
+  return rawItems.map(item => {
+    const severity = scoreItem(item);
+    const terror = detectTerror(item);
+    const category = categorizeItem(item);
+    const impact = generateRocketImpact({ ...item, severity, terror, category });
+    return { ...item, severity, terror, category, rocketImpact: impact, id: Math.random().toString(36).substr(2,9) };
+  });
+}
+
+// ─── FETCH ALL SOURCES ────────────────────────────────────────────────────────
+
+async function fetchAllSources() {
+  const btn = document.getElementById('refresh-btn');
+  btn.disabled = true;
+  btn.textContent = '↻ Fetching...';
+  document.getElementById('loading-progress').textContent = 'Loading cached alerts...';
+
+  try {
+    const res = await fetch(ALERTS_URL + '?t=' + Date.now());
+    if (!res.ok) throw new Error(`HTTP ${res.status} — alerts.json not found. Run the GitHub Action first.`);
+    const payload = await res.json();
+
+    if (!payload || !payload.alerts) {
+      document.getElementById('loading-progress').textContent =
+        'No data yet — go to GitHub → Actions → "Fetch Threat Intel Feeds" → Run workflow, then refresh in 2–3 minutes.';
+    } else {
+      const rawAlerts = payload.alerts || [];
+      const health = payload.health || {};
+      const fetchedAt = payload.fetchedAt || '';
+
+      feedHealth = {};
+      for (const [id, h] of Object.entries(health)) {
+        feedHealth[id] = { status: h.status, items: h.items, checked: h.checkedAt, name: id };
+        if (h.status === 'ok') logActivity(id, id, 'ok', `${h.items} items`);
+        else logActivity(id, id, 'error', 'Failed at last fetch');
+      }
+
+      allAlerts = rawAlerts.map(alert => ({
+        ...alert,
+        rocketImpact: generateRocketImpact(alert),
+        id: alert.id || Math.random().toString(36).substr(2,9),
+      }));
+
+      document.getElementById('loading-progress').textContent =
+        `Loaded ${allAlerts.length} alerts · Last fetched ${fetchedAt ? new Date(fetchedAt).toLocaleTimeString() : 'unknown'}`;
+    }
+  } catch(e) {
+    document.getElementById('loading-progress').textContent = `Error: ${e.message}`;
+    logActivity('system', 'System', 'error', e.message);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '↻ Refresh';
+
+  updateHealthBar();
+  updateStats();
+  renderDashboardTab();
+  renderAlertFeed();
+  renderCriticalBuildings();
+  renderDataSources();
+  renderMiniMap();
+  if (fullMapInitialized) updateFullMap();
+  document.getElementById('tab-count-feed').textContent = allAlerts.length;
+}
+
+// ─── UPDATE HEALTH BAR ───────────────────────────────────────────────────────
+
+function updateHealthBar() {
+  const total = DATA_SOURCES.length;
+  const healthy = Object.values(feedHealth).filter(f => f.status === 'ok').length;
+  const bar = document.getElementById('health-bar');
+  bar.textContent = `${healthy} / ${total} SOURCES`;
+  const ratio = healthy / total;
+  if (ratio >= 0.8) { bar.className = ''; bar.id = 'health-bar'; }
+  else if (ratio >= 0.5) bar.className = 'degraded';
+  else bar.className = 'critical-health';
+}
+
+// ─── UPDATE STATS ─────────────────────────────────────────────────────────────
+
+function updateStats() {
+  document.getElementById('stat-total').textContent = allAlerts.length;
+  document.getElementById('stat-terror').textContent = allAlerts.filter(a => a.category === 'terror' || a.terror).length;
+  document.getElementById('stat-cyber').textContent = allAlerts.filter(a => a.category === 'cyber').length;
+  document.getElementById('stat-natural').textContent = allAlerts.filter(a => a.category === 'natural').length;
+  document.getElementById('stat-financial').textContent = allAlerts.filter(a => a.category === 'financial').length;
+  document.getElementById('stat-infra').textContent = allAlerts.filter(a => a.category === 'infrastructure').length;
+}
+
+// ─── RENDER DASHBOARD ─────────────────────────────────────────────────────────
+
+function renderDashboardTab() {
+  const topAlerts = allAlerts.filter(a => {
+    if (a.terror) return true;
+    return a.severity <= 2;
+  }).slice(0, 15);
+
+  const container = document.getElementById('top-alerts-list');
+  if (topAlerts.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">✓</div><div>No critical alerts detected</div></div>';
+    return;
+  }
+
+  container.innerHTML = topAlerts.map(alert => renderAlertItem(alert)).join('');
+}
+
+function renderAlertItem(alert) {
+  const sevClass = `s${alert.severity}`;
+  const timeAgo = formatTimeAgo(alert.pubDate);
+  let terrorBadge = '';
+  if (alert.terror === 'physical') terrorBadge = '<span class="terror-badge physical">TERROR</span>';
+  else if (alert.terror === 'cyber') terrorBadge = '<span class="terror-badge cyber-t">CYBER TERROR</span>';
+
+  return `<div class="alert-item" onclick="openAlertModal('${escapeHtml(alert.id)}')">
+    <div class="sev-badge ${sevClass}">${alert.severity}</div>
+    <div class="alert-body">
+      <div class="alert-title">${escapeHtml(alert.title)}</div>
+      <div class="alert-meta">
+        <span class="cat-badge ${alert.category}">${alert.category}</span>
+        ${terrorBadge}
+        <span class="alert-source">${escapeHtml(alert.sourceName)}</span>
+      </div>
+    </div>
+    <div class="alert-time">${timeAgo}</div>
+  </div>`;
+}
+
+// ─── RENDER ALERT FEED ────────────────────────────────────────────────────────
+
+function renderAlertFeed() {
+  const catFilter = document.getElementById('filter-category').value;
+  const sevFilter = document.getElementById('filter-severity').value;
+  const searchFilter = document.getElementById('filter-search').value.toLowerCase();
+  const regionFilter = document.getElementById('filter-region').value;
+
+  let filtered = allAlerts.filter(a => {
+    if (catFilter && a.category !== catFilter && !(catFilter === 'terror' && a.terror)) return false;
+    if (sevFilter !== '' && a.severity !== parseInt(sevFilter)) return false;
+    if (regionFilter && a.region !== regionFilter && a.region !== 'national') return false;
+    if (searchFilter) {
+      const searchIn = ((a.title || '') + ' ' + (a.description || '') + ' ' + (a.sourceName || '')).toLowerCase();
+      if (!searchIn.includes(searchFilter)) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('feed-results-count').textContent = `Showing ${filtered.length} of ${allAlerts.length} alerts`;
+
+  const container = document.getElementById('alert-feed-container');
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty-state" style="background:var(--panel);border-radius:var(--radius);"><div class="empty-icon">🔍</div><div>No alerts match current filters</div></div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(alert => renderAlertCard(alert)).join('');
+}
+
+function renderAlertCard(alert) {
+  const sevClass = `s${alert.severity}`;
+  const timeAgo = formatTimeAgo(alert.pubDate);
+  let terrorBadge = '';
+  if (alert.terror === 'physical') terrorBadge = '<span class="terror-badge physical">TERROR</span>';
+  else if (alert.terror === 'cyber') terrorBadge = '<span class="terror-badge cyber-t">CYBER TERROR</span>';
+
+  const sevLabels = ['Catastrophic','Critical','Serious','Moderate','Minor'];
+
+  // Build severity scale pips
+  let pips = '';
+  for (let i = 4; i >= 0; i--) {
+    const active = i >= alert.severity ? 'active ' + sevClass : '';
+    pips += `<div class="sev-pip ${active}"></div>`;
+  }
+
+  const linkHtml = alert.link
+    ? `<a class="source-link" href="${escapeHtml(alert.link)}" target="_blank" rel="noopener">&#x2197; View Source: ${escapeHtml(alert.sourceName)}</a>`
+    : `<span style="font-size:12px;color:var(--text-muted);">${escapeHtml(alert.sourceName)}</span>`;
+
+  return `<div class="alert-card" id="card-${alert.id}">
+    <div class="alert-card-header" onclick="toggleCard('${alert.id}')">
+      <div class="sev-badge ${sevClass}">${alert.severity}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="alert-card-title">${escapeHtml(alert.title)}</div>
+        <div class="alert-meta" style="margin-top:4px;">
+          <span class="cat-badge ${alert.category}">${alert.category}</span>
+          ${terrorBadge}
+          <span class="alert-source">${escapeHtml(alert.sourceName)}</span>
+          <span class="alert-time" style="margin-left:0;">${timeAgo}</span>
+        </div>
+      </div>
+      <div class="expand-chevron">&#x2304;</div>
+    </div>
+    <div class="alert-card-body">
+      <p class="alert-description">${escapeHtml(alert.description || 'No description available.')}</p>
+      <div class="detail-grid">
+        <div class="detail-block">
+          <div class="detail-block-label">Severity</div>
+          <div class="sev-scale">${pips}</div>
+          <div class="detail-block-value">${sevLabels[alert.severity] || 'Unknown'}</div>
+        </div>
+        <div class="detail-block">
+          <div class="detail-block-label">Published</div>
+          <div class="detail-block-value">${alert.pubDate ? new Date(alert.pubDate).toLocaleString() : 'Unknown'}</div>
+        </div>
+      </div>
+      <div class="impact-box">
+        <div class="impact-box-label">Rocket Companies Impact Assessment</div>
+        <div class="impact-box-text">${escapeHtml(alert.rocketImpact)}</div>
+      </div>
+      <div style="margin-top:10px;">${linkHtml}</div>
+    </div>
+  </div>`;
+}
+
+function toggleCard(id) {
+  const card = document.getElementById(`card-${id}`);
+  if (card) card.classList.toggle('expanded');
+}
+
+// ─── RENDER MINI MAP ──────────────────────────────────────────────────────────
+
+function renderMiniMap() {
+  if (!miniMapInitialized) {
+    miniMap = L.map('mini-map', {
+      zoomControl: false, attributionControl: false, dragging: false,
+      touchZoom: false, doubleClickZoom: false, scrollWheelZoom: false,
+      boxZoom: false, keyboard: false,
+    }).setView([39.5, -96.5], 4);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19, opacity: 0.9
+    }).addTo(miniMap);
+    miniMapInitialized = true;
+    setTimeout(() => { miniMap.invalidateSize(); miniMap.setView([39.5, -96.5], 4); }, 200);
+  } else {
+    // Clear old layers
+    for (const layer of mapThreatLayers) { try { miniMap.removeLayer(layer); } catch(e){} }
+    mapThreatLayers = [];
+  }
+
+  // Add office markers
+  for (const office of ROCKET_OFFICES) {
+    const color = office.type === 'critical' ? '#FFD700' : (office.type === 'hq' ? '#C8102E' : '#16A34A');
+    const size = office.type === 'critical' ? 8 : (office.type === 'hq' ? 7 : 5);
+    const icon = L.divIcon({
+      html: office.type === 'critical'
+        ? `<div style="width:${size}px;height:${size}px;background:${color};transform:rotate(45deg);border:1px solid rgba(255,255,255,0.4);"></div>`
+        : `<div style="width:${size}px;height:${size}px;background:${color};border-radius:50%;border:1px solid rgba(255,255,255,0.3);"></div>`,
+      className: '',
+      iconSize: [size, size],
+      iconAnchor: [size/2, size/2],
+    });
+    L.marker([office.lat, office.lng], { icon }).addTo(miniMap);
+  }
+
+  // Add threat circles for alerts with lat/lng
+  const geolocalizedAlerts = allAlerts.filter(a => a.lat && a.lng && a.severity <= 3);
+  for (const alert of geolocalizedAlerts.slice(0, 30)) {
+    const radiusMi = alert.severity <= 1 ? 60 : alert.severity === 2 ? 40 : 25;
+    const radiusM = radiusMi * 1609;
+    const color = alert.severity <= 1 ? '#C8102E' : alert.severity === 2 ? '#EA580C' : '#D97706';
+    const layer = L.circle([alert.lat, alert.lng], {
+      radius: radiusM,
+      color,
+      fillColor: color,
+      fillOpacity: 0.12,
+      weight: 1,
+      opacity: 0.5,
+    }).addTo(miniMap);
+    mapThreatLayers.push(layer);
+  }
+}
+
+// ─── RENDER FULL MAP ──────────────────────────────────────────────────────────
+
+function initFullMap() {
+  if (fullMapInitialized) return;
+  fullMap = L.map('locations-map', {
+    zoomControl: true, attributionControl: true,
+    maxBounds: [[15, -175], [72, -50]],
+    maxBoundsViscosity: 0.85,
+    minZoom: 3,
+  }).setView([39.5, -96.5], 4);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  }).addTo(fullMap);
+
+  fullMapInitialized = true;
+  updateFullMap();
+}
+
+function updateFullMap() {
+  if (!fullMap) return;
+
+  // Clear existing layers
+  for (const layer of mapMarkerLayers) { try { fullMap.removeLayer(layer); } catch(e){} }
+  mapMarkerLayers = [];
+
+  // Add office markers
+  for (const office of ROCKET_OFFICES) {
+    let iconHtml, size;
+    if (office.type === 'critical') {
+      size = 16;
+      iconHtml = `<div style="width:14px;height:14px;background:#FFD700;transform:rotate(45deg);border:2px solid rgba(255,255,255,0.6);box-shadow:0 0 6px rgba(255,215,0,0.5);"></div>`;
+    } else if (office.type === 'hq') {
+      size = 14;
+      iconHtml = `<div style="width:14px;height:14px;background:#C8102E;border-radius:50%;border:2px solid rgba(255,255,255,0.5);box-shadow:0 0 5px rgba(200,16,46,0.6);"></div>`;
+    } else {
+      size = 10;
+      iconHtml = `<div style="width:10px;height:10px;background:#16A34A;border-radius:50%;border:1px solid rgba(255,255,255,0.4);"></div>`;
+    }
+    const icon = L.divIcon({ html: iconHtml, className: '', iconSize: [size, size], iconAnchor: [size/2, size/2] });
+    const marker = L.marker([office.lat, office.lng], { icon })
+      .bindPopup(`<div style="font-family:'Nunito Sans',sans-serif;min-width:200px;">
+        <div style="font-weight:800;font-size:14px;margin-bottom:4px;">${escapeHtml(office.name)}</div>
+        <div style="font-size:12px;color:#666;">${escapeHtml(office.address)}</div>
+        <div style="font-size:11px;margin-top:4px;padding:2px 6px;border-radius:3px;display:inline-block;
+          background:${office.type === 'critical' ? '#7B3F00' : office.type === 'hq' ? '#3B0010' : '#0A2010'};
+          color:${office.type === 'critical' ? '#FFD700' : office.type === 'hq' ? '#FCA5A5' : '#4ADE80'}">
+          ${office.type.toUpperCase()}
+        </div>
+      </div>`)
+      .addTo(fullMap);
+    mapMarkerLayers.push(marker);
+  }
+
+  // Add threat overlays
+  const geolocalizedAlerts = allAlerts.filter(a => a.lat && a.lng && a.severity <= 3);
+  for (const alert of geolocalizedAlerts.slice(0, 50)) {
+    const isTerror = !!alert.terror;
+    const radiusMi = alert.severity <= 1 ? 80 : alert.severity === 2 ? 50 : 30;
+    const radiusM = radiusMi * 1609;
+    let color, fillOpacity, weight, dashArray;
+    if (alert.terror === 'physical') {
+      color = '#FF1744'; fillOpacity = 0.25; weight = 2.5; dashArray = '6,4';
+    } else if (alert.terror === 'cyber') {
+      color = '#FF6D00'; fillOpacity = 0.22; weight = 2.5; dashArray = '4,4';
+    } else {
+      color = alert.severity <= 1 ? '#C8102E' : alert.severity === 2 ? '#EA580C' : '#D97706';
+      fillOpacity = 0.18; weight = 1.5; dashArray = null;
+    }
+
+    const layer = L.circle([alert.lat, alert.lng], {
+      radius: radiusM,
+      color, fillColor: color,
+      fillOpacity, weight, opacity: isTerror ? 0.9 : 0.7,
+      dashArray,
+    });
+
+    // Clicking a threat overlay opens the full app modal (not just a popup)
+    const alertId = alert.id;
+    layer.on('click', () => openAlertModal(alertId));
+
+    // Add terror icon marker at center for terror events
+    if (isTerror) {
+      const terrorLabel = alert.terror === 'physical' ? '⚠' : '⚡';
+      const terrorColor = alert.terror === 'physical' ? '#FF1744' : '#FF6D00';
+      const tIcon = L.divIcon({
+        html: `<div style="font-size:16px;line-height:1;color:${terrorColor};text-shadow:0 0 6px ${terrorColor},0 0 12px rgba(0,0,0,0.8);filter:drop-shadow(0 0 3px ${terrorColor});">${terrorLabel}</div>`,
+        className: '', iconSize: [20, 20], iconAnchor: [10, 10],
+      });
+      const tMarker = L.marker([alert.lat, alert.lng], { icon: tIcon });
+      tMarker.on('click', () => openAlertModal(alertId));
+      tMarker.addTo(fullMap);
+      mapMarkerLayers.push(tMarker);
+    }
+
+    layer.addTo(fullMap);
+    mapMarkerLayers.push(layer);
+  }
+}
+
+function resetMapView() {
+  if (fullMap) fullMap.setView([39.5, -96.5], 4);
+}
+
+// ─── RENDER CRITICAL BUILDINGS ────────────────────────────────────────────────
+
+function renderCriticalBuildings() {
+  const grid = document.getElementById('buildings-grid');
+  grid.innerHTML = CRITICAL_BUILDINGS.map(building => {
+    // Find nearby alerts
+    const nearbyAlerts = allAlerts.filter(a => {
+      if (a.lat && a.lng) {
+        return haversineDistanceMiles(building.lat, building.lng, a.lat, a.lng) <= building.radiusMiles * 5;
+      }
+      // Fallback: check region match
+      return a.region === building.region && a.severity <= 2;
+    }).slice(0, 8);
+
+    const riskChips = building.risks.map(r => `<span class="risk-chip">${escapeHtml(r)}</span>`).join('');
+
+    const alertRows = nearbyAlerts.length > 0
+      ? nearbyAlerts.map(a => `<div class="building-alert-row">
+          <div class="sev-badge s${a.severity}">${a.severity}</div>
+          <div style="flex:1;font-size:12px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            ${escapeHtml(a.title)}
+          </div>
+        </div>`).join('')
+      : '<div class="no-alerts-msg">No nearby alerts detected</div>';
+
+    return `<div class="building-card">
+      <div class="building-card-header">
+        <div class="building-icon">${building.icon}</div>
+        <div>
+          <div class="building-name">${escapeHtml(building.name)}</div>
+          <div class="building-address">${escapeHtml(building.address)}</div>
+          <div class="building-desc">${escapeHtml(building.description)}</div>
+        </div>
+      </div>
+      <div class="building-card-body">
+        <div class="building-alerts-label">Risk Profile</div>
+        <div class="risk-chips" style="margin-bottom:12px;">${riskChips}</div>
+        <div class="building-alerts-label">Nearby Active Alerts</div>
+        <div class="building-alerts-list">${alertRows}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── RENDER DATA SOURCES ──────────────────────────────────────────────────────
+
+function renderDataSources() {
+  const grid = document.getElementById('sources-grid');
+
+  const categories = [
+    { label: 'Federal — Weather & Disasters', ids: ['nws','fema','usgs'] },
+    { label: 'Federal — Cybersecurity', ids: ['cisa-kev','sans'] },
+    { label: 'Federal — Law Enforcement', ids: ['fbi','dhs','atf'] },
+    { label: 'National News', ids: ['cbs','thehill','nbc','abc','npr','fox','cnn'] },
+    { label: 'Detroit / Michigan', ids: ['bridgemi','michiganradio','wdet','wdiv'] },
+    { label: 'Los Angeles / California', ids: ['latimes','abc7la'] },
+    { label: 'Dallas / Fort Worth', ids: ['nbcdfw','nbcdfw2','wfaa'] },
+    { label: 'Washington DC', ids: ['wtop','wamu'] },
+    { label: 'Pittsburgh PA', ids: ['pgpostgazette','wtae'] },
+    { label: 'Windsor Ontario / Detroit Border', ids: ['windsorstar','cbcwindsor'] },
+    { label: 'Charlotte NC', ids: ['wcnc','wsoc'] },
+    { label: 'Cleveland OH', ids: ['fox8cleveland','news5cleveland'] },
+    { label: 'Phoenix / Arizona', ids: ['ktar','azfamily'] },
+    { label: 'Financial / Regulatory', ids: ['cfpb','sec','sec-enforce'] },
+    { label: 'Cloud Infrastructure', ids: ['aws','azure','salesforce'] },
+  ];
+
+  let html = '';
+  for (const cat of categories) {
+    html += `<div class="source-section-header">${escapeHtml(cat.label)}</div>`;
+    for (const id of cat.ids) {
+      const source = DATA_SOURCES.find(s => s.id === id);
+      const health = feedHealth[id];
+      if (!source) continue;
+      const status = health ? health.status : 'loading';
+      const statusText = status === 'ok' ? '✓ OK' : status === 'error' ? '✗ Error' : '◌ Loading';
+      const statusClass = status === 'ok' ? 'ok' : status === 'error' ? 'error' : 'loading';
+      const items = health ? health.items : '--';
+      const checked = health ? formatTimeAgo(health.checked) : '--';
+      html += `<div class="source-card">
+        <div class="source-card-top">
+          <div class="source-name">${escapeHtml(source.name)}</div>
+          <div class="source-status ${statusClass}">${statusText}</div>
+        </div>
+        <div class="source-type">${source.type} · ${source.category} · ${source.region}</div>
+        <div class="source-items">${items} items</div>
+        <div class="source-checked">Checked: ${checked}</div>
+      </div>`;
+    }
+  }
+  grid.innerHTML = html;
+}
+
+// ─── MODAL ────────────────────────────────────────────────────────────────────
+
+function openAlertModal(alertId) {
+  const alert = allAlerts.find(a => a.id === alertId);
+  if (!alert) return;
+
+  const sevLabels = ['Catastrophic','Critical','Serious','Moderate','Minor'];
+  const modal = document.getElementById('alert-modal');
+  document.getElementById('modal-title').textContent = alert.title;
+
+  let terrorBadge = '';
+  if (alert.terror === 'physical') terrorBadge = '<span class="terror-badge physical" style="margin-right:6px;">TERROR</span>';
+  else if (alert.terror === 'cyber') terrorBadge = '<span class="terror-badge cyber-t" style="margin-right:6px;">CYBER TERROR</span>';
+
+  let pips = '';
+  for (let i = 4; i >= 0; i--) {
+    const s = `s${alert.severity}`;
+    const active = i >= alert.severity ? 'active ' + s : '';
+    pips += `<div class="sev-pip ${active}"></div>`;
+  }
+
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <div class="sev-badge s${alert.severity}" style="width:auto;padding:2px 10px;font-size:12px;">
+        SEV ${alert.severity} — ${sevLabels[alert.severity] || ''}
+      </div>
+      <span class="cat-badge ${alert.category}">${alert.category}</span>
+      ${terrorBadge}
+      <span style="font-size:12px;color:var(--text-muted);">${formatTimeAgo(alert.pubDate)}</span>
+    </div>
+    <p class="alert-description">${escapeHtml(alert.description || 'No description available.')}</p>
+    <div class="detail-grid" style="margin:14px 0;">
+      <div class="detail-block">
+        <div class="detail-block-label">Severity Scale</div>
+        <div class="sev-scale">${pips}</div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-block-label">Published</div>
+        <div class="detail-block-value">${alert.pubDate ? new Date(alert.pubDate).toLocaleString() : 'Unknown'}</div>
+      </div>
+    </div>
+    <div class="impact-box">
+      <div class="impact-box-label">Rocket Companies Impact Assessment</div>
+      <div class="impact-box-text">${escapeHtml(alert.rocketImpact)}</div>
+    </div>
+    ${alert.link ? `<a class="source-link" href="${escapeHtml(alert.link)}" target="_blank" rel="noopener">↗ View Source: ${escapeHtml(alert.sourceName)}</a>` : ''}
+  `;
+  modal.classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('alert-modal').classList.remove('open');
+}
+
+document.getElementById('alert-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ─── TAB SWITCHING ────────────────────────────────────────────────────────────
+
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`tab-${tabId}`).classList.add('active');
+  if (btn) btn.classList.add('active');
+  else {
+    const b = document.querySelector(`[data-tab="${tabId}"]`);
+    if (b) b.classList.add('active');
+  }
+  if (tabId === 'locations') {
+    setTimeout(() => {
+      initFullMap();
+      if (fullMap) fullMap.invalidateSize();
+    }, 50);
+  }
+}
+
+function filterFeedAndSwitch(category) {
+  document.getElementById('filter-category').value = category;
+  renderAlertFeed();
+  switchTab('feed', document.querySelector('[data-tab="feed"]'));
+}
+
+// ─── COUNTDOWN & AUTO-REFRESH ─────────────────────────────────────────────────
+
+function startCountdown() {
+  countdownSeconds = 900;
+  if (countdownInterval) clearInterval(countdownInterval);
+  countdownInterval = setInterval(updateCountdown, 1000);
+}
+
+function updateCountdown() {
+  countdownSeconds--;
+  if (countdownSeconds <= 0) {
+    countdownSeconds = 900;
+    fetchAllSources().then(() => {
+      document.getElementById('loading-overlay').classList.add('hidden');
+    });
+  }
+  const m = Math.floor(countdownSeconds / 60);
+  const s = countdownSeconds % 60;
+  document.getElementById('countdown-timer').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+}
+
+function manualRefresh() {
+  startCountdown();
+  document.getElementById('loading-overlay').classList.remove('hidden');
+  fetchAllSources().then(() => {
+    document.getElementById('loading-overlay').classList.add('hidden');
+  });
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+
+(async function init() {
+  // Initialize source health as loading
+  for (const src of DATA_SOURCES) {
+    feedHealth[src.id] = { status: 'loading', items: 0, checked: new Date().toISOString(), name: src.name };
+  }
+
+  renderDataSources();
+  renderCriticalBuildings();
+
+  await fetchAllSources();
+  document.getElementById('loading-overlay').classList.add('hidden');
+  startCountdown();
+})();
+</script>
+</body>
+</html>
