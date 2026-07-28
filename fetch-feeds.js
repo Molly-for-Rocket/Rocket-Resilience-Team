@@ -7,8 +7,6 @@ const parser = new Parser({ timeout: 15000, headers: { 'User-Agent': 'Mozilla/5.
 const RSS_SOURCES = [
   { id: 'sans',          name: 'SANS Internet Storm Center',  category: 'cyber',      region: 'national',      url: 'https://isc.sans.edu/rssfeed_full.xml' },
   { id: 'fbi',           name: 'FBI Press Releases',          category: 'terror',     region: 'national',      url: 'https://www.fbi.gov/feeds/fbi-in-the-news/rss.xml' },
-  { id: 'dhs',           name: 'DHS News',                    category: 'terror',     region: 'national',      url: 'https://www.dhs.gov/sites/default/files/feeds/news_releases.rss' },
-  { id: 'atf',           name: 'ATF Press Releases',          category: 'terror',     region: 'national',      url: 'https://www.atf.gov/feeds/news' },
   { id: 'cbs',           name: 'CBS News National',           category: 'general',    region: 'national',      url: 'https://www.cbsnews.com/latest/rss/main' },
   { id: 'thehill',       name: 'The Hill',                    category: 'general',    region: 'national',      url: 'https://thehill.com/feed/' },
   { id: 'nbc',           name: 'NBC News',                    category: 'general',    region: 'national',      url: 'https://feeds.nbcnews.com/nbcnews/public/news' },
@@ -17,9 +15,7 @@ const RSS_SOURCES = [
   { id: 'fox',           name: 'Fox News',                    category: 'general',    region: 'national',      url: 'https://moxie.foxnews.com/google-publisher/latest.xml' },
   { id: 'cnn',           name: 'CNN Top Stories',             category: 'general',    region: 'national',      url: 'http://rss.cnn.com/rss/cnn_topstories.rss' },
   { id: 'bridgemi',      name: 'Bridge Michigan',             category: 'general',    region: 'detroit',       url: 'https://www.bridgemi.com/feed/' },
-  { id: 'michiganradio', name: 'Michigan Radio (NPR)',        category: 'general',    region: 'detroit',       url: 'https://www.michiganradio.org/rss.xml' },
   { id: 'wdet',          name: 'WDET Detroit Public Radio',   category: 'general',    region: 'detroit',       url: 'https://wdet.org/feed/' },
-  { id: 'wdiv',          name: 'ClickOnDetroit (WDIV)',       category: 'general',    region: 'detroit',       url: 'https://www.clickondetroit.com/feed/' },
   { id: 'latimes',       name: 'LA Times',                    category: 'general',    region: 'socal',         url: 'https://www.latimes.com/local/rss2.0.xml' },
   { id: 'abc7la',        name: 'ABC7 LA',                     category: 'general',    region: 'socal',         url: 'https://abc7.com/feed/' },
   { id: 'nbcdfw',        name: 'NBC5 DFW Local',              category: 'general',    region: 'dfw',           url: 'https://www.nbcdfw.com/news/local/feed/' },
@@ -28,18 +24,12 @@ const RSS_SOURCES = [
   { id: 'wtop',          name: 'WTOP News DC',                category: 'general',    region: 'dc',            url: 'https://wtop.com/feed/' },
   { id: 'wamu',          name: 'WAMU 88.5 DC',                category: 'general',    region: 'dc',            url: 'https://wamu.org/feed/' },
   { id: 'pgpostgazette', name: 'Pittsburgh Post-Gazette',     category: 'general',    region: 'pennsylvania',  url: 'https://www.post-gazette.com/rss/all' },
-  { id: 'wtae',          name: 'WTAE Pittsburgh',             category: 'general',    region: 'pennsylvania',  url: 'https://www.wtae.com/feeds/syndication/rss/news' },
   { id: 'windsorstar',   name: 'Windsor Star',                category: 'general',    region: 'canada',        url: 'https://windsorstar.com/feed/' },
-  { id: 'cbcwindsor',    name: 'CBC Windsor',                 category: 'general',    region: 'canada',        url: 'https://www.cbc.ca/cmlink/rss-canada-windsor' },
   { id: 'wcnc',          name: 'WCNC Charlotte (NBC)',        category: 'general',    region: 'carolina',      url: 'https://www.wcnc.com/feed/' },
-  { id: 'wsoc',          name: 'WSOC Charlotte (ABC)',        category: 'general',    region: 'carolina',      url: 'https://www.wsoctv.com/feed/' },
   { id: 'fox8cleveland', name: 'Fox 8 Cleveland (WJW)',       category: 'general',    region: 'ohio',          url: 'https://fox8.com/feed/' },
-  { id: 'news5cleveland',name: 'News 5 Cleveland',            category: 'general',    region: 'ohio',          url: 'https://www.news5cleveland.com/feed/' },
   { id: 'ktar',          name: 'KTAR Phoenix News',           category: 'general',    region: 'arizona',       url: 'https://www.ktar.com/feed/' },
-  { id: 'azfamily',      name: 'AZFamily CBS5 Phoenix',       category: 'general',    region: 'arizona',       url: 'https://www.azfamily.com/feed/' },
   { id: 'cfpb',          name: 'CFPB Newsroom',               category: 'financial',  region: 'national',      url: 'https://www.consumerfinance.gov/about-us/newsroom/feed/' },
   { id: 'sec',           name: 'SEC Press Releases',          category: 'financial',  region: 'national',      url: 'https://www.sec.gov/news/pressreleases.rss' },
-  { id: 'sec-enforce',   name: 'SEC Enforcement',             category: 'financial',  region: 'national',      url: 'https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=&dateb=&owner=include&count=40&search_text=&action=getcurrent&output=atom' },
 ];
 
 const JSON_SOURCES = [
@@ -48,8 +38,6 @@ const JSON_SOURCES = [
   { id: 'fema',       name: 'FEMA Disaster Declarations',  category: 'natural',        region: 'national',  url: 'https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?%24orderby=declarationDate%20desc&%24top=50' },
   { id: 'cisa-kev',   name: 'CISA Known Exploited Vulns',  category: 'cyber',          region: 'national',  url: 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json' },
   { id: 'salesforce', name: 'Salesforce Status',           category: 'infrastructure', region: 'national',  url: 'https://api.status.salesforce.com/v1/incidents' },
-  { id: 'aws',        name: 'AWS Service Health',          category: 'infrastructure', region: 'national',  url: 'https://status.aws.amazon.com/data.json' },
-  { id: 'azure',      name: 'Azure Status',                category: 'infrastructure', region: 'national',  url: 'https://azure.status.microsoft/api/v2/status.json' },
 ];
 
 // ─── SEVERITY SCORING ─────────────────────────────────────────────────────────
