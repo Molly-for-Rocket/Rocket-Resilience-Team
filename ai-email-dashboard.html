@@ -4152,6 +4152,203 @@
           {name:'Texas Comptroller Property Tax', url:'https://comptroller.texas.gov/taxes/property-tax/'}
         ]}
       ]
+    },
+    troy_dc: {
+      weather: [
+        { tier:2, title:'Severe Thunderstorm & DTE Power Disruption Risk', desc:'The Troy data center at 800 Tower Drive sits in Oakland County, where DTE Energy\'s transmission infrastructure is highly exposed to severe summer thunderstorms. Oakland County averages 30+ severe thunderstorm events annually, with a documented history of multi-hour outages impacting the I-75/Big Beaver corridor where the facility is located. Power events at this facility are the highest operational risk given its role as the primary Michigan data center.', timeline:[
+          {date:'Aug 2023', event:'Severe derecho — 250,000+ DTE outages across Oakland and Wayne Counties; Troy corridor lost power for 6–14 hrs; generator activation confirmed at multiple I-75 corridor facilities'},
+          {date:'Jul 2022', event:'Heat-driven grid demand event — DTE issued emergency conservation request; Oakland County substations operating at 98% capacity for 4 hrs'},
+          {date:'Jul 2021', event:'Back-to-back storm systems caused 3 days of intermittent DTE outages in the Troy-Sterling Heights corridor'},
+          {date:'Aug 2014', event:'100-year storm event; $1B+ regional damage; Troy-area grid did not recover fully for 5 days in hardest-hit sections'}
+        ], sources:[
+          {name:'NWS Detroit — Local Forecasts & Warnings', url:'https://www.weather.gov/dtx/'},
+          {name:'DTE Energy Outage Map', url:'https://outage.dteenergy.com/'},
+          {name:'NOAA Storm Data Publication', url:'https://www.ncei.noaa.gov/products/land-based-station/storm-data'},
+          {name:'FEMA Historical Declarations — Michigan', url:'https://www.fema.gov/disaster/declarations?field_dv2_state_territory_tribal_value=MI'}
+        ]},
+        { tier:2, title:'Winter Ice Storm & Extended Outage Risk', desc:'Troy\'s suburban location on the I-75 corridor makes it particularly vulnerable to freezing rain and ice storm events. Above-ground transmission lines serving the Big Beaver / Tower Drive area take longer to restore after ice events than underground lines serving downtown Detroit. Extended winter outages create both generator fuel logistics challenges and cooling management concerns as outside temperatures drop.', timeline:[
+          {date:'Jan 2019', event:'Polar Vortex — Oakland County temperatures hit -15°F; DTE issued highest outage emergency in recent history; generator fuel resupply complicated by road conditions'},
+          {date:'Feb 2021', event:'Winter Storm Uri fringe — 8" snow + ice; several Oakland County substations deenergized for precautionary maintenance during the event'},
+          {date:'Dec 2022', event:'Winter Storm Elliott — sustained below-zero wind chills; DTE pre-positioned crews in Troy corridor in anticipation of equipment failures'},
+          {date:'Mar 2017', event:'Late-season blizzard + ice accumulation; Oakland County declared snow emergency; I-75 corridor access restricted for 18 hrs'}
+        ], sources:[
+          {name:'NWS Detroit — Winter Weather', url:'https://www.weather.gov/dtx/winterweather'},
+          {name:'DTE Energy Storm Center', url:'https://newlook.dteenergy.com/wps/wcm/connect/dte-web/home/storm-center/'},
+          {name:'Oakland County Emergency Management', url:'https://www.oakgov.com/em/'}
+        ]},
+        { tier:3, title:'Extreme Heat — HVAC & Cooling Load Risk', desc:'Sustained high temperatures strain data center cooling infrastructure at 800 Tower Drive. The facility relies on DTE Energy\'s grid during peak summer demand windows, when grid stress is highest and the risk of conservation-driven demand reduction or brief service interruptions is elevated. Cooling system failures during heat events represent the primary operational continuity risk at this facility.', timeline:[
+          {date:'Jul 2026', event:'Excessive Heat Warning — heat index 105–112°F across Oakland County; DTE grid conservation advisory issued; data center HVAC systems operating at elevated load'},
+          {date:'Jul 2022', event:'4 consecutive days at 97°F+; DTE conservation request issued; Oakland County commercial facilities asked to reduce non-critical HVAC load 3–7 PM'},
+          {date:'Jun 2024', event:'Early heat dome produced 5+ consecutive days over 90°F; DTE demand approached record June levels for metro area'}
+        ], sources:[
+          {name:'NWS Detroit', url:'https://www.weather.gov/dtx/'},
+          {name:'DTE Energy Grid Conservation', url:'https://newlook.dteenergy.com/'},
+          {name:'EPA Data Center Energy Efficiency', url:'https://www.energystar.gov/products/data_center_equipment'}
+        ]}
+      ],
+      cyber: [
+        { tier:1, title:'Data Center as High-Value Ransomware Target', desc:'Colocation and enterprise data centers in the Detroit metro area are documented ransomware targets. A successful intrusion at 800 Tower Drive could affect all virtual infrastructure hosted there simultaneously. Physical data centers represent the highest-consequence single point of failure in Rocket\'s technology stack — full encryption of stored systems would be a SEV 1 event with days-to-weeks recovery timelines.', timeline:[
+          {date:'2019', event:'City of Detroit ransomware — DDOT and city services impacted; lateral risk to ISP/carrier infrastructure shared with downtown-proximate facilities'},
+          {date:'2022', event:'Michigan-based critical infrastructure saw 34% increase in ransomware incidents per CISA Region 5 report; data centers specifically named as priority targets'},
+          {date:'Oct 2023', event:'Mr. Cooper (Rocket subsidiary) ransomware — all customer-facing systems offline 3+ weeks; underscored vulnerability of data center infrastructure to ransomware with prolonged recovery'},
+          {date:'2024', event:'Multiple Michigan municipal data center environments targeted; CISA issued Midwest advisory for colocation and enterprise DC operators'}
+        ], sources:[
+          {name:'CISA Ransomware Guidance', url:'https://www.cisa.gov/stopransomware'},
+          {name:'CISA Region 5 Advisories', url:'https://www.cisa.gov/news-events/cybersecurity-advisories'},
+          {name:'Michigan Cyber Command', url:'https://www.michigan.gov/cyber'},
+          {name:'FBI Detroit Field Office', url:'https://www.fbi.gov/contact-us/field-offices/detroit'}
+        ]},
+        { tier:1, title:'Physical Intrusion & Insider Threat — Data Center Access Controls', desc:'Physical access to 800 Tower Drive represents a direct path to critical infrastructure. Tailgating, credential theft, and insider threats are the leading physical vectors for data center compromise. A physical intrusion enabling hardware implantation or direct server access would bypass most network security controls and could result in long-term, undetected compromise.', timeline:[
+          {date:'2023', event:'CISA published updated data center physical security guidance following documented increase in nation-state physical intrusion attempts at US colocation facilities'},
+          {date:'2022', event:'FBI issued TLP:WHITE advisory on foreign adversary attempts to gain physical access to US telecommunications and data center facilities under cover of maintenance contracts'},
+          {date:'Ongoing', event:'CISA annual threat assessments consistently rate insider threat and physical access compromise as top-3 risks for enterprise data center operators'}
+        ], sources:[
+          {name:'CISA Physical Security Guidance — Data Centers', url:'https://www.cisa.gov/sites/default/files/publications/Data_Center_Physical_Security_Checklist.pdf'},
+          {name:'FBI Cyber Division — Physical Security Threats', url:'https://www.fbi.gov/investigate/cyber'},
+          {name:'NIST SP 800-116 — Physical Access Control', url:'https://csrc.nist.gov/publications/detail/sp/800-116/rev-1/final'}
+        ]},
+        { tier:2, title:'ISP & Network Carrier Concentration Risk', desc:'The Troy data center\'s internet connectivity depends on a limited set of carrier providers in the Oakland County corridor. A carrier-level outage, BGP hijack, or fiber cut on the I-75 utility corridor could cause extended network isolation at 800 Tower Drive even if internal systems remain operational. Single-carrier dependency at any colocation facility is a CISA-identified critical infrastructure risk factor.', sources:[
+          {name:'CISA Internet Infrastructure Security', url:'https://www.cisa.gov/topics/critical-infrastructure-security-and-resilience'},
+          {name:'FCC Broadband Infrastructure Reports', url:'https://www.fcc.gov/reports-research/reports/broadband-progress-reports'},
+          {name:'DTE Energy Underground Cable Map', url:'https://outage.dteenergy.com/'}
+        ]}
+      ],
+      human: [
+        { tier:2, title:'I-75 Corridor Access Disruption — Troy Campus', desc:'800 Tower Drive sits directly off the I-75 / Big Beaver interchange, one of the most heavily trafficked corridors in Michigan. Major accidents, infrastructure maintenance closures, and winter weather events regularly cause significant access delays to the facility. For a data center, access disruption primarily affects emergency response personnel and replacement hardware delivery timelines.', timeline:[
+          {date:'Feb 2024', event:'I-75 emergency bridge inspection closure at Big Beaver; Troy corridor access disrupted for 22 hrs; hardware delivery for scheduled maintenance delayed by 1 day'},
+          {date:'Nov 2022', event:'Multi-vehicle accident on I-75 southbound at Big Beaver; Big Beaver Rd congestion backup to facility entrance for 4 hrs'},
+          {date:'Jan 2019', event:'Polar Vortex road conditions — I-75 reduced to one lane at multiple points; emergency generator fuel delivery to Troy corridor facilities delayed 6 hrs'}
+        ], sources:[
+          {name:'MDOT Traffic & Travel', url:'https://www.michigan.gov/mdot/travel'},
+          {name:'Michigan 511', url:'https://mi511.org/'},
+          {name:'Oakland County Road Commission', url:'https://www.rcoc.org/'}
+        ]},
+        { tier:3, title:'Theft & Vandalism — Hardware & Infrastructure Risk', desc:'Data center hardware theft is a documented risk at facilities with loading dock or exterior infrastructure exposure. Troy\'s suburban industrial corridor has experienced periodic theft of copper wiring and HVAC equipment from commercial facilities. Generator fuel theft is an emerging risk for data centers with above-ground fuel storage.', sources:[
+          {name:'Troy Police Department', url:'https://www.troymi.gov/departments/police/'},
+          {name:'Oakland County Sheriff', url:'https://www.oakgov.com/sheriff/'},
+          {name:'CISA Physical Security — Perimeter Controls', url:'https://www.cisa.gov/sites/default/files/publications/Data_Center_Physical_Security_Checklist.pdf'}
+        ]}
+      ],
+      financial: [
+        { tier:2, title:'Data Center Operational Cost Volatility — Power Pricing', desc:'DTE Energy commercial electricity rates have increased 18% since 2021 and are subject to fuel adjustment charges that fluctuate quarterly. As electricity is the dominant operating cost for any data center, significant rate increases directly affect the cost basis for Michigan-hosted infrastructure. DTE\'s ongoing grid modernization capital program may result in additional rate case approvals through 2027.', timeline:[
+          {date:'2021–2024', event:'DTE commercial rates increased ~18% over 3 years; MPSC approved multiple infrastructure surcharges tied to storm hardening capital program'},
+          {date:'2023', event:'DTE filed rate case seeking additional 6.7% commercial increase; MPSC approved modified 4.2% increase effective Jan 2024'},
+          {date:'2025', event:'DTE rate case filed for grid modernization capital recovery; commercial customers facing potential additional surcharge through 2027'}
+        ], sources:[
+          {name:'Michigan Public Service Commission', url:'https://www.michigan.gov/mpsc'},
+          {name:'DTE Energy Investor Relations', url:'https://newlook.dteenergy.com/wps/wcm/connect/dte-web/home/company/investor-relations'},
+          {name:'Crain\'s Detroit Business — DTE Coverage', url:'https://www.crainsdetroit.com/'}
+        ]},
+        { tier:3, title:'Michigan Data Privacy Compliance Risk', desc:'Michigan\'s evolving data privacy framework and potential adoption of CPRA-equivalent legislation would impose new obligations on data processed and stored at Michigan facilities. The Troy data center, as host of core Michigan mortgage processing infrastructure, would be subject to any state-level data residency or processing requirements.', sources:[
+          {name:'Michigan Legislature — Privacy Bills', url:'https://www.legislature.mi.gov/'},
+          {name:'CFPB Mortgage Data Regulations', url:'https://www.consumerfinance.gov/rules-policy/final-rules/'},
+          {name:'IAPP US Privacy Law Tracker', url:'https://iapp.org/resources/article/us-state-privacy-legislation-tracker/'}
+        ]}
+      ]
+    },
+    detroit_dc: {
+      weather: [
+        { tier:2, title:'DTE Power Grid Vulnerability — Corktown / Rosa Parks Corridor', desc:'The Detroit data center at 1401 Rosa Parks Blvd is located in the Corktown neighborhood, served by aging DTE underground distribution infrastructure. The Rosa Parks / Michigan Avenue corridor has a documented history of infrastructure-related outages distinct from the overhead line events that affect suburban Detroit. Underground cable faults in this area can take 8–24 hours to repair versus 4–6 hours for overhead line events.', timeline:[
+          {date:'Aug 2023', event:'Severe derecho — Wayne County sustained widespread DTE outages; Corktown-area underground infrastructure experienced faults requiring 12–18 hr repairs on multiple circuits'},
+          {date:'Jul 2021', event:'Heat-driven grid stress combined with aging underground equipment caused localized outages in the Rosa Parks / Michigan Ave corridor lasting up to 16 hrs'},
+          {date:'Aug 2014', event:'100-year storm event — downtown Detroit and Corktown areas among last restored due to underground infrastructure complexity; some circuits out 4+ days'},
+          {date:'2023', event:'FEMA DR-4810-MI declaration — Corktown included in Wayne County damage assessment; underground infrastructure replacement began post-declaration'}
+        ], sources:[
+          {name:'NWS Detroit', url:'https://www.weather.gov/dtx/'},
+          {name:'DTE Energy Outage Map', url:'https://outage.dteenergy.com/'},
+          {name:'City of Detroit DWSD', url:'https://detroitmi.gov/departments/water-and-sewerage-department'},
+          {name:'FEMA DR-4810-MI Declaration', url:'https://www.fema.gov/disaster/4810'}
+        ]},
+        { tier:2, title:'Flooding — Detroit Combined Sewer System & Basement Risk', desc:'Detroit\'s combined sewer system is among the oldest in the US and is directly adjacent to 1401 Rosa Parks Blvd. Heavy rainfall events exceeding 1 inch/hour routinely cause combined sewer overflow conditions in the Corktown area. Basement and below-grade infrastructure at this facility faces higher flood risk than suburban data center locations. The FEMA DR-4810-MI declaration specifically covers Wayne County flood damage including the Corktown corridor.', timeline:[
+          {date:'Jul 2026', event:'FEMA DR-4810-MI declaration — Wayne County flood damage confirmed; Rosa Parks/Corktown corridor received elevated rainfall and street flooding'},
+          {date:'Aug 2014', event:'Record 4.57" in 3 hrs — downtown Detroit including Corktown experienced catastrophic street and basement flooding; DWSD issued combined sewer overflow emergency advisory'},
+          {date:'Jun 2021', event:'Flash flood warning issued for downtown Detroit; Corktown-area streets reported standing water; several Michigan Ave basement businesses reported flooding'},
+          {date:'Sep 2022', event:'Hurricane Ian remnants — DWSD issued combined sewer overflow advisory specifically for Michigan Avenue / Rosa Parks corridor'}
+        ], sources:[
+          {name:'FEMA Flood Map Service Center', url:'https://msc.fema.gov/portal/home'},
+          {name:'City of Detroit DWSD Flood Info', url:'https://detroitmi.gov/departments/water-and-sewerage-department'},
+          {name:'FEMA DR-4810-MI', url:'https://www.fema.gov/disaster/4810'},
+          {name:'NWS Detroit Rainfall Data', url:'https://www.weather.gov/dtx/'}
+        ]},
+        { tier:3, title:'Extreme Heat — Urban Heat Island & Cooling Load', desc:'Detroit\'s Corktown neighborhood experiences an amplified urban heat island effect due to dense building stock, limited tree canopy, and dark surface coverage. During heat events, ambient temperatures at this facility can exceed Troy DC temperatures by 3–5°F, increasing HVAC load and cooling system stress. The current July 2026 heat event directly affects this facility.', timeline:[
+          {date:'Jul 2026', event:'Excessive Heat Warning — heat index 105–112°F across Wayne County; DTE grid conservation advisory active; Detroit DC HVAC operating at elevated load'},
+          {date:'Aug 2020', event:'Heat index 107°F; Wayne County heat emergency; DTE conservation request during 4–8 PM peak; Corktown area ambient temp reached 102°F surface reading'},
+          {date:'Jul 2022', event:'4 consecutive days 97°F+; Corktown among highest recorded urban temperatures in metro area during event'}
+        ], sources:[
+          {name:'NWS Detroit', url:'https://www.weather.gov/dtx/'},
+          {name:'EPA Urban Heat Island — Detroit', url:'https://www.epa.gov/green-infrastructure/reduce-urban-heat-island-effect'},
+          {name:'DTE Energy Conservation Programs', url:'https://newlook.dteenergy.com/'}
+        ]}
+      ],
+      cyber: [
+        { tier:1, title:'Data Center as High-Value Ransomware & Nation-State Target', desc:'The Detroit data center at 1401 Rosa Parks Blvd hosts critical production infrastructure for Rocket Companies\' mortgage origination platform. As a secondary Michigan data center supporting primary operations, it represents a high-value target for ransomware operators and nation-state actors seeking to disrupt US financial services infrastructure. A successful attack on this facility in conjunction with a Troy DC event could result in complete Michigan data center unavailability.', timeline:[
+          {date:'2019', event:'City of Detroit ransomware — shared ISP and carrier infrastructure with nearby city facilities creates lateral risk pathway'},
+          {date:'Oct 2023', event:'Mr. Cooper ransomware — demonstrated that mortgage servicer data center infrastructure is an active ransomware target with 3+ week recovery timelines'},
+          {date:'2024', event:'CISA issued advisory on nation-state targeting of US financial services data centers; Michigan facilities specifically mentioned in FBI Detroit briefing'},
+          {date:'2025', event:'FBI Detroit reported continued targeting of Midwest financial services infrastructure by ransomware-as-a-service operators'}
+        ], sources:[
+          {name:'CISA Ransomware Guidance', url:'https://www.cisa.gov/stopransomware'},
+          {name:'FBI Detroit Field Office', url:'https://www.fbi.gov/contact-us/field-offices/detroit'},
+          {name:'Michigan Cyber Command', url:'https://www.michigan.gov/cyber'},
+          {name:'CISA #StopRansomware Advisories', url:'https://www.cisa.gov/news-events/cybersecurity-advisories'}
+        ]},
+        { tier:1, title:'Physical Security — Corktown Neighborhood Access Controls', desc:'Unlike the Troy DC\'s suburban campus setting, 1401 Rosa Parks Blvd is in an urban neighborhood with higher foot traffic, more street-level access points, and proximity to surface parking. Physical security controls at this facility require a higher threat posture than suburban colocation environments. Nation-state physical intrusion methodology documented by CISA targets exactly these urban facility profiles.', timeline:[
+          {date:'2023', event:'CISA updated physical security guidance specifically addressing urban data center threat profiles distinct from campus/suburban facilities'},
+          {date:'2022', event:'FBI issued advisory on foreign adversary attempts to obtain maintenance contractor access to urban telecom and data center facilities in major US cities'},
+          {date:'2024', event:'Detroit Police Department reported increase in commercial intrusion attempts in Corktown / Michigan Ave corridor adjacent to Tiger Stadium redevelopment construction'}
+        ], sources:[
+          {name:'CISA Physical Security Guidance — Data Centers', url:'https://www.cisa.gov/sites/default/files/publications/Data_Center_Physical_Security_Checklist.pdf'},
+          {name:'Detroit Police Department', url:'https://detroitmi.gov/departments/police-department'},
+          {name:'FBI Cyber Division', url:'https://www.fbi.gov/investigate/cyber'}
+        ]},
+        { tier:2, title:'Telecommunications Infrastructure Dependency — Corktown', desc:'The Corktown data center\'s network connectivity relies on telecom conduit runs along Michigan Avenue and Rosa Parks Blvd. The ongoing FEMA-funded infrastructure replacement following DR-4810-MI includes utility corridor work in this area, creating both planned maintenance windows and risk of accidental fiber cuts during excavation activity.', sources:[
+          {name:'CISA Telecommunications Infrastructure Security', url:'https://www.cisa.gov/topics/critical-infrastructure-security-and-resilience'},
+          {name:'FCC Broadband Infrastructure Reports', url:'https://www.fcc.gov/reports-research/reports/broadband-progress-reports'},
+          {name:'City of Detroit DPW', url:'https://detroitmi.gov/departments/public-works'}
+        ]}
+      ],
+      human: [
+        { tier:2, title:'Corktown Neighborhood Development & Construction Activity', desc:'The area surrounding 1401 Rosa Parks Blvd is undergoing significant redevelopment — the Ford Michigan Central Station project, Tiger Stadium site development, and FEMA-funded infrastructure replacement all create sustained heavy construction activity within 0.5 miles of the facility. Construction vibration, utility disruptions during excavation, and increased truck traffic on Rosa Parks Blvd represent ongoing operational disruption risks.', timeline:[
+          {date:'2022–ongoing', event:'Ford Motor Company Michigan Central Station redevelopment — $950M project; major construction activity on Rosa Parks Blvd and Michigan Ave within 2 blocks of facility'},
+          {date:'Jul 2026', event:'FEMA DR-4810-MI infrastructure replacement work active on Rosa Parks / Michigan Ave corridor; utility excavation within 3 blocks of data center'},
+          {date:'2024', event:'Tiger Stadium site redevelopment construction began; Michigan Ave / Trumbull intersection heavy equipment activity affecting Rosa Parks Blvd access routes'},
+          {date:'2025', event:'Michigan Central Station nearing completion; transition to operational use expected to increase foot and vehicle traffic on Rosa Parks corridor permanently'}
+        ], sources:[
+          {name:'Ford Michigan Central — Project Updates', url:'https://www.michigan.central/'},
+          {name:'City of Detroit DPW Construction Notices', url:'https://detroitmi.gov/departments/public-works'},
+          {name:'Crain\'s Detroit Business — Corktown Development', url:'https://www.crainsdetroit.com/real-estate'}
+        ]},
+        { tier:2, title:'Downtown Detroit Civil Unrest & Access Risk', desc:'The Rosa Parks Blvd corridor is a primary arterial for demonstrations originating in or moving through downtown Detroit. Major protest events along Woodward Ave and through Corktown have historically impacted Rosa Parks Blvd access. As a 24/7 operational facility, any access restriction requires staff to navigate alternate entry routes, which are limited given the facility\'s location in the Corktown urban grid.', timeline:[
+          {date:'May–Jun 2020', event:'George Floyd protests — nightly marches through Corktown along Michigan Ave and Rosa Parks Blvd; data center access restricted to credentialed staff only for 5 consecutive nights'},
+          {date:'Jun 2022', event:'Dobbs decision protests — march through Corktown; Rosa Parks Blvd temporarily closed by Detroit Police; 2-hr access restriction for non-emergency personnel'},
+          {date:'Sep 2023', event:'UAW strike rally through downtown; Corktown access routes impacted for 4 hrs midday'}
+        ], sources:[
+          {name:'Detroit Police Department Special Events', url:'https://detroitmi.gov/departments/police-department'},
+          {name:'Michigan State Police', url:'https://www.michigan.gov/msp'},
+          {name:'WXYZ Detroit News', url:'https://www.wxyz.com/'}
+        ]},
+        { tier:3, title:'Vehicle Theft & Copper Wire Theft Risk — Corktown', desc:'Wayne County leads Michigan in vehicle theft rates, and the Corktown industrial corridor has documented incidents of copper wiring and HVAC equipment theft from commercial buildings. Generator components, external cooling units, and rooftop electrical infrastructure are documented targets at urban data center facilities in Detroit.', sources:[
+          {name:'Detroit Police Department Crime Mapping', url:'https://detroitmi.gov/departments/police-department/crime-mapping-stats'},
+          {name:'Wayne County Sheriff', url:'https://www.waynecounty.com/elected/sheriff/home.aspx'},
+          {name:'Michigan Auto Theft Prevention Authority', url:'https://www.michigan.gov/msp/divisions/cifs/matpa'}
+        ]}
+      ],
+      financial: [
+        { tier:2, title:'DTE Power Rate Exposure — Wayne County Commercial Rates', desc:'The Detroit data center, located in Wayne County, faces the same DTE Energy commercial rate increases affecting all Michigan Rocket facilities. At a data center scale, electricity cost is the dominant operational expense, and the 18% DTE rate increase since 2021 has materially affected the cost basis for Michigan-hosted infrastructure. Wayne County commercial customers also face a distribution infrastructure surcharge tied to the post-DR-4810-MI grid hardening capital program.', timeline:[
+          {date:'2021–2024', event:'DTE commercial rates increased ~18%; Wayne County customers subject to additional distribution modernization surcharge tied to storm vulnerability mitigation'},
+          {date:'Jul 2026', event:'FEMA DR-4810-MI infrastructure replacement — DTE is funding accelerated Wayne County underground cable replacement; potential for brief planned outages during construction windows'},
+          {date:'2025', event:'DTE rate case filed for continued grid modernization; Wayne County commercial customers facing potential additional surcharge through 2027'}
+        ], sources:[
+          {name:'Michigan Public Service Commission', url:'https://www.michigan.gov/mpsc'},
+          {name:'DTE Energy Rate Information', url:'https://newlook.dteenergy.com/'},
+          {name:'Wayne County Executive Office', url:'https://www.waynecounty.com/elected/executive/'}
+        ]},
+        { tier:2, title:'Michigan Regulatory Compliance — Financial Data Processing', desc:'As a Wayne County-located facility processing Michigan mortgage origination data, 1401 Rosa Parks Blvd is subject to Michigan Department of Insurance and Financial Services (DIFS) data handling requirements and any state-level data residency obligations. Evolving Michigan privacy legislation and CFPB examination focus on mortgage servicer data management practices directly affect operational requirements at this facility.', sources:[
+          {name:'Michigan DIFS — Financial Institutions', url:'https://www.michigan.gov/difs'},
+          {name:'CFPB Mortgage Servicing Rules', url:'https://www.consumerfinance.gov/rules-policy/final-rules/'},
+          {name:'Michigan Legislature — Privacy Legislation', url:'https://www.legislature.mi.gov/'}
+        ]}
+      ]
     }
   };
 
@@ -4234,7 +4431,11 @@
                'irving','las colinas','lewisville','flower mound','elm fork','trinity river',
                'cypress waters','dallas-fort worth'],
     fortworth:['fort worth','tarrant county','tarrant co','north texas','dfw','alliance',
-               'hillwood','i-35w','west fort worth','dallas-fort worth','ercot']
+               'hillwood','i-35w','west fort worth','dallas-fort worth','ercot'],
+    troy_dc:  ['troy','800 tower drive','tower drive','oakland county','troy michigan','dte energy',
+               'dte grid','michigan','metro detroit','i-75','big beaver','sterling heights'],
+    detroit_dc:['1401 rosa parks','rosa parks blvd','corktown','detroit','wayne county','dte energy',
+                'dte grid','michigan avenue','tiger stadium','michigan','metro detroit']
   };
 
   function buildLiveAlertsForBuilding(buildingKey, city, state, liveItems) {
@@ -4267,7 +4468,13 @@
       profileKey:'texas', color:'#EA580C' },
     { key:'fortworth', label:'Fort Worth — 9800 Hillwood Pkwy', subtitle:'Fort Worth, TX', state:'TX', city:'Fort Worth',
       buildings:['9800 Hillwood Pkwy'],
-      profileKey:'texas', color:'#EA580C' }
+      profileKey:'texas', color:'#EA580C' },
+    { key:'troy_dc', label:'Data Center — Troy', subtitle:'800 Tower Drive · Troy, MI · Primary Michigan DC', state:'MI', city:'Troy',
+      buildings:['800 Tower Drive, Troy MI'],
+      profileKey:'troy_dc', color:'#7C3AED' },
+    { key:'detroit_dc', label:'Data Center — Detroit', subtitle:'1401 Rosa Parks Blvd · Detroit, MI · Secondary Michigan DC', state:'MI', city:'Detroit',
+      buildings:['1401 Rosa Parks Blvd, Detroit MI'],
+      profileKey:'detroit_dc', color:'#7C3AED' }
   ];
 
   function buildCriticalBuildingCard(cb, liveItems) {
