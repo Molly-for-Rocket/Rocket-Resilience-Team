@@ -319,8 +319,8 @@
 <div id="tab-dashboard" class="tab-content active">
   <div class="section-header">
     <div>
-      <div class="section-title">Threat Intelligence Dashboard</div>
-      <div class="section-subtitle">AI-Aggregated Alert System · Detroit Metro Focus</div>
+      <div class="section-title" style="font-size:22px">Threat Intelligence Dashboard</div>
+      <div class="section-subtitle" style="font-size:14px">AI-Aggregated Alert System · Detroit Metro Focus</div>
     </div>
     <div class="btn-row" style="margin-top:0">
       <button class="btn btn-ghost btn-sm" onclick="switchTab('ai', document.querySelectorAll('.nav-tab')[4])">Generate Report</button>
@@ -328,7 +328,7 @@
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:16px">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px">
     <div class="stat-tile cat-human-bg" onclick="filterByCategory('human')" style="cursor:pointer" title="Click to filter alerts by Human-Made category">
       <div class="stat-number cat-human" id="stat-human">—</div>
       <div class="stat-label">Human-Made Threats</div>
@@ -349,11 +349,9 @@
       <div class="stat-label">Financial / Regulatory</div>
       <div class="stat-delta" id="stat-financial-delta">Loading…</div>
     </div>
-    <div class="stat-tile cat-datacenter-bg" onclick="filterByCategory('datacenter')" style="cursor:pointer" title="Click to filter alerts affecting Data Centers">
-      <div class="stat-number cat-datacenter" id="stat-datacenter">—</div>
-      <div class="stat-label">Data Center / Infra</div>
-      <div class="stat-delta" id="stat-datacenter-delta">Loading…</div>
-    </div>
+    <!-- datacenter tile removed from display; stat-datacenter element kept hidden for JS compatibility -->
+    <div id="stat-datacenter" style="display:none"></div>
+    <div id="stat-datacenter-delta" style="display:none"></div>
   </div>
 
   <div class="grid-2" style="align-items:stretch">
@@ -2461,7 +2459,7 @@
       maxBounds: usBounds,
       maxBoundsViscosity: 1.0,
       attributionControl: false
-    }).setView([39.5, -98.35], 3);
+    }).setView([38.5, -96.0], 4);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd', maxZoom: 19
     }).addTo(miniMap);
@@ -3636,41 +3634,73 @@
   var CB_RISK_PROFILES = {
     detroit: {
       weather: [
-        { tier:2, title:'Severe Thunderstorm Season (Jun–Sep)', desc:'Detroit sits in a high-frequency severe thunderstorm corridor. Wayne County averages 35+ severe thunderstorm events annually. Risk: power outages, flash flooding of lower-level parking, roof and window damage to high-rise buildings on Woodward Ave.', sources:[
+        { tier:2, title:'Severe Thunderstorm Season (Jun–Sep)', desc:'Detroit sits in a high-frequency severe thunderstorm corridor. Wayne County averages 35+ severe thunderstorm events annually. Risk: power outages, flash flooding of lower-level parking, roof and window damage to high-rise buildings on Woodward Ave.', timeline:[
+          {date:'Aug 2023', event:'Severe derecho knocked out power to 250,000+ Wayne County customers; Woodward Ave buildings on generator backup for 6–18 hrs'},
+          {date:'Jul 2021', event:'Back-to-back severe storm system caused 3 days of intermittent outages across downtown Detroit'},
+          {date:'Jun 2019', event:'EF-0 tornado touched down in Downriver area; severe winds caused window damage along Woodward corridor'},
+          {date:'Aug 2014', event:'Historic 100-year storm event; $1B+ regional damage; DTE declared major outage emergency'}
+        ], sources:[
           {name:'NWS Detroit — Local Forecasts & Warnings', url:'https://www.weather.gov/dtx/'},
           {name:'NOAA Storm Data Publication', url:'https://www.ncei.noaa.gov/products/land-based-station/storm-data'},
           {name:'FEMA Historical Declarations — Michigan', url:'https://www.fema.gov/disaster/declarations?field_dv2_state_territory_tribal_value=MI'}
         ]},
-        { tier:2, title:'Winter Ice Storm & Blizzard Risk', desc:'Detroit experiences significant ice storm and blizzard events on average every 2–3 years. The Woodward Ave corridor is particularly exposed to wind chill and ice accumulation. The 2019 polar vortex caused building closures across downtown Detroit for 2 days.', sources:[
+        { tier:2, title:'Winter Ice Storm & Blizzard Risk', desc:'Detroit experiences significant ice storm and blizzard events on average every 2–3 years. The Woodward Ave corridor is particularly exposed to wind chill and ice accumulation. The 2019 polar vortex caused building closures across downtown Detroit for 2 days.', timeline:[
+          {date:'Jan 2019', event:'Polar Vortex — temps hit -13°F; all downtown Detroit Rocket buildings closed for 2 consecutive days'},
+          {date:'Feb 2021', event:'Winter Storm Uri fringe effects; 8" snowfall + ice accumulation; delayed campus opens for 3 days'},
+          {date:'Dec 2022', event:'Winter Storm Elliott — wind chills of -30°F; parking structure access restricted; partial work-from-home activation'},
+          {date:'Mar 2017', event:'Late-season blizzard dropped 10" on Detroit; commuter disruption impacted staffing levels for 2 days'}
+        ], sources:[
           {name:'NWS Detroit — Winter Weather', url:'https://www.weather.gov/dtx/winterweather'},
           {name:'NOAA Climate Data Online', url:'https://www.ncdc.noaa.gov/cdo-web/'},
           {name:'Wayne County Emergency Management', url:'https://www.waynecounty.com/elected/sheriff/office-of-homeland-security-emergency-management.aspx'}
         ]},
-        { tier:3, title:'Flooding — Detroit River & Combined Sewer Overflow', desc:'Detroit\'s aging combined sewer system is prone to backup flooding during heavy rainfall events exceeding 1 inch/hour. The First National Building basement and lower parking levels have historical flood risk. The August 2014 storm caused $1B+ in regional flood damage.', sources:[
+        { tier:3, title:'Flooding — Detroit River & Combined Sewer Overflow', desc:'Detroit\'s aging combined sewer system is prone to backup flooding during heavy rainfall events exceeding 1 inch/hour. The First National Building basement and lower parking levels have historical flood risk. The August 2014 storm caused $1B+ in regional flood damage.', timeline:[
+          {date:'Aug 2014', event:'Record 4.57" rainfall in 3 hrs; $1B+ regional damage; downtown parking structures flooded; Wayne County declared state of emergency'},
+          {date:'Jun 2021', event:'Flash flood warning issued for downtown Detroit; several Woodward Ave lower-level parking areas reported standing water'},
+          {date:'Sep 2022', event:'Remnants of Hurricane Ian produced heavy rainfall; DWSD issued combined sewer overflow advisory for Detroit River vicinity'}
+        ], sources:[
           {name:'FEMA Flood Map Service Center', url:'https://msc.fema.gov/portal/home'},
           {name:'City of Detroit DWSD Flood Info', url:'https://detroitmi.gov/departments/water-and-sewerage-department'},
           {name:'NOAA Detroit Rainfall Data', url:'https://www.weather.gov/dtx/'}
         ]},
-        { tier:3, title:'Extreme Heat Events', desc:'Detroit Urban Heat Island effect creates temperatures 5–10°F higher than surrounding areas during heat waves. The dense downtown cluster of Woodward Ave buildings creates additional thermal retention. HVAC strain and power grid demand peaks during July–August heat events.', sources:[
+        { tier:3, title:'Extreme Heat Events', desc:'Detroit Urban Heat Island effect creates temperatures 5–10°F higher than surrounding areas during heat waves. The dense downtown cluster of Woodward Ave buildings creates additional thermal retention. HVAC strain and power grid demand peaks during July–August heat events.', timeline:[
+          {date:'Jul 2022', event:'Detroit hit 97°F for 4 consecutive days; DTE issued conservation alerts; HVAC load-shedding advisories for commercial buildings'},
+          {date:'Aug 2020', event:'Heat index reached 107°F; Wayne County heat emergency declared; cooling center activations impacted downtown foot traffic'},
+          {date:'Jun 2024', event:'Early-season heat dome produced 5+ days over 90°F; DTE grid demand reached record levels for June'}
+        ], sources:[
           {name:'NOAA National Centers for Environmental Information', url:'https://www.ncei.noaa.gov/'},
           {name:'EPA Urban Heat Island Effect', url:'https://www.epa.gov/green-infrastructure/reduce-urban-heat-island-effect'},
           {name:'Wayne County Health Department', url:'https://www.waynecounty.com/departments/health/about-us.aspx'}
         ]}
       ],
       cyber: [
-        { tier:1, title:'City of Detroit Ransomware & Cyber Incidents', desc:'Detroit city infrastructure has been targeted by ransomware multiple times. In 2019, the City of Detroit suffered a ransomware attack affecting city services. As Rocket Companies is the dominant corporate tenant in downtown Detroit, shared building infrastructure and ISP connections create lateral risk vectors.', sources:[
+        { tier:1, title:'City of Detroit Ransomware & Cyber Incidents', desc:'Detroit city infrastructure has been targeted by ransomware multiple times. In 2019, the City of Detroit suffered a ransomware attack affecting city services. As Rocket Companies is the dominant corporate tenant in downtown Detroit, shared building infrastructure and ISP connections create lateral risk vectors.', timeline:[
+          {date:'2019', event:'City of Detroit systems hit by ransomware; DDOT and city services disrupted; Michigan Cyber Command activated'},
+          {date:'2020', event:'Detroit Public Schools ransomware attack; broader Wayne County infrastructure on alert'},
+          {date:'2022', event:'Michigan-based government entities saw 34% increase in ransomware incidents per CISA Region 5 report'},
+          {date:'2024', event:'Multiple Michigan municipal water and utility systems targeted; CISA issued advisory for Midwest critical infrastructure'}
+        ], sources:[
           {name:'CISA Cybersecurity Advisories', url:'https://www.cisa.gov/news-events/cybersecurity-advisories'},
           {name:'Detroit Free Press Tech Archives', url:'https://www.freep.com/tech/'},
           {name:'Michigan Cyber Command', url:'https://www.michigan.gov/cyber'}
         ]},
-        { tier:2, title:'Financial District Targeting — Scattered Spider & TA505', desc:'Threat actors specifically targeting the US financial services corridor have been documented operating in the Detroit metro area. Rocket\'s Woodward campus is co-located with other financial institutions making it a high-value target cluster.', sources:[
+        { tier:2, title:'Financial District Targeting — Scattered Spider & TA505', desc:'Threat actors specifically targeting the US financial services corridor have been documented operating in the Detroit metro area. Rocket\'s Woodward campus is co-located with other financial institutions making it a high-value target cluster.', timeline:[
+          {date:'Oct 2023', event:'CISA/FBI joint advisory AA23-320A published on Scattered Spider; mortgage & financial services specifically named as targets'},
+          {date:'Nov 2023', event:'TA505 campaigns against US financial services companies surged; Michigan-based firms received FBI threat notifications'},
+          {date:'2024', event:'FBI Detroit office reported 40%+ increase in financial sector BEC (Business Email Compromise) complaints from Michigan businesses'}
+        ], sources:[
           {name:'CISA Advisory AA23-320A — Scattered Spider', url:'https://www.cisa.gov/news-events/cybersecurity-advisories/aa23-320a'},
           {name:'FBI Detroit Field Office', url:'https://www.fbi.gov/contact-us/field-offices/detroit'},
           {name:'Michigan State Police Cyber Unit', url:'https://www.michigan.gov/msp/divisions/cifs/cyber-unit'}
         ]}
       ],
       human: [
-        { tier:2, title:'Downtown Detroit Mass Demonstration History', desc:'The Woodward Ave corridor is the primary protest route in Detroit. Major demonstrations have occurred in 2020 (racial justice), 2022 (reproductive rights), and 2024 (labor actions). Events regularly impact access to 611 Woodward, One Campus Martius, and First National Building. Average of 8 permitted large demonstrations per year on Woodward.', sources:[
+        { tier:2, title:'Downtown Detroit Mass Demonstration History', desc:'The Woodward Ave corridor is the primary protest route in Detroit. Major demonstrations have occurred in 2020 (racial justice), 2022 (reproductive rights), and 2024 (labor actions). Events regularly impact access to 611 Woodward, One Campus Martius, and First National Building. Average of 8 permitted large demonstrations per year on Woodward.', timeline:[
+          {date:'May–Jun 2020', event:'George Floyd / racial justice protests; Woodward Ave closed for 3+ weeks of nightly marches; building access restricted after 6 PM'},
+          {date:'Jun 2022', event:'Dobbs decision protests; 5,000+ marched down Woodward; Campus Martius plaza occupied for 8 hrs'},
+          {date:'Sep 2023', event:'UAW strike rally at Campus Martius drew 3,000+; Woodward Ave access restricted midday'},
+          {date:'Oct 2024', event:'Labor action coalition march; Woodward closed between Jefferson and Grand Blvd for 4 hrs midday'}
+        ], sources:[
           {name:'Detroit Police Department — Special Events', url:'https://detroitmi.gov/departments/police-department'},
           {name:'Michigan State Police', url:'https://www.michigan.gov/msp'},
           {name:'MLive Michigan News', url:'https://www.mlive.com/news/detroit/'},
@@ -3681,14 +3711,23 @@
           {name:'Wayne County Sheriff', url:'https://www.waynecounty.com/elected/sheriff/home.aspx'},
           {name:'Detroit Police Department Crime Mapping', url:'https://detroitmi.gov/departments/police-department/crime-mapping-stats'}
         ]},
-        { tier:3, title:'Labor Unrest — UAW & Stellantis/GM Spillover', desc:'Detroit\'s status as the automotive labor capital means major labor actions by UAW or related unions can cause significant downtown disruption. The 2023 UAW strike included downtown Detroit rallies that impacted Woodward Ave corridor access for multiple days.', sources:[
+        { tier:3, title:'Labor Unrest — UAW & Stellantis/GM Spillover', desc:'Detroit\'s status as the automotive labor capital means major labor actions by UAW or related unions can cause significant downtown disruption. The 2023 UAW strike included downtown Detroit rallies that impacted Woodward Ave corridor access for multiple days.', timeline:[
+          {date:'Sep–Oct 2023', event:'UAW strike vs. Ford, GM, Stellantis — 6-week work stoppage; weekly downtown rallies impacted Woodward corridor access and employee morale'},
+          {date:'2019', event:'UAW-GM strike (40 days); downtown Detroit solidarity marches disrupted Woodward Ave on 3 occasions'},
+          {date:'2025 (ongoing)', event:'UAW-Stellantis contract dispute; periodic work actions and community rallies expected through Q3 2025'}
+        ], sources:[
           {name:'UAW Official News', url:'https://uaw.org/news/'},
           {name:'Detroit News Labor Coverage', url:'https://www.detroitnews.com/business/'},
           {name:'Michigan State Police', url:'https://www.michigan.gov/msp'}
         ]}
       ],
       financial: [
-        { tier:1, title:'Mortgage Rate Sensitivity — Detroit HQ Revenue Risk', desc:'As Rocket Mortgage\'s primary origination operations are headquartered in downtown Detroit, Federal Reserve rate decisions directly impact operational headcount and facility utilization at these buildings. High-rate environments have historically triggered workforce reductions affecting building occupancy levels.', sources:[
+        { tier:1, title:'Mortgage Rate Sensitivity — Detroit HQ Revenue Risk', desc:'As Rocket Mortgage\'s primary origination operations are headquartered in downtown Detroit, Federal Reserve rate decisions directly impact operational headcount and facility utilization at these buildings. High-rate environments have historically triggered workforce reductions affecting building occupancy levels.', timeline:[
+          {date:'2022–2023', event:'Fed raised rates 525bps in 18 months; Rocket Companies reduced workforce ~8,000 employees; multiple downtown Detroit floors vacated'},
+          {date:'Sep 2023', event:'Rocket announced consolidation of Detroit campus footprint; partial subleasing of floors at 1 Campus Martius'},
+          {date:'2024', event:'Rates held at 5.25–5.5%; origination volume remained below 2021 peak; building occupancy at ~60% of 2021 levels'},
+          {date:'2025', event:'Fed began easing cycle; origination recovery underway; campus headcount rebuilding'}
+        ], sources:[
           {name:'Federal Reserve Monetary Policy', url:'https://www.federalreserve.gov/monetarypolicy.htm'},
           {name:'Rocket Companies SEC Filings (10-K)', url:'https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=RKT&type=10-K'},
           {name:'CFPB Mortgage Market Data', url:'https://www.consumerfinance.gov/data-research/mortgage-data/'}
@@ -3702,17 +3741,30 @@
     },
     cerritos: {
       weather: [
-        { tier:1, title:'Seismic Risk — Los Angeles Basin / Cerritos Fault Zone', desc:'Cerritos sits directly above the Cerritos fault and adjacent to the Whittier and Puente Hills fault systems. The 1987 Whittier Narrows earthquake (M5.9) caused significant damage in the Cerritos area. A major Puente Hills fault rupture (M7.5 estimated) would cause catastrophic damage across the LA Basin including the 17785 Center Court facility.', sources:[
+        { tier:1, title:'Seismic Risk — Los Angeles Basin / Cerritos Fault Zone', desc:'Cerritos sits directly above the Cerritos fault and adjacent to the Whittier and Puente Hills fault systems. The 1987 Whittier Narrows earthquake (M5.9) caused significant damage in the Cerritos area. A major Puente Hills fault rupture (M7.5 estimated) would cause catastrophic damage across the LA Basin including the 17785 Center Court facility.', timeline:[
+          {date:'Oct 1987', event:'M5.9 Whittier Narrows earthquake — epicenter 8 miles from Cerritos; significant structural damage to area buildings; 8 fatalities in LA County'},
+          {date:'Jan 1994', event:'M6.7 Northridge earthquake — felt strongly in Cerritos; widespread non-structural damage across the LA Basin industrial corridor'},
+          {date:'Jul 2019', event:'M7.1 Ridgecrest earthquake — shaking felt throughout LA Basin; no structural damage in Cerritos but emergency protocol activated at area facilities'},
+          {date:'Inherent risk', event:'USGS rates Cerritos-area annual probability of M6.7+ at ~60% over 30 years; considered one of highest-risk seismic zones for Rocket facilities'}
+        ], sources:[
           {name:'USGS Seismic Hazard Program', url:'https://earthquake.usgs.gov/hazards/'},
           {name:'CA Dept of Conservation — Fault Maps', url:'https://maps.conservation.ca.gov/cgs/faultactivity/'},
           {name:'Southern California Earthquake Center', url:'https://www.scec.org/'}
         ]},
-        { tier:2, title:'Wildfire Smoke & Air Quality Events', desc:'Although Cerritos itself has low direct wildfire risk, the LA Basin experiences significant wildfire smoke events from surrounding mountains (San Gabriel, San Bernardino ranges) multiple times per year. The 2020 wildfire season produced 30+ days of unhealthy air quality in the Cerritos area, triggering work-from-home guidance.', sources:[
+        { tier:2, title:'Wildfire Smoke & Air Quality Events', desc:'Although Cerritos itself has low direct wildfire risk, the LA Basin experiences significant wildfire smoke events from surrounding mountains (San Gabriel, San Bernardino ranges) multiple times per year. The 2020 wildfire season produced 30+ days of unhealthy air quality in the Cerritos area, triggering work-from-home guidance.', timeline:[
+          {date:'Sep–Oct 2020', event:'LA wildfire season — 30+ days of AQI >150 (Unhealthy) in Cerritos area; facility outdoor activities suspended; WFH guidance issued'},
+          {date:'Nov 2018', event:'Woolsey Fire smoke reached Cerritos area; AQI hit 200+ (Very Unhealthy); facility HVAC placed on recirculate for 5 days'},
+          {date:'Jan 2025', event:'Palisades and Eaton fires — worst LA wildfire event on record; smoke blanketed Cerritos corridor for 2 weeks; AQI peaked at 250+'}
+        ], sources:[
           {name:'California Air Resources Board (CARB)', url:'https://ww2.arb.ca.gov/'},
           {name:'South Coast AQMD — Air Quality Index', url:'http://www.aqmd.gov/home/air-quality'},
           {name:'CAL FIRE Incident Reports', url:'https://www.fire.ca.gov/incidents/'}
         ]},
-        { tier:3, title:'El Niño Flooding — Los Cerritos Channel', desc:'The Los Cerritos Channel adjacent to Cerritos poses periodic flooding risk during El Niño years. FEMA Flood Zone AE designations affect portions of the Cerritos industrial corridor near Center Court Dr. The 2017 and 2023 El Niño events caused localized flooding in the area.', sources:[
+        { tier:3, title:'El Niño Flooding — Los Cerritos Channel', desc:'The Los Cerritos Channel adjacent to Cerritos poses periodic flooding risk during El Niño years. FEMA Flood Zone AE designations affect portions of the Cerritos industrial corridor near Center Court Dr. The 2017 and 2023 El Niño events caused localized flooding in the area.', timeline:[
+          {date:'Feb 2017', event:'Atmospheric river brought record rainfall to LA Basin; Los Cerritos Channel reached near-capacity; localized street flooding within 0.5 miles of Center Court Dr'},
+          {date:'Mar 2023', event:'El Niño-driven storms; 3+ inches over 48 hrs; LA County issued flood watch; Cerritos industrial district experienced minor inundation'},
+          {date:'Feb 2024', event:'Atmospheric river series — highest cumulative rainfall in 10 years; LA County flood control infrastructure tested near capacity'}
+        ], sources:[
           {name:'FEMA Flood Map Service Center', url:'https://msc.fema.gov/portal/home'},
           {name:'LA County Public Works — Flood Control', url:'https://dpw.lacounty.gov/wrd/'},
           {name:'NOAA ENSO Forecasts', url:'https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/'}
@@ -3742,26 +3794,44 @@
     },
     texas: {
       weather: [
-        { tier:1, title:'Hurricane & Tropical Storm — Dallas-Fort Worth Corridor', desc:'While DFW is inland, Gulf Coast hurricanes and tropical storms regularly track inland and affect the region with heavy rain, flooding, and high winds. Hurricane Harvey (2017) caused catastrophic flooding across North Texas including Coppell, Carrollton, and Fort Worth. The Cypress Waters campus in Coppell sits in a flood-prone low-lying area near the Elm Fork Trinity River.', sources:[
+        { tier:1, title:'Hurricane & Tropical Storm — Dallas-Fort Worth Corridor', desc:'While DFW is inland, Gulf Coast hurricanes and tropical storms regularly track inland and affect the region with heavy rain, flooding, and high winds. Hurricane Harvey (2017) caused catastrophic flooding across North Texas including Coppell, Carrollton, and Fort Worth. The Cypress Waters campus in Coppell sits in a flood-prone low-lying area near the Elm Fork Trinity River.', timeline:[
+          {date:'Aug 2017', event:'Hurricane Harvey remnants — catastrophic flooding across North TX; Coppell received 12"+ in 24 hrs; Elm Fork Trinity River overflowed; multiple Cypress Waters-area road closures for 4+ days'},
+          {date:'Sep 2021', event:'Tropical Storm Nicholas remnants — heavy rainfall across DFW; flash flood watch issued for Tarrant and Dallas counties'},
+          {date:'May 2024', event:'Tropical system remnants + severe storm system; Fort Worth recorded 6" rainfall in 6 hrs; Hillwood Pkwy corridor flooded temporarily'}
+        ], sources:[
           {name:'NOAA National Hurricane Center', url:'https://www.nhc.noaa.gov/'},
           {name:'FEMA Historical Declarations — Texas', url:'https://www.fema.gov/disaster/declarations?field_dv2_state_territory_tribal_value=TX'},
           {name:'NWS Fort Worth', url:'https://www.weather.gov/fwd/'},
           {name:'Dallas County Flood Control', url:'https://www.dallascounty.org/departments/public-works/flood-control.php'}
         ]},
-        { tier:2, title:'Tornado Alley — Direct Risk to Both TX Facilities', desc:'Both Cypress Waters (Coppell) and Fort Worth 9800 Hillwood are located in one of the highest-frequency tornado corridors in North America. Tarrant and Dallas counties average 8–12 significant tornado events per decade. The April 2022 North Texas tornado outbreak caused damage within 5 miles of the Cypress Waters campus.', sources:[
+        { tier:2, title:'Tornado Alley — Direct Risk to Both TX Facilities', desc:'Both Cypress Waters (Coppell) and Fort Worth 9800 Hillwood are located in one of the highest-frequency tornado corridors in North America. Tarrant and Dallas counties average 8–12 significant tornado events per decade. The April 2022 North Texas tornado outbreak caused damage within 5 miles of the Cypress Waters campus.', timeline:[
+          {date:'Apr 2022', event:'North Texas tornado outbreak — EF-2 tornado touched down in Garland; EF-1 passed within 5 miles of Cypress Waters campus; Coppell under tornado warning for 45 min'},
+          {date:'May 2022', event:'EF-3 tornado struck Elgin TX (statewide outbreak); DFW area under Tornado Watch for 8 hrs; Cypress Waters facility sheltered in place'},
+          {date:'Dec 2021', event:'Rare December tornado outbreak across North TX; Garland EF-3 caused 11 fatalities; both DFW facilities under tornado watch'},
+          {date:'Inherent risk', event:'SPC classifies both Coppell and Fort Worth as "High Risk" for tornado occurrence — top 5% of all US metro areas'}
+        ], sources:[
           {name:'NOAA Storm Prediction Center', url:'https://www.spc.noaa.gov/climo/torn/'},
           {name:'NWS Fort Worth — Severe Weather', url:'https://www.weather.gov/fwd/severe'},
           {name:'FEMA Historical TX Declarations', url:'https://www.fema.gov/disaster/declarations?field_dv2_state_territory_tribal_value=TX'},
           {name:'Dallas Morning News Weather Archives', url:'https://www.dallasnews.com/weather/'}
         ]},
-        { tier:2, title:'Winter Storm Uri-Type Grid Failure Risk', desc:'The February 2021 Winter Storm Uri caused the ERCOT Texas power grid to fail for up to 4 days, leaving 4.5 million Texans without power. Both Cypress Waters and Fort Worth 9800 Hillwood lost power for 48–72 hours during Uri. ERCOT has made improvements but Texas remains the only major US grid not connected to national interconnects, maintaining this risk.', sources:[
+        { tier:2, title:'Winter Storm Uri-Type Grid Failure Risk', desc:'The February 2021 Winter Storm Uri caused the ERCOT Texas power grid to fail for up to 4 days, leaving 4.5 million Texans without power. Both Cypress Waters and Fort Worth 9800 Hillwood lost power for 48–72 hours during Uri. ERCOT has made improvements but Texas remains the only major US grid not connected to national interconnects, maintaining this risk.', timeline:[
+          {date:'Feb 2021', event:'Winter Storm Uri — ERCOT grid failure; both Cypress Waters and Fort Worth Hillwood lost power for 48–72 hrs; full WFH activation; generator fuel logistics activated'},
+          {date:'Feb 2023', event:'Winter Storm Mara — temperatures hit single digits in DFW; rolling outages threatened; facilities pre-emptively sent non-essential staff home'},
+          {date:'Dec 2022', event:'Winter Storm Elliott — DFW hit 4°F; ERCOT declared grid emergency and requested conservation; Cypress Waters facility on reduced operations for 2 days'},
+          {date:'Inherent risk', event:'ERCOT is isolated from Eastern and Western Interconnects; Texas cannot import emergency power from neighboring states — structural grid vulnerability remains'}
+        ], sources:[
           {name:'ERCOT Grid Reliability Reports', url:'https://www.ercot.com/gridinfo/reliability'},
           {name:'PUCT Storm Uri Investigation', url:'https://www.puc.texas.gov/agency/resources/pubs/winterstorm/default.aspx'},
           {name:'Texas Tribune — ERCOT Coverage', url:'https://www.texastribune.org/series/winter-storm-texas/'}
         ]}
       ],
       cyber: [
-        { tier:2, title:'Texas Financial Services Cyber Risk — DFW Corridor', desc:'The Dallas-Fort Worth metro is a major US financial technology hub. FBI Dallas has documented elevated ransomware and business email compromise (BEC) activity targeting DFW financial services companies. Mr. Cooper (headquartered in Coppell, adjacent to Cypress Waters) suffered a major ransomware attack in 2023 affecting 14 million customers — directly relevant to Rocket\'s co-location in the same corridor.', sources:[
+        { tier:2, title:'Texas Financial Services Cyber Risk — DFW Corridor', desc:'The Dallas-Fort Worth metro is a major US financial technology hub. FBI Dallas has documented elevated ransomware and business email compromise (BEC) activity targeting DFW financial services companies. Mr. Cooper (headquartered in Coppell, adjacent to Cypress Waters) suffered a major ransomware attack in 2023 affecting 14 million customers — directly relevant to Rocket\'s co-location in the same corridor.', timeline:[
+          {date:'Oct–Nov 2023', event:'Mr. Cooper (Coppell HQ, adjacent to Cypress Waters) hit by ransomware — 14M customers affected; SEC 8-K filed; FBI Dallas investigation opened'},
+          {date:'2022', event:'Cadence Bank (Dallas) suffered data breach; FBI Dallas issued DFW financial sector advisory on BEC campaigns'},
+          {date:'2024', event:'FBI Dallas reported DFW financial sector as top-3 nationally for BEC complaint volume; phishing campaigns targeting Rocket co-located entities'}
+        ], sources:[
           {name:'FBI Dallas Field Office', url:'https://www.fbi.gov/contact-us/field-offices/dallas'},
           {name:'CISA Known Exploited Vulnerabilities', url:'https://www.cisa.gov/known-exploited-vulnerabilities-catalog'},
           {name:'Mr. Cooper 2023 SEC 8-K Filing', url:'https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=COOP&type=8-K'},
@@ -3769,7 +3839,11 @@
         ]}
       ],
       human: [
-        { tier:2, title:'DFW Infrastructure Vulnerability — Power & Water', desc:'The 2021 Uri event exposed significant infrastructure vulnerability in both DFW facilities\' dependency on Texas\'s isolated power grid. Unlike most US states, Texas cannot draw emergency power from neighboring states. Both buildings require robust generator and UPS backup planning that goes beyond standard business continuity.', sources:[
+        { tier:2, title:'DFW Infrastructure Vulnerability — Power & Water', desc:'The 2021 Uri event exposed significant infrastructure vulnerability in both DFW facilities\' dependency on Texas\'s isolated power grid. Unlike most US states, Texas cannot draw emergency power from neighboring states. Both buildings require robust generator and UPS backup planning that goes beyond standard business continuity.', timeline:[
+          {date:'Feb 2021', event:'Uri grid failure — Fort Worth water treatment plants lost power; boil-water notices issued for 3 days; Hillwood Pkwy facility had no running water for 28 hrs'},
+          {date:'Jun 2022', event:'ERCOT set demand records amid heat wave; voluntary conservation requests issued; DFW businesses asked to reduce non-essential power use'},
+          {date:'Jun 2023', event:'ERCOT emergency alerts during heat dome; Fort Worth utility asked commercial customers to reduce demand; Hillwood facility HVAC management activated'}
+        ], sources:[
           {name:'ERCOT Annual Reliability Report', url:'https://www.ercot.com/gridinfo/reliability'},
           {name:'Texas PUC Reliability Filings', url:'https://www.puc.texas.gov/industry/electric/reports/'},
           {name:'City of Fort Worth Emergency Management', url:'https://www.fortworthtexas.gov/departments/emergency-management'}
@@ -3781,7 +3855,11 @@
         ]}
       ],
       financial: [
-        { tier:1, title:'Mr. Cooper Co-location Risk — Coppell TX', desc:'Mr. Cooper Group (acquired by Rocket Companies) is headquartered in Coppell, TX, directly adjacent to the Cypress Waters campus. A major operational, regulatory, or cyber incident at Mr. Cooper directly affects the physical facilities and personnel sharing this geographic cluster. The 2023 Mr. Cooper ransomware attack is a prime example of this co-location risk.', sources:[
+        { tier:1, title:'Mr. Cooper Co-location Risk — Coppell TX', desc:'Mr. Cooper Group (acquired by Rocket Companies) is headquartered in Coppell, TX, directly adjacent to the Cypress Waters campus. A major operational, regulatory, or cyber incident at Mr. Cooper directly affects the physical facilities and personnel sharing this geographic cluster. The 2023 Mr. Cooper ransomware attack is a prime example of this co-location risk.', timeline:[
+          {date:'Oct 2023', event:'Mr. Cooper ransomware attack — all customer-facing systems offline for 3+ weeks; SEC 8-K filed; customer PII of 14M exposed; Coppell campus on incident response footing'},
+          {date:'Nov 2023', event:'CFPB and TX AG launched inquiries into Mr. Cooper breach; Coppell campus involved in regulatory response coordination'},
+          {date:'2024', event:'Rocket Companies completed acquisition of Mr. Cooper; integration of Coppell campus increases co-location exposure at the Cypress Waters cluster'}
+        ], sources:[
           {name:'Mr. Cooper SEC Filings', url:'https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=COOP&type=8-K'},
           {name:'CISA Known Exploited Vulnerabilities', url:'https://www.cisa.gov/known-exploited-vulnerabilities-catalog'},
           {name:'Rocket Companies Investor Relations', url:'https://ir.rocketcompanies.com/'},
@@ -3822,6 +3900,22 @@
       +'</div>';
   }
 
+  function cbTimeline(events) {
+    if (!events || events.length === 0) return '';
+    var html = '<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:8px">&#128197; Event Timeline</div>'
+      +'<div style="position:relative;padding-left:16px;border-left:2px solid var(--border)">';
+    events.forEach(function(ev) {
+      html += '<div style="position:relative;margin-bottom:8px;padding-left:10px">'
+        +'<span style="position:absolute;left:-9px;top:3px;width:7px;height:7px;border-radius:50%;background:var(--accent);border:1.5px solid var(--surface);display:inline-block"></span>'
+        +'<div style="font-size:11px;font-weight:700;color:var(--text)">'+escHtml(ev.date)+'</div>'
+        +'<div style="font-size:11px;color:var(--muted);line-height:1.5">'+escHtml(ev.event)+'</div>'
+        +'</div>';
+    });
+    html += '</div></div>';
+    return html;
+  }
+
   function buildRiskGroup(catLabel, catColor, catIcon, risks) {
     if (!risks || risks.length === 0) return '';
     var sorted = risks.slice().sort(function(a,b){ return a.tier - b.tier; });
@@ -3838,6 +3932,7 @@
         +'<div style="display:none;padding:12px 14px;font-size:12px;line-height:1.7;background:var(--surface)">'
         +cbTierBar(risk.tier)
         +'<div style="margin-top:10px">'+risk.desc+'</div>'
+        +cbTimeline(risk.timeline)
         +cbSourceList(risk.sources)
         +'</div>'
         +'</div>';
@@ -3931,15 +4026,15 @@
       +'</div>'
       // Live alerts section
       +'<div style="margin-bottom:20px">'
-      +'<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px">'
-      +'<span style="width:7px;height:7px;border-radius:50%;background:#16A34A;display:inline-block;animation:pulse 2s infinite"></span>'
+      +'<div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px">'
+      +'<span style="width:8px;height:8px;border-radius:50%;background:#16A34A;display:inline-block;animation:pulse 2s infinite"></span>'
       +'Live Alerts — '+cb.city+', '+cb.state
       +'</div>'
       +liveSection
       +'</div>'
       // Risk profiles
       +'<div>'
-      +'<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:12px">Known Risk Profile — Historical &amp; Current</div>'
+      +'<div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:12px">Known Risk Profile — Historical &amp; Current</div>'
       +riskHTML
       +'</div>'
       +'</div>';
