@@ -58,6 +58,10 @@
     .hazard-snapshot-time { font-size:11px; font-weight:700; color:#6B7280; margin-bottom:4px; }
     .hazard-snapshot-what { font-size:12px; color:#1A1A2E; line-height:1.5; }
     .hazard-snapshot-current { background:rgba(200,16,46,.04); border-radius:6px; padding:8px 10px; margin-bottom:4px; }
+    /* ── Critical buildings group filter pills ── */
+    .cb-grp-pill { padding:4px 14px; font-size:11px; font-weight:600; background:var(--surface2); border:1px solid var(--border); border-radius:999px; cursor:pointer; color:var(--muted); font-family:inherit; transition:background .15s,color .15s,border-color .15s; white-space:nowrap; }
+    .cb-grp-pill:hover { background:var(--border); color:var(--text); }
+    .cb-grp-pill.active { background:var(--accent); color:#fff; border-color:var(--accent); }
   </style>
   <style>
     :root {
@@ -1346,15 +1350,26 @@
 
 <!-- ═══════════════ CRITICAL BUILDINGS ═══════════════ -->
 <div id="tab-critical-buildings" class="tab-content">
-  <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-    <div>
-      <h2 style="font-size:18px;font-weight:700;margin-bottom:4px">&#9670; Critical Buildings Intelligence</h2>
-      <div style="font-size:12px;color:var(--muted)">Live threat monitoring, historical risk profiles, and local intelligence for all 8 designated critical facilities</div>
+  <div class="section-header" style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <h2 style="font-size:18px;font-weight:700;margin-bottom:4px">&#9670; Critical Buildings Intelligence</h2>
+        <div style="font-size:12px;color:var(--muted)">Live threat monitoring, historical risk profiles, and local intelligence for all 8 designated critical facilities</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary btn-sm" onclick="refreshCriticalBuildings()">&#8635; Refresh All</button>
+        <button class="btn btn-sm" onclick="switchCriticalTab('risks',this)" id="cb-tab-risks" style="border-bottom:2px solid var(--accent);color:var(--accent)">Risk Profiles</button>
+        <button class="btn btn-sm" onclick="switchCriticalTab('sources',this)" id="cb-tab-sources">Data Sources</button>
+      </div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn btn-primary btn-sm" onclick="refreshCriticalBuildings()">&#8635; Refresh All</button>
-      <button class="btn btn-sm" onclick="switchCriticalTab('risks',this)" id="cb-tab-risks" style="border-bottom:2px solid var(--accent);color:var(--accent)">Risk Profiles</button>
-      <button class="btn btn-sm" onclick="switchCriticalTab('sources',this)" id="cb-tab-sources">Data Sources</button>
+    <!-- Building group filter pills -->
+    <div style="display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap" id="cb-group-filter-row">
+      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-right:2px">Filter:</span>
+      <button id="cb-grp-detroit" class="cb-grp-pill" onclick="setCBGroup('detroit',this)">&#127968; Detroit Buildings</button>
+      <button id="cb-grp-other" class="cb-grp-pill" onclick="setCBGroup('other',this)">&#127758; Other Critical Buildings</button>
+      <button id="cb-grp-dc" class="cb-grp-pill" onclick="setCBGroup('dc',this)">&#128421; Data Centers</button>
+      <!-- Exit / clear filter — only visible when a filter is active -->
+      <button id="cb-grp-clear" onclick="setCBGroup(null,this)" style="display:none;margin-left:4px;padding:4px 12px;font-size:11px;font-weight:600;background:var(--surface2);border:1px solid var(--border);border-radius:999px;cursor:pointer;color:var(--muted);font-family:inherit">&#10005; Show All</button>
     </div>
   </div>
 
@@ -3899,6 +3914,37 @@
   /* ── CRITICAL BUILDINGS ── */
 
   var cbLoaded = false;
+  var activeCBGroup = null; /* null = show all, 'detroit' | 'other' | 'dc' */
+
+  /* Map CB_BUILDINGS key → group */
+  var CB_GROUP_MAP = {
+    detroit: 'detroit',
+    cerritos: 'other',
+    coppell: 'other',
+    fortworth: 'other',
+    troy_dc: 'dc',
+    detroit_dc: 'dc'
+  };
+
+  function setCBGroup(group, el) {
+    activeCBGroup = group;
+    /* Update pill active states */
+    ['cb-grp-detroit','cb-grp-other','cb-grp-dc'].forEach(function(id) {
+      var btn = document.getElementById(id);
+      if (btn) btn.classList.remove('active');
+    });
+    var clearBtn = document.getElementById('cb-grp-clear');
+    if (group && el && el.classList) {
+      el.classList.add('active');
+      if (clearBtn) clearBtn.style.display = 'inline-block';
+    } else {
+      if (clearBtn) clearBtn.style.display = 'none';
+    }
+    /* Re-render the grid with the new filter */
+    cbLoaded = false;
+    renderCriticalBuildings();
+    cbLoaded = true;
+  }
 
   function switchCriticalTab(which, el) {
     document.getElementById('cb-subtab-risks').style.display = which === 'risks' ? 'block' : 'none';
@@ -4537,15 +4583,38 @@
   function renderCriticalBuildings() {
     var grid = document.getElementById('critical-buildings-grid');
     if (!grid) return;
-    /* Only update the live-alerts sections if the tab is already rendered — avoid full rebuild on every sync */
     var isFirstRender = grid.children.length === 0 || (grid.children.length === 1 && grid.children[0].tagName !== 'DIV'.toUpperCase());
     if (document.getElementById('tab-critical-buildings').classList.contains('active') || isFirstRender) {
-      grid.innerHTML = '<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">&#128257; Loading intelligence for all critical buildings…</div>';
+      /* Filter buildings by active group */
+      var visibleBuildings = CB_BUILDINGS.filter(function(cb) {
+        if (!activeCBGroup) return true;
+        return CB_GROUP_MAP[cb.key] === activeCBGroup;
+      });
+
+      var groupLabels = {
+        detroit: '&#127968; Detroit Buildings',
+        other:   '&#127758; Other Critical Buildings',
+        dc:      '&#128421; Data Centers'
+      };
+
+      var bannerHtml = '';
+      if (activeCBGroup) {
+        bannerHtml = '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;font-size:12px">'
+          + '<span style="font-weight:600;color:var(--text)">' + (groupLabels[activeCBGroup] || '') + ' &nbsp;<span style="color:var(--muted);font-weight:400">— showing ' + visibleBuildings.length + ' of ' + CB_BUILDINGS.length + ' locations</span></span>'
+          + '<button onclick="setCBGroup(null,this)" style="padding:3px 10px;font-size:11px;font-weight:600;background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--muted);font-family:inherit">&#10005; Exit filter</button>'
+          + '</div>';
+      }
+
+      grid.innerHTML = '<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">&#128257; Loading intelligence…</div>';
       setTimeout(function() {
-        var html = CB_BUILDINGS.map(function(cb) {
+        if (!visibleBuildings.length) {
+          grid.innerHTML = bannerHtml + '<div style="padding:32px;text-align:center;color:var(--muted)">No buildings in this group.</div>';
+          return;
+        }
+        var html = visibleBuildings.map(function(cb) {
           return buildCriticalBuildingCard(cb, allItems);
         }).join('');
-        grid.innerHTML = html || '<div style="padding:32px;text-align:center;color:var(--muted)">No data available.</div>';
+        grid.innerHTML = bannerHtml + (html || '<div style="padding:32px;text-align:center;color:var(--muted)">No data available.</div>');
       }, 200);
     }
   }
