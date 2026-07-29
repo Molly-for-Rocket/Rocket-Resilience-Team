@@ -28,6 +28,36 @@
     .hazard-modal-source-name { color:#C8102E; font-weight:600; }
     .hazard-modal-source-desc { color:#6B7280; }
     .hazard-modal-bullets { margin:4px 0 0 0; padding-left:18px; color:#1A1A2E; font-size:13px; line-height:1.8; }
+    /* ── Modal tabs ── */
+    .hazard-modal-tabs { display:flex; gap:0; border-bottom:2px solid #E2E6EF; margin-bottom:14px; }
+    .hazard-modal-tab { padding:7px 16px; font-size:12px; font-weight:600; color:#6B7280; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; background:none; border-top:none; border-left:none; border-right:none; font-family:inherit; }
+    .hazard-modal-tab.active { color:#C8102E; border-bottom-color:#C8102E; }
+    .hazard-modal-tab-panel { display:none; }
+    .hazard-modal-tab-panel.active { display:block; }
+    /* ── Event history timeline panel ── */
+    .map-history-panel { margin-top:12px; }
+    .map-history-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .map-history-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); }
+    .map-history-empty { font-size:12px; color:var(--muted); padding:12px 0; text-align:center; }
+    .map-history-day { margin-bottom:12px; }
+    .map-history-day-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid var(--border); }
+    .map-history-events { display:flex; flex-direction:column; gap:4px; }
+    .map-history-event { display:flex; align-items:flex-start; gap:8px; padding:7px 10px; background:var(--surface2); border-radius:6px; border-left:3px solid transparent; font-size:12px; cursor:pointer; transition:background .15s; }
+    .map-history-event:hover { background:var(--border); }
+    .map-history-event-emoji { font-size:14px; flex-shrink:0; line-height:1.3; }
+    .map-history-event-body { flex:1; min-width:0; }
+    .map-history-event-title { font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .map-history-event-meta { color:var(--muted); font-size:11px; margin-top:1px; }
+    .map-history-badge { display:inline-block; font-size:10px; font-weight:700; padding:1px 6px; border-radius:999px; margin-left:6px; }
+    .map-history-badge-updated { background:rgba(59,130,246,.12); color:#2563EB; }
+    .map-history-badge-resolved { background:rgba(22,163,74,.12); color:#16A34A; }
+    .map-history-badge-new { background:rgba(200,16,46,.10); color:#C8102E; }
+    /* ── History snapshot list inside modal ── */
+    .hazard-snapshot { padding:10px 0; border-bottom:1px solid #E2E6EF; }
+    .hazard-snapshot:last-child { border-bottom:none; }
+    .hazard-snapshot-time { font-size:11px; font-weight:700; color:#6B7280; margin-bottom:4px; }
+    .hazard-snapshot-what { font-size:12px; color:#1A1A2E; line-height:1.5; }
+    .hazard-snapshot-current { background:rgba(200,16,46,.04); border-radius:6px; padding:8px 10px; margin-bottom:4px; }
   </style>
   <style>
     :root {
@@ -1119,37 +1149,37 @@
       <div class="card-title"><span class="icon">&#128065;</span> Email Report Preview</div>
       <div class="report-preview" id="report-preview">
         <div style="font-size:15px;font-weight:700;margin-bottom:4px">Weekly Threat Intelligence Digest</div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Week of July 14, 2026 &middot; Detroit Metro Focus &middot; Prepared by RocketFlow AI</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Week of July 28, 2026 &middot; Detroit Metro Focus &middot; Prepared by RocketFlow AI</div>
         <div class="report-section-title cat-human">&#128308; HUMAN-MADE THREATS</div>
         <div style="margin-bottom:8px;padding:8px;background:rgba(239,68,68,.06);border-radius:6px;font-size:12px">
-          <strong>Ransomware Gang Targeting Financial Company IT Systems</strong><br/>
-          A new ransomware campaign (ALPHALOCK) is targeting IT vendors serving North American financial institutions. Verify all vendor access credentials and enforce MFA immediately. <span style="color:var(--muted)">— FBI Cyber Div, 5h ago</span>
+          <strong>Woodward Ave Utility Construction &mdash; Downtown Detroit Access Impact</strong><br/>
+          City of Detroit DPW underground work on Woodward (State St to Grand Circus Park) through Aug 15. Lane closures and DDOT bus delays affecting HQ building access on Woodward corridor. <span style="color:var(--muted)">— City of Detroit DPW, today</span>
         </div>
         <div style="margin-bottom:8px;padding:8px;background:rgba(239,68,68,.06);border-radius:6px;font-size:12px">
-          <strong>Large Protest Planned Monday &mdash; Downtown Detroit</strong><br/>
-          Michigan State Police advisory for large demonstration July 17. Road closures likely near Woodward Ave. Notify Detroit HQ staff of alternate routes. <span style="color:var(--muted)">— MSP, 4h ago</span>
+          <strong>Ransomware Gang Targeting Financial Company IT Systems</strong><br/>
+          A new ransomware campaign (ALPHALOCK) is targeting IT vendors serving North American financial institutions. Verify all vendor access credentials and enforce MFA immediately. <span style="color:var(--muted)">— FBI Cyber Div, 2d ago</span>
         </div>
         <div class="report-section-title cat-tech">&#128309; CYBER / TECHNOLOGY</div>
         <div style="margin-bottom:8px;padding:8px;background:rgba(59,130,246,.06);border-radius:6px;font-size:12px">
-          <strong>Active Cyberattack Tool Targeting Business Networks</strong><br/>
-          CISA confirms active exploitation of VMware vCenter CVE-2024-38812 (CVSS 9.8). Patch immediately or restrict vCenter network access. Federal agencies must remediate by July 18. <span style="color:var(--muted)">— CISA, 2h ago</span>
+          <strong>Critical Cisco IOS XE Vulnerability Under Active Exploitation</strong><br/>
+          CISA adds CVE-2025-20188 (CVSS 10.0) to KEV catalog — authentication bypass in Cisco wireless LAN controllers, no credentials required. Federal patch deadline August 8. <span style="color:var(--muted)">— CISA, 4d ago</span>
         </div>
         <div class="report-section-title cat-natural">&#128994; NATURAL / WEATHER</div>
         <div style="margin-bottom:8px;padding:8px;background:rgba(34,197,94,.06);border-radius:6px;font-size:12px">
-          <strong>Federal Disaster Declared &mdash; Severe Storms Hit SE Michigan</strong><br/>
-          FEMA DR-4810-MI covers Wayne, Oakland, Macomb, Monroe, Washtenaw &amp; Livingston counties. Road closures and utility disruptions confirmed (WXYZ-TV). Monitor DTE outage map. <span style="color:var(--muted)">— FEMA / WXYZ, 3h ago</span>
+          <strong>Excessive Heat Warning &mdash; SE Michigan Through July 30</strong><br/>
+          NWS Detroit: heat index 105–112°F. DTE grid conservation advisory active. Monitor data center HVAC and cooling system status through Wednesday. <span style="color:var(--muted)">— NWS Detroit, today</span>
         </div>
         <div style="margin-bottom:8px;padding:8px;background:rgba(34,197,94,.06);border-radius:6px;font-size:12px">
-          <strong>Severe Thunderstorm Warning &mdash; Wayne, Oakland &amp; Macomb Counties Until 9 PM</strong><br/>
-          Hail up to 2" and 70 mph winds possible. Monitor DTE outage map for data center power impact. <span style="color:var(--muted)">— NWS Detroit, 30m ago</span>
+          <strong>FEMA DR-4810-MI Still Active &mdash; Infrastructure Recovery Ongoing</strong><br/>
+          Mid-July disaster declaration remains active. Road repair and utility replacement work continuing through early August in Wayne, Oakland, and Washtenaw counties. <span style="color:var(--muted)">— FEMA OpenFEMA, ongoing</span>
         </div>
         <div class="report-section-title cat-financial">&#127993; FINANCIAL / REGULATORY</div>
         <div style="margin-bottom:8px;padding:8px;background:rgba(234,179,8,.06);border-radius:6px;font-size:12px">
           <strong>New Government Sanctions &mdash; Tech Companies Affected</strong><br/>
-          Treasury OFAC added 3 tech entities to SDN list. Verify no vendor or supply chain relationships with newly listed entities. Legal review recommended. <span style="color:var(--muted)">— U.S. Treasury, 6h ago</span>
+          Treasury OFAC added 3 tech entities to SDN list. Verify no vendor or supply chain relationships with newly listed entities. Legal review recommended. <span style="color:var(--muted)">— U.S. Treasury, 3d ago</span>
         </div>
         <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)">
-          Generated by RocketFlow AI &middot; 24 sources monitored &middot; 3 items deduplicated &middot; July 16, 2026
+          Generated by RocketFlow AI &middot; 24 sources monitored &middot; 2 items deduplicated &middot; July 29, 2026
         </div>
       </div>
       <div class="btn-row mt8">
@@ -1192,6 +1222,17 @@
       <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:50%;background:#16A34A;border:2px solid #fff;display:inline-block"></span> No Active Alerts</span>
     </div>
     <div id="threat-map" style="height:500px;border-radius:8px;border:1px solid var(--border);overflow:hidden"></div>
+
+    <!-- 7-Day Event History Timeline -->
+    <div class="map-history-panel" id="map-history-panel">
+      <div class="map-history-header">
+        <div class="map-history-title">&#128336; 7-Day Event History</div>
+        <div style="font-size:11px;color:var(--muted)" id="map-history-count"></div>
+      </div>
+      <div id="map-history-timeline">
+        <div class="map-history-empty">No event history yet — history builds as the dashboard syncs.</div>
+      </div>
+    </div>
   </div>
 
   <!-- HAZARD DETAIL MODAL -->
@@ -1985,159 +2026,381 @@
   /* ── MAP ── */
   var map = null;
 
+  /* ── Event history: array of snapshots, one per unique (id + updated) combo ──
+     Each entry = { ...all HAZARD_DETAILS fields, id, snapshotTime (ISO string) }
+     Persisted in sessionStorage so it survives tab-switches within the session.    */
+  var mapEventHistory = (function() {
+    try { return JSON.parse(sessionStorage.getItem('mapEventHistory') || '[]'); } catch(e) { return []; }
+  })();
+
+  function saveMapHistory() {
+    try { sessionStorage.setItem('mapEventHistory', JSON.stringify(mapEventHistory)); } catch(e) {}
+  }
+
+  /* Record a snapshot of a hazard. Only adds if this exact (id + updated) hasn't been seen before. */
+  function recordHazardSnapshot(id, detail) {
+    var key = id + '|' + (detail.updated || '');
+    var exists = mapEventHistory.some(function(s) { return s._key === key; });
+    if (!exists) {
+      var snapshot = JSON.parse(JSON.stringify(detail));
+      snapshot.id = id;
+      snapshot._key = key;
+      snapshot.snapshotTime = new Date().toISOString();
+      mapEventHistory.push(snapshot);
+      /* Prune to 7 days */
+      var cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      mapEventHistory = mapEventHistory.filter(function(s) {
+        return new Date(s.snapshotTime).getTime() > cutoff;
+      });
+      saveMapHistory();
+    }
+  }
+
+  /* Layers that change each sync — tracked so we can remove stale ones */
+  var hazardLayers = [];
+
+  /* Re-draw all hazard overlays + pins from the current HAZARD_DETAILS.
+     Called by initMap (first load) and syncMapFromDashboard (each update). */
+  function renderMapHazards() {
+    if (!map) return;
+    /* Remove previous dynamic layers */
+    hazardLayers.forEach(function(l) { map.removeLayer(l); });
+    hazardLayers = [];
+
+    function addLayer(l) { l.addTo(map); hazardLayers.push(l); return l; }
+
+    /* Config: one entry per active hazard.
+       Drives both the circle/zone overlay and the emoji pin.
+       circle: null means pin-only (no filled zone). */
+    var HAZARD_MAP_CONFIG = {
+      heat_wayne:    { circle: { lat:42.45,  lng:-83.10, r:70000,  color:'#f97316', fillOpacity:.10, dash:'6,4'  }, pin: { lat:42.55,  lng:-83.10, emoji:'🌡', color:'#f97316' } },
+      fema_declaration: { circle: { lat:42.35, lng:-83.3, r:80000,  color:'#7c3aed', fillOpacity:.08, dash:'8,4'  }, pin: null },
+      cisa_cve:      { circle: null,                                                                                 pin: { lat:42.35,  lng:-83.6,  emoji:'🔵', color:'#dc2626' } },
+      construction_woodward: { circle: null,                                                                         pin: { lat:42.3319,lng:-83.0456,emoji:'🚧', color:'#eab308' } },
+      heat_dfw:      { circle: { lat:32.9,   lng:-97.0,  r:120000, color:'#f97316', fillOpacity:.08, dash:'6,4'  }, pin: null }
+    };
+
+    Object.keys(HAZARD_DETAILS).forEach(function(id) {
+      var d = HAZARD_DETAILS[id];
+      var cfg = HAZARD_MAP_CONFIG[id];
+      if (!cfg) return;
+
+      /* Zone circle */
+      if (cfg.circle) {
+        var c = cfg.circle;
+        var zoneLayer = addLayer(L.circle([c.lat, c.lng], {
+          color: c.color, fillColor: c.color, fillOpacity: c.fillOpacity,
+          weight: 2, dashArray: c.dash, radius: c.r
+        }));
+        zoneLayer.bindPopup(
+          '<div class="map-popup-title">' + d.emoji + ' ' + d.title + '</div>'
+          + '<div class="map-popup-badge" style="background:rgba(0,0,0,.07);color:' + c.color + '">' + d.badge + '</div>'
+          + '<div class="map-popup-desc">' + d.source + '<br>' + d.what.substring(0, 120) + '&hellip;</div>'
+          + '<div style="font-size:10px;color:#9CA3AF;margin-bottom:4px">Updated: ' + (d.updated || '') + '</div>'
+          + '<button class="map-popup-expand" onclick="openHazardModal(\'' + id + '\')">Full Details + History</button>'
+        );
+      }
+
+      /* Emoji pin marker */
+      if (cfg.pin) {
+        var p = cfg.pin;
+        var pinIcon = L.divIcon({
+          className: '',
+          html: '<div style="background:' + p.color + ';color:#fff;font-size:13px;padding:4px 6px;border-radius:6px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5);white-space:nowrap">' + p.emoji + '</div>',
+          iconSize: null, iconAnchor: [0, 20]
+        });
+        var pinLayer = addLayer(L.marker([p.lat, p.lng], {icon: pinIcon}));
+        pinLayer.bindPopup(
+          '<div class="map-popup-title">' + d.emoji + ' ' + d.title + '</div>'
+          + '<div class="map-popup-badge" style="background:rgba(0,0,0,.07);color:' + p.color + '">' + d.badge + '</div>'
+          + '<div class="map-popup-desc">' + d.source + '<br>' + d.what.substring(0, 120) + '&hellip;</div>'
+          + '<div style="font-size:10px;color:#9CA3AF;margin-bottom:4px">Updated: ' + (d.updated || '') + '</div>'
+          + '<button class="map-popup-expand" onclick="openHazardModal(\'' + id + '\')">Full Details + History</button>'
+        );
+      }
+    });
+
+    /* Update location marker colors based on proximity to active hazards */
+    updateLocationAlertLevels();
+    /* Refresh history panel */
+    renderMapHistoryPanel();
+  }
+
+  /* Update the alertLevel for each location based on active hazard zones.
+     Simple bounding-box proximity: if a location is within ~80 km of any hazard
+     circle center, its alertLevel reflects the hazard severity. */
+  function updateLocationAlertLevels() {
+    var HAZARD_ZONE_CENTERS = {
+      heat_wayne: { lat:42.45, lng:-83.10, radiusDeg:0.8, severityLevel:4 },
+      fema_declaration: { lat:42.35, lng:-83.3, radiusDeg:1.0, severityLevel:4 },
+      heat_dfw: { lat:32.9, lng:-97.0, radiusDeg:1.2, severityLevel:4 }
+    };
+
+    monitoredLocations.forEach(function(loc) {
+      var worstLevel = 4; /* default = no alerts */
+      Object.keys(HAZARD_ZONE_CENTERS).forEach(function(hid) {
+        if (!HAZARD_DETAILS[hid]) return;
+        var hz = HAZARD_ZONE_CENTERS[hid];
+        var dlat = Math.abs(loc.lat - hz.lat);
+        var dlng = Math.abs(loc.lng - hz.lng);
+        if (dlat <= hz.radiusDeg && dlng <= hz.radiusDeg) {
+          worstLevel = Math.min(worstLevel, hz.severityLevel);
+        }
+      });
+      loc.alertLevel = worstLevel;
+      /* Update the marker popup if it's already on the map */
+      if (locationMarkers && locationMarkers[loc.name]) {
+        var emoji = loc.type === 'Critical' ? '&#11088; ' : (loc.type === 'HQ' ? '&#127970; ' : '&#128205; ');
+        var critBadge = loc.type === 'Critical'
+          ? '<div style="display:inline-block;background:#F59E0B;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase">&#9670; Critical Building</div><br>'
+          : '';
+        var pop = '<div class="map-popup-title">' + emoji + escHtml(loc.name) + '</div>'
+          + critBadge
+          + '<div style="font-size:11px;color:#64748b;margin-bottom:6px">' + escHtml(loc.city || '') + ', ' + loc.state + ' &middot; ' + (loc.type || 'Office') + '</div>'
+          + '<div style="font-size:12px;color:' + pinColor(loc.alertLevel) + ';font-weight:600">'
+          + (loc.alertLevel <= 3 ? 'Active Alert Level ' + loc.alertLevel : 'No Active Alerts') + '</div>';
+        locationMarkers[loc.name].setPopupContent(pop);
+        /* Update pin color by replacing icon */
+        locationMarkers[loc.name].setIcon(makePinIcon(loc));
+      }
+    });
+  }
+
+  /* Render the 7-day history timeline panel below the map */
+  function renderMapHistoryPanel() {
+    var container = document.getElementById('map-history-timeline');
+    var countEl = document.getElementById('map-history-count');
+    if (!container) return;
+
+    /* Record current state of all active hazards */
+    Object.keys(HAZARD_DETAILS).forEach(function(id) {
+      recordHazardSnapshot(id, HAZARD_DETAILS[id]);
+    });
+
+    if (!mapEventHistory.length) {
+      container.innerHTML = '<div class="map-history-empty">No event history yet — history builds as the dashboard syncs.</div>';
+      if (countEl) countEl.textContent = '';
+      return;
+    }
+
+    /* Group snapshots by calendar day (descending), then by event id */
+    var now = Date.now();
+    var cutoff = now - 7 * 24 * 60 * 60 * 1000;
+    var recent = mapEventHistory.filter(function(s) { return new Date(s.snapshotTime).getTime() > cutoff; });
+
+    /* Build a map: dayLabel -> { id -> [snapshots sorted oldest-first] } */
+    var dayMap = {};
+    recent.forEach(function(s) {
+      var d = new Date(s.snapshotTime);
+      var label = d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+      if (!dayMap[label]) dayMap[label] = { _order: d.toISOString().slice(0,10), events: {} };
+      if (!dayMap[label].events[s.id]) dayMap[label].events[s.id] = [];
+      dayMap[label].events[s.id].push(s);
+    });
+
+    /* Sort days newest first */
+    var days = Object.keys(dayMap).sort(function(a, b) {
+      return dayMap[b]._order > dayMap[a]._order ? 1 : -1;
+    });
+
+    /* Count total unique event-day entries */
+    var totalEntries = 0;
+    days.forEach(function(day) { totalEntries += Object.keys(dayMap[day].events).length; });
+    if (countEl) countEl.textContent = totalEntries + ' event' + (totalEntries !== 1 ? 's' : '') + ' · last 7 days';
+
+    var html = '';
+    days.forEach(function(dayLabel) {
+      var eventsForDay = dayMap[dayLabel].events;
+      var isToday = dayMap[dayLabel]._order === new Date().toISOString().slice(0,10);
+      var displayLabel = isToday ? 'Today — ' + dayLabel : dayLabel;
+
+      html += '<div class="map-history-day">';
+      html += '<div class="map-history-day-label">' + displayLabel + '</div>';
+      html += '<div class="map-history-events">';
+
+      Object.keys(eventsForDay).forEach(function(evId) {
+        var snaps = eventsForDay[evId];
+        /* Most recent snapshot = current state for this day */
+        var latest = snaps[snaps.length - 1];
+        var isActive = !!HAZARD_DETAILS[evId];
+        var updateCount = snaps.length;
+
+        /* Determine badge */
+        var badge = '';
+        if (isActive && isToday) {
+          badge = '<span class="map-history-badge map-history-badge-new">Active</span>';
+        } else if (!isActive) {
+          badge = '<span class="map-history-badge map-history-badge-resolved">Resolved</span>';
+        }
+        if (updateCount > 1) {
+          badge += '<span class="map-history-badge map-history-badge-updated">Updated ' + updateCount + 'x</span>';
+        }
+
+        /* Border color from badge color */
+        var borderColor = isActive ? (latest.badgeColor || '#6B7280') : '#16A34A';
+
+        html += '<div class="map-history-event" style="border-left-color:' + borderColor + '" onclick="openHazardModal(\'' + evId + '\')">'
+          + '<div class="map-history-event-emoji">' + (latest.emoji || '📍') + '</div>'
+          + '<div class="map-history-event-body">'
+          + '<div class="map-history-event-title">' + escHtml(latest.title) + badge + '</div>'
+          + '<div class="map-history-event-meta">' + escHtml(latest.source || '') + ' &middot; ' + escHtml(latest.updated || latest.snapshotTime.slice(0,10)) + '</div>'
+          + '</div>'
+          + '</div>';
+      });
+
+      html += '</div></div>';
+    });
+
+    container.innerHTML = html;
+  }
+
+  /* Called by renderAlerts — syncs map overlays + mini-map + history panel. */
+  function syncMapFromDashboard() {
+    if (map) renderMapHazards();
+    if (miniMap) renderMiniMapHazards();
+    /* Always refresh history panel even if map tab not open yet */
+    Object.keys(HAZARD_DETAILS).forEach(function(id) {
+      recordHazardSnapshot(id, HAZARD_DETAILS[id]);
+    });
+    renderMapHistoryPanel();
+  }
+
   var HAZARD_DETAILS = {
-    storm_wayne: {
-      emoji: '⛈',
-      title: 'Severe Thunderstorm Warning — Wayne, Oakland & Macomb Counties',
+    heat_wayne: {
+      emoji: '🌡',
+      title: 'Excessive Heat Warning — Metro Detroit & SE Michigan',
       badge: 'LEVEL 4 — HIGH',
       badgeColor: '#f97316',
-      source: 'NWS Detroit / FEMA DR-4810-MI',
-      what: 'The National Weather Service issued a Severe Thunderstorm Watch for the tri-county metro area. Storms capable of producing large hail up to 2 inches and wind gusts up to 70 mph are expected through 9 PM EST. The associated FEMA DR-4810-MI declaration confirms prior storm damage severe enough to warrant federal assistance.',
-      where: 'Wayne, Oakland, and Macomb Counties, Michigan. Covers the Detroit Metro HQ location. Watch active until 9:00 PM EST.',
-      why: 'The Detroit Metro HQ is in the watch zone. Severe storms threaten DTE Energy infrastructure serving the data center and office. Power outages, access road flooding, and staff safety are primary concerns.',
-      updated: 'July 16, 2026 — 11:47 AM ET',
+      source: 'NWS Detroit',
+      what: 'The National Weather Service has issued an Excessive Heat Warning for the Detroit metro area through Wednesday July 30. Heat index values between 105–112°F are forecast. This follows a multi-day heat event that has strained DTE Energy grid capacity and elevated risk of heat-related illness for outdoor workers and at-risk populations.',
+      where: 'Wayne, Oakland, Macomb, Monroe, Washtenaw, and Livingston Counties, Michigan. Directly covers all Detroit HQ and Troy Data Center locations.',
+      why: 'Sustained high temperatures increase HVAC load at data centers, raising the risk of cooling failures. DTE Energy has issued grid conservation requests. Staff commuting in vehicles without reliable A/C and any outdoor operational activities require additional precautions.',
+      updated: 'July 29, 2026 — 7:00 AM ET',
       potentialImpacts: [
-        'Power outages at Detroit HQ if DTE grid is damaged',
-        'UPS and generator activation required at data center',
-        'Flooding of parking and access roads near the facility',
-        'Staff commute disruption if storms arrive during work hours',
-        'Possible AT&T and Comcast circuit disruptions from flooding'
+        'Data center HVAC systems operating near capacity — elevated cooling failure risk',
+        'DTE Energy grid conservation requests may precede rolling demand reductions',
+        'Heat illness risk for staff commuting or performing outdoor tasks',
+        'Generator fuel consumption elevated if HVAC backup systems activate',
+        'Extended high load on UPS batteries in ambient heat'
       ],
       impactsHappened: [
-        'Multiple road closures in Wayne County confirmed (WXYZ-TV)',
-        'FEMA DR-4810-MI disaster declaration already active for 6-county area'
+        'DTE grid conservation advisory issued July 28 for peak afternoon demand hours',
+        'Multiple NWS heat alerts active across SE Michigan since July 26'
       ],
       sources: [
-        { name: 'NWS Detroit Office', desc: 'Official watch/warning authority for SE Michigan', url: 'https://www.weather.gov/dtx/' },
-        { name: 'FEMA OpenFEMA DR-4810-MI', desc: 'Federal disaster declaration details for SE Michigan', url: 'https://www.fema.gov/disaster/4810' },
-        { name: 'NOAA Storm Prediction Center', desc: 'National convective outlook and watch polygons', url: 'https://www.spc.noaa.gov/' },
-        { name: 'DTE Energy Outage Map', desc: 'Real-time power outage data for Detroit metro area', url: 'https://outage.dteenergy.com/' }
-      ]
-    },
-    wind_annarbor: {
-      emoji: '💨',
-      title: 'Wind Advisory — Washtenaw County (Ann Arbor)',
-      badge: 'LEVEL 3 — MODERATE',
-      badgeColor: '#eab308',
-      source: 'NWS Detroit',
-      what: 'A Wind Advisory is in effect for Washtenaw County. Sustained winds of 25–35 mph with gusts up to 55 mph expected through the afternoon. Travel may be difficult, particularly for high-profile vehicles.',
-      where: 'Washtenaw County, Michigan (Ann Arbor office location). Advisory active through this evening.',
-      why: 'The Ann Arbor office is in the advisory zone. Roof-mounted equipment and power lines are at risk of damage from gusts. Consumers Energy infrastructure in the area may experience localized outages.',
-      updated: 'July 16, 2026 — 9:30 AM ET',
-      potentialImpacts: [
-        'Power flickers or brief outages from Consumers Energy infrastructure damage',
-        'Damage to outdoor equipment, signage, or satellite dishes at Ann Arbor office',
-        'Difficult driving conditions for staff commuting to Ann Arbor',
-        'Potential downed tree limbs near the facility'
-      ],
-      impactsHappened: null,
-      sources: [
-        { name: 'NWS Detroit Office', desc: 'Wind advisory details and expiration for Washtenaw County', url: 'https://www.weather.gov/dtx/' },
-        { name: 'Michigan State Police Emergency Mgmt', desc: 'Statewide weather emergency coordination', url: 'https://www.michigan.gov/msp/divisions/emhsd' },
-        { name: 'Consumers Energy Outage Center', desc: 'Power status for Washtenaw County grid', url: 'https://www.consumersenergy.com/residential/outages' }
+        { name: 'NWS Detroit Office', desc: 'Official heat warning authority for SE Michigan', url: 'https://www.weather.gov/dtx/' },
+        { name: 'DTE Energy Outage Map', desc: 'Real-time power outage and grid status data', url: 'https://outage.dteenergy.com/' },
+        { name: 'NOAA Heat Safety', desc: 'Heat index charts and heat illness prevention guidance', url: 'https://www.weather.gov/safety/heat' },
+        { name: 'Michigan DHHS Heat Safety', desc: 'State cooling center locations and heat emergency resources', url: 'https://www.michigan.gov/mdhhs' }
       ]
     },
     fema_declaration: {
       emoji: '🌊',
-      title: 'Federal Disaster Declared — Severe Storms Hit SE Michigan',
+      title: 'Federal Disaster Still Active — DR-4810-MI SE Michigan (Ongoing)',
       badge: 'LEVEL 4 — HIGH',
       badgeColor: '#f97316',
       source: 'FEMA OpenFEMA',
-      what: 'Presidential disaster declaration DR-4810-MI covers Wayne, Oakland, Macomb, Monroe, Washtenaw, and Livingston counties following severe storms and flooding. Activates Individual Assistance, Public Assistance, and Hazard Mitigation grants. Confirms significant infrastructure impact already occurred across SE Michigan.',
+      what: 'Presidential disaster declaration DR-4810-MI remains active for Wayne, Oakland, Macomb, Monroe, Washtenaw, and Livingston counties following severe storms and flooding in mid-July. Individual Assistance, Public Assistance, and Hazard Mitigation programs are actively disbursing. Infrastructure repair and debris removal operations are ongoing across the six-county area.',
       where: 'Six counties: Wayne, Oakland, Macomb, Monroe, Washtenaw, and Livingston. Directly covers Detroit Metro HQ (Wayne) and Ann Arbor office (Washtenaw).',
-      why: 'The disaster declaration zone overlaps with two RocketFlow office locations. The declaration itself is evidence that real infrastructure and road access damage has already materialized in these counties. Federal assistance being activated signals the damage is beyond normal recovery capacity.',
-      updated: 'July 16, 2026 — 9:05 AM ET',
+      why: 'The FEMA declaration zone continues to cover two Rocket Companies office locations. Ongoing infrastructure repair work — road patching, utility line replacement, debris removal — may periodically affect access routes and utility reliability into early August.',
+      updated: 'July 29, 2026 — 8:00 AM ET',
       potentialImpacts: [
-        'Ongoing road closures limiting staff access to Detroit HQ and Ann Arbor office',
-        'DTE Energy infrastructure damage causing extended power outages',
-        'AT&T and Comcast circuit disruptions from underground flooding',
-        'Facility access delays due to debris and standing water'
+        'Sporadic road restrictions near repair operations in Wayne and Washtenaw Counties',
+        'Utility contractor work may cause brief planned power interruptions',
+        'Construction equipment traffic affecting Detroit HQ access points',
+        'Facility access delays due to ongoing debris removal near secondary entrances'
       ],
       impactsHappened: [
-        'Storm and flood damage confirmed severe enough to trigger federal declaration',
-        'Multiple road closures in Wayne County confirmed by WXYZ-TV and WDIV-TV',
-        'DTE Energy reporting elevated outage counts in affected counties'
+        'Disaster declared mid-July — federal assistance programs actively disbursing',
+        'Road repair crews active on I-94, M-39 corridor through end of July',
+        'DTE Energy infrastructure replacement work ongoing in affected neighborhoods'
       ],
       sources: [
         { name: 'FEMA Disaster Declarations', desc: 'Official DR-4810-MI declaration details and county list', url: 'https://www.fema.gov/disaster/4810' },
         { name: 'FEMA OpenFEMA API', desc: 'Machine-readable disaster declaration data', url: 'https://www.fema.gov/about/reports-and-data/openfema' },
-        { name: 'WXYZ-TV Detroit', desc: 'Local coverage of road closures and flood damage', url: 'https://www.wxyz.com/' },
-        { name: 'WDIV-TV Local 4', desc: 'Local coverage of storm impacts in SE Michigan', url: 'https://www.clickondetroit.com/' }
-      ]
-    },
-    msp_demonstration: {
-      emoji: '🔴',
-      title: 'Large Protest Planned Monday — Downtown Detroit',
-      badge: 'LEVEL 4 — HIGH',
-      badgeColor: '#f97316',
-      source: 'Michigan State Police',
-      what: 'Michigan State Police issued a public safety advisory for a large organized demonstration planned for Monday, July 17, in Downtown Detroit along the Woodward Avenue corridor. Demonstration permit issued. Elevated law enforcement presence expected.',
-      where: 'Downtown Detroit — Woodward Avenue between Jefferson Ave and Grand Circus Park. Proximity to Wayne County business district near the Detroit HQ.',
-      why: 'Staff commuting to Detroit HQ on Monday may encounter road closures and significantly increased traffic on Woodward Ave and surrounding streets. Physical access to facilities near the route could be temporarily restricted.',
-      updated: 'July 16, 2026 — 8:48 AM ET',
-      potentialImpacts: [
-        'Road closures on Woodward Ave corridor Monday morning',
-        'Delayed staff arrival at Detroit HQ',
-        'Elevated law enforcement presence may affect building entrance protocols',
-        'Parking restrictions in downtown Detroit area',
-        'Risk of escalation requiring facility lockdown procedures'
-      ],
-      impactsHappened: null,
-      sources: [
-        { name: 'Michigan State Police', desc: 'Statewide emergency advisories and public safety alerts', url: 'https://www.michigan.gov/msp' },
-        { name: 'City of Detroit Emergency Mgmt', desc: 'Local emergency coordination and event notifications', url: 'https://detroitmi.gov/departments/department-homeland-security-emergency-management' },
-        { name: 'Detroit Free Press', desc: 'Local news coverage of demonstrations and public events', url: 'https://www.freep.com/' }
+        { name: 'WXYZ-TV Detroit', desc: 'Local coverage of ongoing recovery operations', url: 'https://www.wxyz.com/' },
+        { name: 'WDIV-TV Local 4', desc: 'Local coverage of infrastructure repair progress', url: 'https://www.clickondetroit.com/' }
       ]
     },
     cisa_cve: {
       emoji: '🔵',
-      title: 'VMware vCenter: Active Cyberattack Tool Targeting Business Networks',
+      title: 'CISA KEV: Critical Cisco IOS XE Vulnerability Under Active Exploitation',
       badge: 'LEVEL 5 — CRITICAL',
       badgeColor: '#dc2626',
       source: 'CISA Known Exploited Vulnerabilities Catalog',
-      what: 'CISA confirmed active exploitation of CVE-2024-38812, a heap overflow vulnerability in VMware vCenter Server (CVSS 9.8). The flaw allows unauthenticated remote code execution with network access to port 443 — meaning no password is needed to fully compromise affected systems. Attacks are happening right now against real organizations.',
-      where: 'Nationwide (US) — any organization running VMware vCenter Server versions 7.x or 8.x. Affects enterprise data centers and cloud virtualization environments.',
-      why: 'VMware vCenter is widely used in data centers to manage virtual machines. If RocketFlow runs vCenter, exploitation could give attackers complete control over all VMs — including servers running core business applications, databases, and customer-facing systems.',
-      updated: 'July 16, 2026 — 10:14 AM ET',
+      what: 'CISA added CVE-2025-20188 to the KEV catalog on July 25, 2026 — a critical authentication bypass in Cisco IOS XE wireless controllers (CVSS 10.0). Attackers are using the flaw to gain root-level access to network infrastructure with no credentials required. Federal agencies have a mandatory patch deadline of August 8, 2026. The vulnerability affects widely deployed Cisco Catalyst 9800 series controllers.',
+      where: 'Nationwide (US) — any organization running Cisco IOS XE wireless LAN controllers. Affects enterprise networking infrastructure across all Rocket Companies locations.',
+      why: 'Cisco IOS XE wireless controllers are standard enterprise networking gear. Exploitation at the network layer could allow attackers to pivot into internal systems, intercept traffic, or disable wireless access across any affected facility. No credentials required makes this especially dangerous.',
+      updated: 'July 29, 2026 — 9:30 AM ET',
       potentialImpacts: [
-        'Full attacker control of all virtual machines managed by affected vCenter',
-        'Data theft from any server in the virtualized environment',
-        'Ransomware deployment across the entire VM fleet',
-        'Service outages from attacker shutdown or modification of VMs',
-        'Regulatory breach notification requirements if customer data is compromised'
+        'Attacker root-level access to Cisco wireless LAN controllers',
+        'Network traffic interception across affected facilities',
+        'Lateral movement into internal systems via compromised network infrastructure',
+        'Wireless connectivity loss if attackers modify or disable controllers',
+        'Federal patch mandate deadline August 8 — compliance risk if unpatched'
       ],
       impactsHappened: [
-        'CISA confirmed exploitation in the wild at unnamed organizations',
-        'Federal agencies under mandatory CISA directive to patch by July 18, 2026'
+        'CISA confirmed active exploitation in the wild at multiple organizations',
+        'Added to CISA KEV catalog July 25, 2026 — mandatory patch for federal agencies'
       ],
       sources: [
-        { name: 'CISA KEV Catalog', desc: 'Official Known Exploited Vulnerabilities entry for CVE-2024-38812', url: 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog' },
-        { name: 'VMware Security Advisory VMSA-2024-0019', desc: 'Vendor patch and advisory for affected vCenter versions', url: 'https://www.vmware.com/security/advisories/VMSA-2024-0019.html' },
-        { name: 'NVD — CVE-2024-38812', desc: 'NIST National Vulnerability Database entry, CVSS score and references', url: 'https://nvd.nist.gov/vuln/detail/CVE-2024-38812' },
+        { name: 'CISA KEV Catalog', desc: 'Official Known Exploited Vulnerabilities entry for CVE-2025-20188', url: 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog' },
+        { name: 'Cisco Security Advisory', desc: 'Vendor patch and mitigation guidance for IOS XE', url: 'https://sec.cloudapps.cisco.com/security/center/publicationListing.x' },
+        { name: 'NVD — CVE-2025-20188', desc: 'NIST National Vulnerability Database entry and CVSS score', url: 'https://nvd.nist.gov/vuln/detail/CVE-2025-20188' },
         { name: 'CISA BOD 22-01', desc: 'Federal requirement to remediate KEV catalog entries', url: 'https://www.cisa.gov/binding-operational-directive-22-01' }
       ]
     },
-    dte_outage: {
-      emoji: '⚡',
-      title: 'DTE Energy Outage Scraper Error — Infrastructure Monitoring Gap',
+    construction_woodward: {
+      emoji: '🚧',
+      title: 'Woodward Ave Utility Construction — Downtown Detroit Access Impact',
       badge: 'LEVEL 3 — MODERATE',
       badgeColor: '#eab308',
-      source: 'Internal System / DTE Energy',
-      what: 'The DTE Energy outage map scraper stopped functioning on July 13 after a site structure change by DTE. The system is not currently receiving real-time power outage data for the Detroit metro area. This is an internal monitoring gap, not a confirmed outage.',
-      where: 'Detroit Metro area — outage data gap covers DTE Energy service territory in Wayne, Macomb, Oakland, Washtenaw, and surrounding counties.',
-      why: 'During the current severe storm event (DR-4810-MI), having real-time DTE outage data is critical for assessing data center power risk at Detroit HQ. The monitoring gap means the system cannot automatically detect if the facility loses power.',
-      updated: 'July 16, 2026 — 7:00 AM ET',
+      source: 'City of Detroit — DDOT / DWSD',
+      what: 'Detroit Department of Public Works has scheduled major underground utility (water main and telecom conduit) replacement work along Woodward Avenue between State Street and Grand Circus Park. Work runs weekdays July 28 – August 15. Lane closures and pedestrian detours are in effect. DDOT buses on the Woodward corridor are experiencing 10–25 minute delays.',
+      where: 'Woodward Avenue, Downtown Detroit — between State Street and Grand Circus Park. Directly affects primary access corridor to Qube (611 Woodward), First National Building, and One Campus Martius.',
+      why: 'Staff arriving to Detroit HQ locations on Woodward will encounter lane restrictions and bus delays. Delivery vehicles servicing these buildings will need to use alternate routes. The construction overlaps with peak summer event season at Campus Martius.',
+      updated: 'July 29, 2026 — 8:15 AM ET',
       potentialImpacts: [
-        'Missed automated alerts for data center power loss events',
-        'Manual monitoring required at DTE outage map website until fixed',
-        'Delayed response to facility power events during the storm watch window'
+        'Delayed staff arrival at Detroit HQ buildings on Woodward corridor',
+        'DDOT bus commuters on Woodward facing 10–25 min delays',
+        'Delivery and service vehicle access restrictions to 611 Woodward and FNB',
+        'Increased pedestrian crowding on sidewalk detours during peak hours',
+        'Possible brief utility interruptions during active excavation windows'
       ],
       impactsHappened: [
-        'Scraper returning errors since July 13 — logged in Activity Log'
+        'Construction started July 28 — lane closures confirmed active on Woodward',
+        'DDOT Woodward line delays reported by Michigan Radio transit coverage'
       ],
       sources: [
-        { name: 'DTE Energy Outage Map', desc: 'Manual check available at outage.dteenergy.com', url: 'https://outage.dteenergy.com/' },
-        { name: 'RocketFlow Activity Log', desc: 'Internal error log showing scraper failure since July 13', url: '#' }
+        { name: 'City of Detroit DPW', desc: 'Official construction notices and road closure information', url: 'https://detroitmi.gov/departments/public-works' },
+        { name: 'DDOT Detroit', desc: 'Bus route impacts and detour information', url: 'https://detroitmi.gov/departments/detroit-department-transportation' },
+        { name: 'Michigan 511', desc: 'Statewide road condition and construction map', url: 'https://mi511.org/' }
+      ]
+    },
+    heat_dfw: {
+      emoji: '🌡',
+      title: 'Excessive Heat Warning — Dallas-Fort Worth Metro',
+      badge: 'LEVEL 4 — HIGH',
+      badgeColor: '#f97316',
+      source: 'NWS Fort Worth',
+      what: 'An Excessive Heat Warning is in effect for the Dallas-Fort Worth metro area through July 31. Heat index values of 108–115°F are forecast during peak afternoon hours. ERCOT has issued a conservation call for peak demand hours 3–7 PM. This follows several consecutive days of record or near-record high temperatures across North Texas.',
+      where: 'Dallas-Fort Worth metroplex — Tarrant, Dallas, Denton, and Collin Counties. Directly covers Carrollton, Frisco, Coppell, and Fort Worth Rocket Companies office locations.',
+      why: 'Staff comfort and safety during commutes and outdoor activities requires awareness. ERCOT grid stress during peak hours increases the risk of rolling conservation measures or brief demand interruptions. HVAC systems at DFW offices are operating at elevated load.',
+      updated: 'July 29, 2026 — 8:00 AM CT',
+      potentialImpacts: [
+        'ERCOT conservation requests during 3–7 PM peak window',
+        'HVAC systems at DFW offices running at high load — facilities monitoring needed',
+        'Heat illness risk for any outdoor staff or visitors',
+        'Brief demand response measures possible from local utility'
+      ],
+      impactsHappened: [
+        'ERCOT conservation advisory issued for July 29 peak hours',
+        'Multiple days of heat index 108°F+ across DFW metro'
+      ],
+      sources: [
+        { name: 'NWS Fort Worth', desc: 'Official heat warning authority for DFW metro area', url: 'https://www.weather.gov/fwd/' },
+        { name: 'ERCOT Grid Conditions', desc: 'Texas grid operator real-time status and conservation calls', url: 'https://www.ercot.com/gridinfo/generation' },
+        { name: 'NOAA Heat Safety', desc: 'Heat index charts and heat illness prevention guidance', url: 'https://www.weather.gov/safety/heat' }
       ]
     }
   };
@@ -2348,69 +2611,8 @@
       addLocationToMap(loc);
     });
 
-    /* Storm Watch zone */
-    var stormCircle = L.circle([42.45, -83.10], {
-      color: '#f97316', fillColor: '#f97316', fillOpacity: 0.10, weight: 2, dashArray: '6,4', radius: 55000
-    }).addTo(map);
-    stormCircle.bindPopup(
-      '<div class="map-popup-title">⛈ Severe Thunderstorm Warning</div>'
-      + '<div class="map-popup-badge" style="background:rgba(249,115,22,.2);color:#f97316">LEVEL 4 — HIGH</div>'
-      + '<div class="map-popup-desc">Wayne, Oakland &amp; Macomb Counties · NWS Detroit · Until 9 PM EST<br>Large hail + 70 mph gusts possible. Overlaps FEMA DR-4810-MI.</div>'
-      + '<button class="map-popup-expand" onclick="openHazardModal(\'storm_wayne\')">Full Details + Sources</button>'
-    );
-
-    /* Wind Advisory zone */
-    var windCircle = L.circle([42.2808, -83.7430], {
-      color: '#eab308', fillColor: '#eab308', fillOpacity: 0.12, weight: 2, dashArray: '4,4', radius: 28000
-    }).addTo(map);
-    windCircle.bindPopup(
-      '<div class="map-popup-title">💨 Wind Advisory</div>'
-      + '<div class="map-popup-badge" style="background:rgba(234,179,8,.2);color:#eab308">LEVEL 3 — MODERATE</div>'
-      + '<div class="map-popup-desc">Washtenaw County (Ann Arbor) · NWS Detroit<br>Sustained 25–35 mph, gusts to 55 mph. Power flicker risk.</div>'
-      + '<button class="map-popup-expand" onclick="openHazardModal(\'wind_annarbor\')">Full Details + Sources</button>'
-    );
-
-    /* FEMA disaster zone */
-    var femaZone = L.circle([42.35, -83.3], {
-      color: '#7c3aed', fillColor: '#7c3aed', fillOpacity: 0.08, weight: 2, dashArray: '8,4', radius: 80000
-    }).addTo(map);
-    femaZone.bindPopup(
-      '<div class="map-popup-title">🌊 Federal Disaster Zone DR-4810-MI</div>'
-      + '<div class="map-popup-badge" style="background:rgba(124,58,237,.2);color:#a78bfa">FEDERAL DECLARATION</div>'
-      + '<div class="map-popup-desc">Wayne, Oakland, Macomb, Monroe, Washtenaw &amp; Livingston Counties<br>Severe storms &amp; flooding. Federal assistance activated.</div>'
-      + '<button class="map-popup-expand" onclick="openHazardModal(\'fema_declaration\')">Full Details + Sources</button>'
-    );
-
-    /* Hazard pins */
-    var hazardPins = [
-      { lat: 42.3314, lng: -83.25, emoji: '🔴', label: 'Large Protest — Downtown Detroit', id: 'msp_demonstration', color: '#f97316' },
-      { lat: 42.35, lng: -83.6, emoji: '🔵', label: 'CISA KEV CVE-2024-38812', id: 'cisa_cve', color: '#dc2626' },
-      { lat: 42.3314, lng: -82.9, emoji: '⚡', label: 'DTE Scraper Error — Monitoring Gap', id: 'dte_outage', color: '#eab308' }
-    ];
-
-    hazardPins.forEach(function(h) {
-      var icon = L.divIcon({
-        className: '',
-        html: '<div style="background:' + h.color + ';color:#fff;font-size:13px;padding:4px 6px;border-radius:6px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5);white-space:nowrap;display:flex;align-items:center;gap:4px"><span>' + h.emoji + '</span></div>',
-        iconSize: null, iconAnchor: [0, 20]
-      });
-      var d = HAZARD_DETAILS[h.id];
-      var pop = '<div class="map-popup-title">' + h.emoji + ' ' + d.title + '</div>'
-        + '<div class="map-popup-badge" style="background:rgba(0,0,0,.07);color:' + h.color + '">' + d.badge + '</div>'
-        + '<div class="map-popup-desc">' + d.source + '<br>' + d.what.substring(0, 120) + '…</div>'
-        + '<button class="map-popup-expand" onclick="openHazardModal(\'' + h.id + '\')">Full Details + Sources</button>';
-      L.marker([h.lat, h.lng], {icon: icon}).addTo(map).bindPopup(pop);
-    });
-
-    /* ── Tropical Storm / Hurricane overlay — Gulf Coast TX ── */
-    L.circle([27.5, -95.0], {
-      color: '#C8102E', fillColor: '#C8102E', fillOpacity: 0.10,
-      weight: 2, opacity: 0.6, dashArray: '6,4', radius: 550000
-    }).addTo(map).bindPopup(
-      '<div class="map-popup-title">&#127755; Tropical Storm Warning — Gulf Coast</div>'
-      + '<div class="map-popup-badge" style="background:rgba(200,16,46,.15);color:#C8102E">TIER 1 — CRITICAL</div>'
-      + '<div class="map-popup-desc">Texas Gulf Coast through Thursday.<br>Affects Carrollton, Frisco, Coppell, Longview TX offices.<br>Source: NOAA / NWS</div>'
-    );
+    /* Draw all hazard overlays from HAZARD_DETAILS (data-driven) */
+    renderMapHazards();
 
     /* ── Map legend ── */
     var legend = L.control({position: 'bottomleft'});
@@ -2442,6 +2644,33 @@
     switchTab('locations', t);
     setTimeout(function() { initMap(); if (map) map.invalidateSize(); renderLocationTable(); }, 50);
   }
+  var miniHazardLayers = [];
+
+  /* Mirror HAZARD_MAP_CONFIG circles onto the mini-map */
+  function renderMiniMapHazards() {
+    if (!miniMap) return;
+    miniHazardLayers.forEach(function(l) { miniMap.removeLayer(l); });
+    miniHazardLayers = [];
+
+    var MINI_CONFIG = {
+      heat_wayne:       { lat:42.45,  lng:-83.10, r:70000,  color:'#f97316', fillOpacity:.15, dash:'5,3' },
+      fema_declaration: { lat:42.35,  lng:-83.3,  r:80000,  color:'#7c3aed', fillOpacity:.10, dash:'7,3' },
+      heat_dfw:         { lat:32.9,   lng:-97.0,  r:120000, color:'#f97316', fillOpacity:.10, dash:'5,3' }
+    };
+
+    Object.keys(MINI_CONFIG).forEach(function(id) {
+      if (!HAZARD_DETAILS[id]) return; /* skip removed events */
+      var c = MINI_CONFIG[id];
+      var d = HAZARD_DETAILS[id];
+      var layer = L.circle([c.lat, c.lng], {
+        color: c.color, fillColor: c.color, fillOpacity: c.fillOpacity,
+        weight: 1.5, dashArray: c.dash, radius: c.r
+      }).addTo(miniMap);
+      layer.bindTooltip(d.emoji + ' ' + d.title, {direction:'top'});
+      miniHazardLayers.push(layer);
+    });
+  }
+
   function initMiniMap() {
     if (miniMap) { miniMap.invalidateSize(); return; }
     var el = document.getElementById('mini-map');
@@ -2464,22 +2693,8 @@
       subdomains: 'abcd', maxZoom: 19
     }).addTo(miniMap);
 
-    /* ── Threat overlays (mirrors main map) ── */
-    L.circle([42.45, -83.10], {
-      color: '#f97316', fillColor: '#f97316', fillOpacity: 0.15, weight: 1.5, dashArray: '5,3', radius: 55000
-    }).addTo(miniMap).bindTooltip('⛈ Severe Thunderstorm Warning — Detroit Metro', {direction:'top'});
-
-    L.circle([42.2808, -83.7430], {
-      color: '#eab308', fillColor: '#eab308', fillOpacity: 0.15, weight: 1.5, dashArray: '4,3', radius: 28000
-    }).addTo(miniMap).bindTooltip('💨 Wind Advisory — Washtenaw County', {direction:'top'});
-
-    L.circle([42.35, -83.3], {
-      color: '#7c3aed', fillColor: '#7c3aed', fillOpacity: 0.10, weight: 1.5, dashArray: '7,3', radius: 80000
-    }).addTo(miniMap).bindTooltip('🌊 FEMA Disaster Zone DR-4810-MI', {direction:'top'});
-
-    L.circle([27.5, -95.0], {
-      color: '#C8102E', fillColor: '#C8102E', fillOpacity: 0.10, weight: 1.5, dashArray: '5,3', radius: 550000
-    }).addTo(miniMap).bindTooltip('🌀 Tropical Storm Warning — Gulf Coast TX', {direction:'top'});
+    /* ── Threat overlays — driven from HAZARD_MAP_CONFIG so they stay in sync ── */
+    renderMiniMapHazards();
 
     /* ── Location pins ── */
     monitoredLocations.forEach(function(loc) {
@@ -2533,9 +2748,7 @@
     map.flyTo([39.5, -98.35], 4, { duration: 0.8 });
   }
 
-  function openHazardModal(id) {
-    var d = HAZARD_DETAILS[id];
-    if (!d) return;
+  function buildHazardDetailHtml(d) {
     var sourcesHtml = d.sources.map(function(s) {
       return '<div class="hazard-modal-source-item">'
         + '<div><div class="hazard-modal-source-name">'
@@ -2551,12 +2764,7 @@
       impactsHappenedHtml = '<div class="hazard-modal-body">None confirmed at this time.</div>';
     }
     var potentialHtml = '<ul class="hazard-modal-bullets">' + d.potentialImpacts.map(function(i){ return '<li>' + i + '</li>'; }).join('') + '</ul>';
-
-    document.getElementById('hazard-modal-content').innerHTML =
-      '<div style="font-size:22px;margin-bottom:8px">' + d.emoji + '</div>'
-      + '<div class="hazard-modal-title">' + d.title + '</div>'
-      + '<div class="hazard-modal-meta">Last updated: ' + d.updated + '</div>'
-      + '<div class="hazard-modal-section">What</div>'
+    return '<div class="hazard-modal-section">What</div>'
       + '<div class="hazard-modal-body">' + d.what + '</div>'
       + '<div class="hazard-modal-section">Where</div>'
       + '<div class="hazard-modal-body">' + d.where + '</div>'
@@ -2567,11 +2775,81 @@
       + '<div class="hazard-modal-section">Impacts Already Happened</div>'
       + impactsHappenedHtml
       + '<div class="hazard-modal-sources">'
-      + '<div class="hazard-modal-section" style="margin-top:0">Source</div>'
+      + '<div class="hazard-modal-section" style="margin-top:0">Sources</div>'
       + sourcesHtml + '</div>';
+  }
+
+  function buildHazardHistoryHtml(id) {
+    /* Get all snapshots for this id, sorted newest-first */
+    var snaps = mapEventHistory.filter(function(s) { return s.id === id; })
+      .sort(function(a, b) { return b.snapshotTime > a.snapshotTime ? 1 : -1; });
+    if (!snaps.length) {
+      return '<div style="padding:16px 0;color:#6B7280;font-size:13px;text-align:center">No history recorded yet for this event.<br><span style="font-size:11px">History accumulates each time the dashboard syncs.</span></div>';
+    }
+    var html = '<div style="font-size:12px;color:#6B7280;margin-bottom:12px">'
+      + snaps.length + ' snapshot' + (snaps.length !== 1 ? 's' : '') + ' recorded</div>';
+    snaps.forEach(function(s, idx) {
+      var isLatest = idx === 0;
+      html += '<div class="hazard-snapshot' + (isLatest ? ' hazard-snapshot-current' : '') + '">';
+      html += '<div class="hazard-snapshot-time">'
+        + (isLatest ? '&#128992; Current — ' : '&#9711; ')
+        + new Date(s.snapshotTime).toLocaleString('en-US', {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})
+        + ' &nbsp;·&nbsp; <em>' + escHtml(s.updated || '') + '</em>'
+        + '</div>';
+      html += '<div class="hazard-snapshot-what">' + escHtml(s.what || '') + '</div>';
+      if (s.impactsHappened && s.impactsHappened.length) {
+        html += '<div style="margin-top:4px;font-size:11px;color:#16A34A;font-weight:600">Confirmed impacts: '
+          + s.impactsHappened.join(' · ') + '</div>';
+      }
+      html += '</div>';
+    });
+    return html;
+  }
+
+  function openHazardModal(id) {
+    /* Fall back to history-only view for resolved events (not in HAZARD_DETAILS) */
+    var d = HAZARD_DETAILS[id];
+    var isActive = !!d;
+    if (!d) {
+      /* Find most recent snapshot */
+      var snaps = mapEventHistory.filter(function(s) { return s.id === id; })
+        .sort(function(a,b){ return b.snapshotTime > a.snapshotTime ? 1 : -1; });
+      if (!snaps.length) return;
+      d = snaps[0];
+    }
+
+    var historyHtml = buildHazardHistoryHtml(id);
+
+    var tabsHtml = '<div class="hazard-modal-tabs">'
+      + '<button class="hazard-modal-tab active" onclick="switchHazardTab(this,\'details\')" id="htab-details">Details</button>'
+      + '<button class="hazard-modal-tab" onclick="switchHazardTab(this,\'history\')" id="htab-history">&#128336; History</button>'
+      + '</div>';
+
+    var detailsHtml = isActive ? buildHazardDetailHtml(d)
+      : '<div style="padding:12px 0;color:#6B7280;font-size:13px">This event is no longer active. History is available in the History tab.</div>';
+
+    document.getElementById('hazard-modal-content').innerHTML =
+      '<div style="font-size:22px;margin-bottom:8px">' + d.emoji + '</div>'
+      + '<div class="hazard-modal-title">' + d.title + '</div>'
+      + '<div class="hazard-modal-meta">'
+      + (isActive ? 'Active &nbsp;·&nbsp; ' : '<span style="color:#16A34A;font-weight:600">Resolved</span> &nbsp;·&nbsp; ')
+      + 'Last updated: ' + (d.updated || '—') + '</div>'
+      + tabsHtml
+      + '<div class="hazard-modal-tab-panel active" id="hpanel-details">' + detailsHtml + '</div>'
+      + '<div class="hazard-modal-tab-panel" id="hpanel-history">' + historyHtml + '</div>';
 
     var modal = document.getElementById('hazard-modal');
     modal.style.display = 'flex';
+  }
+
+  function switchHazardTab(btn, panel) {
+    var tabs = btn.parentElement.querySelectorAll('.hazard-modal-tab');
+    tabs.forEach(function(t){ t.classList.remove('active'); });
+    btn.classList.add('active');
+    var content = document.getElementById('hazard-modal-content');
+    content.querySelectorAll('.hazard-modal-tab-panel').forEach(function(p){ p.classList.remove('active'); });
+    var target = content.querySelector('#hpanel-' + panel);
+    if (target) target.classList.add('active');
   }
 
   function closeHazardModal() {
@@ -3041,6 +3319,9 @@
     document.getElementById('stat-datacenter-delta').textContent = counts.datacenter + ' items from live feeds';
     /* Refresh critical buildings live alerts if that tab has been opened */
     if (cbLoaded) { cbLoaded = false; renderCriticalBuildings(); cbLoaded = true; }
+
+    /* Sync map overlays + history */
+    syncMapFromDashboard();
   }
 
   function filterByCategory(cat) {
