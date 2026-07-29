@@ -1350,7 +1350,7 @@
 
 <!-- ═══════════════ CRITICAL BUILDINGS ═══════════════ -->
 <div id="tab-critical-buildings" class="tab-content">
-  <div class="section-header" style="margin-bottom:12px">
+  <div class="section-header" style="margin-bottom:20px">
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div>
         <h2 style="font-size:18px;font-weight:700;margin-bottom:4px">&#9670; Critical Buildings Intelligence</h2>
@@ -1362,19 +1362,18 @@
         <button class="btn btn-sm" onclick="switchCriticalTab('sources',this)" id="cb-tab-sources">Data Sources</button>
       </div>
     </div>
-    <!-- Building group filter pills -->
-    <div style="display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap" id="cb-group-filter-row">
-      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-right:2px">Filter:</span>
-      <button id="cb-grp-detroit" class="cb-grp-pill" onclick="setCBGroup('detroit',this)">&#127968; Detroit Buildings</button>
-      <button id="cb-grp-other" class="cb-grp-pill" onclick="setCBGroup('other',this)">&#127758; Other Critical Buildings</button>
-      <button id="cb-grp-dc" class="cb-grp-pill" onclick="setCBGroup('dc',this)">&#128421; Data Centers</button>
-      <!-- Exit / clear filter — only visible when a filter is active -->
-      <button id="cb-grp-clear" onclick="setCBGroup(null,this)" style="display:none;margin-left:4px;padding:4px 12px;font-size:11px;font-weight:600;background:var(--surface2);border:1px solid var(--border);border-radius:999px;cursor:pointer;color:var(--muted);font-family:inherit">&#10005; Show All</button>
-    </div>
   </div>
 
   <!-- RISK PROFILES SUB-PAGE -->
   <div id="cb-subtab-risks">
+    <!-- Building group filter pills -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--border)" id="cb-group-filter-row">
+      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-right:2px">Filter:</span>
+      <button id="cb-grp-detroit" class="cb-grp-pill" onclick="setCBGroup('detroit',this)">&#127968; Detroit Buildings</button>
+      <button id="cb-grp-other" class="cb-grp-pill" onclick="setCBGroup('other',this)">&#127758; Other Critical Buildings</button>
+      <button id="cb-grp-dc" class="cb-grp-pill" onclick="setCBGroup('dc',this)">&#128421; Data Centers</button>
+      <button id="cb-grp-clear" onclick="setCBGroup(null,this)" style="display:none;margin-left:4px;padding:4px 12px;font-size:11px;font-weight:600;background:var(--surface2);border:1px solid var(--border);border-radius:999px;cursor:pointer;color:var(--muted);font-family:inherit">&#10005; Show All</button>
+    </div>
     <div id="critical-buildings-grid" style="display:flex;flex-direction:column;gap:20px">
       <div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">&#128257; Loading critical building intelligence…</div>
     </div>
