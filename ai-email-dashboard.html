@@ -2083,16 +2083,8 @@
 
     function addLayer(l) { l.addTo(map); hazardLayers.push(l); return l; }
 
-    /* Config: one entry per active hazard.
-       Drives both the circle/zone overlay and the emoji pin.
-       circle: null means pin-only (no filled zone). */
-    var HAZARD_MAP_CONFIG = {
-      heat_wayne:    { circle: { lat:42.45,  lng:-83.10, r:70000,  color:'#f97316', fillOpacity:.10, dash:'6,4'  }, pin: { lat:42.55,  lng:-83.10, emoji:'🌡', color:'#f97316' } },
-      fema_declaration: { circle: { lat:42.35, lng:-83.3, r:80000,  color:'#7c3aed', fillOpacity:.08, dash:'8,4'  }, pin: null },
-      cisa_cve:      { circle: null,                                                                                 pin: { lat:42.35,  lng:-83.6,  emoji:'🔵', color:'#dc2626' } },
-      construction_woodward: { circle: null,                                                                         pin: { lat:42.3319,lng:-83.0456,emoji:'🚧', color:'#eab308' } },
-      heat_dfw:      { circle: { lat:32.9,   lng:-97.0,  r:120000, color:'#f97316', fillOpacity:.08, dash:'6,4'  }, pin: null }
-    };
+    /* LIVE_HAZARD_MAP_CONFIG is built from allItems each sync by buildHazardDetailsFromItems(). */
+    var HAZARD_MAP_CONFIG = LIVE_HAZARD_MAP_CONFIG;
 
     Object.keys(HAZARD_DETAILS).forEach(function(id) {
       var d = HAZARD_DETAILS[id];
@@ -2330,8 +2322,152 @@
     container.innerHTML = html;
   }
 
+  /* ── GEO LOOKUP: maps region keywords found in NWS/FEMA titles → map coords ── */
+  var GEO_REGIONS = [
+    /* Michigan */
+    { keys:['wayne county','detroit','metro detroit','southeast michigan','se michigan','southeastern michigan'], lat:42.38, lng:-83.10, r:65000, state:'MI' },
+    { keys:['oakland county','troy','pontiac','auburn hills','royal oak','southfield'], lat:42.58, lng:-83.18, r:40000, state:'MI' },
+    { keys:['macomb county','warren','sterling heights','clinton township'], lat:42.55, lng:-82.95, r:35000, state:'MI' },
+    { keys:['washtenaw','ann arbor','ypsilanti'], lat:42.28, lng:-83.75, r:30000, state:'MI' },
+    { keys:['kent county','grand rapids','west michigan'], lat:42.96, lng:-85.67, r:40000, state:'MI' },
+    { keys:['michigan','mi '], lat:43.50, lng:-84.50, r:200000, state:'MI' },
+    /* Texas */
+    { keys:['dallas','dfw','dallas-fort worth','tarrant county','collin county','denton county'], lat:32.90, lng:-97.00, r:110000, state:'TX' },
+    { keys:['fort worth','hillwood','arlington'], lat:32.73, lng:-97.29, r:40000, state:'TX' },
+    { keys:['harris county','houston'], lat:29.76, lng:-95.37, r:80000, state:'TX' },
+    { keys:['travis county','austin'], lat:30.27, lng:-97.74, r:50000, state:'TX' },
+    { keys:['texas','tx '], lat:31.00, lng:-99.00, r:300000, state:'TX' },
+    /* California */
+    { keys:['los angeles','la county','socal','southern california','cerritos','long beach','orange county','irvine','anaheim'], lat:34.00, lng:-118.25, r:100000, state:'CA' },
+    { keys:['san diego','carlsbad'], lat:32.72, lng:-117.15, r:50000, state:'CA' },
+    { keys:['bay area','alameda','pleasanton','san francisco','santa clara'], lat:37.55, lng:-122.05, r:70000, state:'CA' },
+    { keys:['sacramento','folsom'], lat:38.58, lng:-121.49, r:50000, state:'CA' },
+    { keys:['riverside','inland empire','corona'], lat:33.95, lng:-117.40, r:50000, state:'CA' },
+    { keys:['california','ca '], lat:36.50, lng:-119.50, r:300000, state:'CA' },
+    /* Florida */
+    { keys:['miami-dade','miami','broward','palm beach','boca raton','south florida'], lat:26.10, lng:-80.25, r:90000, state:'FL' },
+    { keys:['orlando','orange county florida','seminole county','altamonte'], lat:28.54, lng:-81.38, r:50000, state:'FL' },
+    { keys:['jacksonville','duval county'], lat:30.33, lng:-81.66, r:45000, state:'FL' },
+    { keys:['florida','fl ','gulf coast florida'], lat:27.80, lng:-82.50, r:200000, state:'FL' },
+    /* Washington DC metro */
+    { keys:['washington dc','district of columbia','dmv','national capital region','dc '], lat:38.90, lng:-77.03, r:50000, state:'DC' },
+    { keys:['northern virginia','nova ','falls church','arlington virginia','fairfax'], lat:38.85, lng:-77.20, r:40000, state:'VA' },
+    { keys:['maryland','baltimore','montgomery county','rockville'], lat:39.10, lng:-76.95, r:80000, state:'MD' },
+    /* Ohio */
+    { keys:['cleveland','cuyahoga','northeast ohio'], lat:41.50, lng:-81.69, r:45000, state:'OH' },
+    { keys:['columbus','franklin county ohio','worthington'], lat:39.96, lng:-82.99, r:50000, state:'OH' },
+    { keys:['cincinnati','hamilton county ohio'], lat:39.10, lng:-84.51, r:40000, state:'OH' },
+    { keys:['ohio','oh '], lat:40.40, lng:-82.80, r:200000, state:'OH' },
+    /* Pennsylvania */
+    { keys:['pittsburgh','allegheny','coraopolis'], lat:40.44, lng:-79.99, r:50000, state:'PA' },
+    { keys:['philadelphia','delaware county','wayne pa','chester county'], lat:40.00, lng:-75.15, r:60000, state:'PA' },
+    /* Nevada */
+    { keys:['las vegas','clark county nevada','henderson nevada'], lat:36.17, lng:-115.14, r:60000, state:'NV' },
+    { keys:['reno','washoe'], lat:39.53, lng:-119.81, r:40000, state:'NV' },
+    /* Washington State */
+    { keys:['seattle','king county washington','bellevue','puget sound','snohomish','lynnwood','everett'], lat:47.55, lng:-122.10, r:80000, state:'WA' },
+    { keys:['spokane','eastern washington'], lat:47.66, lng:-117.43, r:40000, state:'WA' },
+    /* Arizona */
+    { keys:['maricopa','phoenix','scottsdale','tempe','chandler','mesa'], lat:33.44, lng:-112.07, r:90000, state:'AZ' },
+    { keys:['tucson','pima county'], lat:32.22, lng:-110.97, r:40000, state:'AZ' },
+    /* North Carolina */
+    { keys:['charlotte','mecklenburg','carolina'], lat:35.23, lng:-80.84, r:50000, state:'NC' },
+    { keys:['raleigh','durham','wake county','triangle'], lat:35.78, lng:-78.64, r:50000, state:'NC' },
+    /* Nationwide fallback */
+    { keys:['nationwide','national','united states','us ','u.s.'], lat:38.00, lng:-97.00, r:null, state:'US' }
+  ];
+
+  /* Category → emoji, color, zone color */
+  var HAZARD_STYLE = {
+    natural:    { emoji:'🌩', color:'#f97316', zoneColor:'#f97316' },
+    cyber:      { emoji:'🔵', color:'#dc2626', zoneColor:'#dc2626' },
+    terror:     { emoji:'⚠️',  color:'#7c0000', zoneColor:'#7c0000' },
+    financial:  { emoji:'📊', color:'#d97706', zoneColor:'#d97706' },
+    human:      { emoji:'🚨', color:'#c8102e', zoneColor:'#c8102e' },
+    datacenter: { emoji:'🖥',  color:'#7c3aed', zoneColor:'#7c3aed' },
+    general:    { emoji:'📌', color:'#6b7280', zoneColor:'#6b7280' }
+  };
+
+  function geoForItem(item) {
+    var text = ((item.title||'')+(item.desc||'')).toLowerCase();
+    for (var i = 0; i < GEO_REGIONS.length; i++) {
+      var reg = GEO_REGIONS[i];
+      for (var j = 0; j < reg.keys.length; j++) {
+        if (text.indexOf(reg.keys[j]) !== -1) return reg;
+      }
+    }
+    return null;
+  }
+
+  /* Build HAZARD_DETAILS + LIVE_HAZARD_MAP_CONFIG from current allItems each sync. */
+  var LIVE_HAZARD_MAP_CONFIG = {};
+  function buildHazardDetailsFromItems(items) {
+    var candidates = (items || []).filter(function(i){ return i.severity <= 3; });
+    /* Pick at most 8 items — highest severity first, then deduplicate by geo region */
+    var sorted = candidates.slice().sort(function(a,b){ return a.severity - b.severity || new Date(b.pubDate) - new Date(a.pubDate); });
+    var usedRegions = {};
+    var selected = [];
+    sorted.forEach(function(item) {
+      if (selected.length >= 8) return;
+      var geo = geoForItem(item);
+      if (!geo) return;
+      /* Allow at most 2 items per broad region key (first matched key) */
+      var rKey = geo.keys[0] + '|' + (item.category||'');
+      if ((usedRegions[rKey] || 0) >= 2) return;
+      usedRegions[rKey] = (usedRegions[rKey] || 0) + 1;
+      item._geo = geo;
+      selected.push(item);
+    });
+
+    var newDetails = {};
+    var newConfig = {};
+    var now = new Date();
+    var dateStr = now.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})
+                + ' — ' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
+
+    selected.forEach(function(item, idx) {
+      var key = 'live_' + idx;
+      var geo = item._geo;
+      var style = HAZARD_STYLE[item.category] || HAZARD_STYLE.general;
+      var sevLabel = item.severity <= 1 ? 'LEVEL 1 — CRISIS' : item.severity === 2 ? 'LEVEL 2 — HIGH' : 'LEVEL 3 — SIGNIFICANT';
+
+      newDetails[key] = {
+        emoji: style.emoji,
+        title: (item.title || '').substring(0, 120),
+        badge: sevLabel,
+        badgeColor: style.color,
+        source: item.source || item.sourceId || '',
+        what: item.desc || item.title || '',
+        where: geo.state !== 'US' ? ('Affects: ' + geo.keys.slice(0,3).map(function(k){ return k.charAt(0).toUpperCase()+k.slice(1); }).join(', ')) : 'Nationwide',
+        why: 'Live alert from ' + (item.source||'feed') + '. Severity: ' + sevLabel + '. Review and assess impact on nearby Rocket locations.',
+        updated: dateStr,
+        potentialImpacts: [],
+        impactsHappened: [],
+        sources: item.link ? [{ name: item.source||'Source', desc: 'Original article/alert', url: item.link }] : []
+      };
+
+      if (geo.r) {
+        /* Has a radius — draw a zone circle + optional pin */
+        newConfig[key] = {
+          circle: { lat: geo.lat, lng: geo.lng, r: geo.r, color: style.zoneColor, fillOpacity: 0.07, dash: '6,4' },
+          pin: { lat: geo.lat + 0.15, lng: geo.lng + 0.05, emoji: style.emoji, color: style.color }
+        };
+      } else {
+        /* Nationwide — pin only at geographic center */
+        newConfig[key] = {
+          circle: null,
+          pin: { lat: geo.lat, lng: geo.lng, emoji: style.emoji, color: style.color }
+        };
+      }
+    });
+
+    HAZARD_DETAILS = newDetails;
+    LIVE_HAZARD_MAP_CONFIG = newConfig;
+  }
+
   /* Called by renderAlerts — syncs map overlays + mini-map + history panel. */
   function syncMapFromDashboard() {
+    buildHazardDetailsFromItems(allItems);
     if (map) renderMapHazards();
     if (miniMap) renderMiniMapHazards();
     /* Always refresh history panel even if map tab not open yet */
@@ -2716,25 +2852,20 @@
   }
   var miniHazardLayers = [];
 
-  /* Mirror HAZARD_MAP_CONFIG circles onto the mini-map */
+  /* Mirror live hazard circles onto the mini-map — driven by LIVE_HAZARD_MAP_CONFIG */
   function renderMiniMapHazards() {
     if (!miniMap) return;
     miniHazardLayers.forEach(function(l) { miniMap.removeLayer(l); });
     miniHazardLayers = [];
 
-    var MINI_CONFIG = {
-      heat_wayne:       { lat:42.45,  lng:-83.10, r:70000,  color:'#f97316', fillOpacity:.15, dash:'5,3' },
-      fema_declaration: { lat:42.35,  lng:-83.3,  r:80000,  color:'#7c3aed', fillOpacity:.10, dash:'7,3' },
-      heat_dfw:         { lat:32.9,   lng:-97.0,  r:120000, color:'#f97316', fillOpacity:.10, dash:'5,3' }
-    };
-
-    Object.keys(MINI_CONFIG).forEach(function(id) {
-      if (!HAZARD_DETAILS[id]) return; /* skip removed events */
-      var c = MINI_CONFIG[id];
+    Object.keys(LIVE_HAZARD_MAP_CONFIG).forEach(function(id) {
+      var cfg = LIVE_HAZARD_MAP_CONFIG[id];
       var d = HAZARD_DETAILS[id];
+      if (!cfg || !cfg.circle || !d) return;
+      var c = cfg.circle;
       var layer = L.circle([c.lat, c.lng], {
-        color: c.color, fillColor: c.color, fillOpacity: c.fillOpacity,
-        weight: 1.5, dashArray: c.dash, radius: c.r
+        color: c.color, fillColor: c.color, fillOpacity: 0.12,
+        weight: 1.5, dashArray: '5,3', radius: c.r
       }).addTo(miniMap);
       layer.bindTooltip(d.emoji + ' ' + d.title, {direction:'top'});
       miniHazardLayers.push(layer);
