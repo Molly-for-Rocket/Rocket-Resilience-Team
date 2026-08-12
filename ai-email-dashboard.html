@@ -2389,6 +2389,112 @@ Account that should own these flows after handoff: [add name here]</textarea>
 
   var locationMarkers = {}; /* name -> L.marker */
 
+  /* Keyword sets for scoring alerts against a location. Keyed by state abbreviation for
+     broad matching, with city overrides for places that share common words. */
+  var LOC_GEO_OVERRIDES = {
+    /* city-level overrides: key = "city|state" lowercase */
+    'detroit|mi':        ['detroit','wayne county','woodward','downtown detroit','michigan','metro detroit','tri-county','macomb','dte energy'],
+    'troy|mi':           ['troy michigan','troy mi','800 tower','oakland county','metro detroit','michigan','i-75 corridor'],
+    'cerritos|ca':       ['cerritos','los angeles','la county','southern california','socal','long beach','orange county'],
+    'coppell|tx':        ['coppell','dallas','dfw','north texas','carrollton','irving','cypress waters','dallas-fort worth'],
+    'fort worth|tx':     ['fort worth','tarrant county','dfw','north texas','hillwood','ercot','dallas-fort worth'],
+    'carrollton|tx':     ['carrollton','dallas','dfw','north texas','dallas-fort worth'],
+    'frisco|tx':         ['frisco','dallas','dfw','north texas','collin county'],
+    'farmers branch|tx': ['farmers branch','dallas','dfw','north texas'],
+    'playa vista|ca':    ['playa vista','los angeles','la county','southern california','socal'],
+    'chandler|az':       ['chandler','maricopa','phoenix metro','az','arizona','east valley'],
+    'tempe|az':          ['tempe','maricopa','phoenix metro','az','arizona'],
+    'flagstaff|az':      ['flagstaff','coconino','arizona','az','northern arizona'],
+    'tucson|az':         ['tucson','pima county','arizona','az','southern arizona'],
+    'windsor|on':        ['windsor','ontario','canada','on'],
+    'toronto|on':        ['toronto','ontario','gta','canada','on'],
+    'scarborough|on':    ['scarborough','toronto','ontario','canada','on'],
+    'ottawa|on':         ['ottawa','ontario','canada','on'],
+    'vancouver|bc':      ['vancouver','british columbia','bc','canada'],
+    'charlotte|nc':      ['charlotte','mecklenburg','north carolina','nc','carolinas'],
+    'durham|nc':         ['durham','triangle','north carolina','nc','research triangle'],
+    'cleveland|oh':      ['cleveland','cuyahoga','ohio','oh','northeast ohio'],
+    'cincinnati|oh':     ['cincinnati','hamilton county','ohio','oh','southwest ohio'],
+    'worthington|oh':    ['worthington','columbus','franklin county','ohio','oh'],
+    'coraopolis|pa':     ['coraopolis','pittsburgh','allegheny','pennsylvania','pa'],
+    'wayne|pa':          ['wayne','philadelphia','delaware county','pennsylvania','pa'],
+    'pittsburgh|pa':     ['pittsburgh','allegheny','pennsylvania','pa'],
+    'washington|dc':     ['washington dc','district of columbia','dc','dmv','national capital'],
+    'falls church|va':   ['falls church','northern virginia','nova','virginia','va','dmv'],
+    'baltimore|md':      ['baltimore','maryland','md','dmv'],
+    'rockville|md':      ['rockville','montgomery county','maryland','md'],
+    'henderson|nv':      ['henderson','las vegas','clark county','nevada','nv'],
+    'reno|nv':           ['reno','washoe','nevada','nv','sierra nevada'],
+    'altamonte springs|fl': ['altamonte springs','orlando','seminole county','florida','fl','central florida'],
+    'boca raton|fl':     ['boca raton','palm beach','broward','florida','fl','south florida'],
+    'jacksonville|fl':   ['jacksonville','duval county','florida','fl','northeast florida'],
+    'miramar beach|fl':  ['miramar beach','destin','okaloosa','florida','fl','panhandle'],
+    'bellevue|wa':       ['bellevue','seattle','king county','washington','wa','puget sound'],
+    'everett|wa':        ['everett','snohomish','washington','wa','puget sound'],
+    'lynnwood|wa':       ['lynnwood','snohomish','washington','wa','puget sound'],
+    'spokane|wa':        ['spokane','eastern washington','washington','wa'],
+    'tacoma|wa':         ['tacoma','pierce county','washington','wa','puget sound'],
+    'vancouver|wa':      ['vancouver washington','clark county','washington','wa','portland metro'],
+    'portland|or':       ['portland','multnomah','oregon','or','pacific northwest'],
+    'grand rapids|mi':   ['grand rapids','kent county','michigan','mi','west michigan'],
+    'novi|mi':           ['novi','oakland county','michigan','mi','metro detroit'],
+    'carlsbad|ca':       ['carlsbad','san diego','southern california','socal','ca'],
+    'corona|ca':         ['corona','riverside county','inland empire','southern california','ca'],
+    'folsom|ca':         ['folsom','sacramento','el dorado','california','ca','nor cal'],
+    'irvine|ca':         ['irvine','orange county','southern california','socal','ca'],
+    'lake forest|ca':    ['lake forest','orange county','southern california','socal','ca'],
+    'palm desert|ca':    ['palm desert','coachella','riverside','southern california','ca'],
+    'pleasanton|ca':     ['pleasanton','alameda','east bay','bay area','california','ca'],
+    'sherman oaks|ca':   ['sherman oaks','los angeles','la county','san fernando','socal','ca'],
+    'moonachie|nj':      ['moonachie','bergen county','new jersey','nj','new york metro'],
+    'jericho|ny':        ['jericho','nassau county','long island','new york','ny'],
+    'oklahoma city|ok':  ['oklahoma city','okc','oklahoma','ok'],
+    'longview|tx':       ['longview','gregg county','east texas','texas','tx'],
+    'el paso|tx':        ['el paso','west texas','texas','tx']
+  };
+
+  /* Score a location against live items. Returns new alertLevel (0-4). */
+  function scoreLocationAlerts(loc, liveItems) {
+    if (!liveItems || liveItems.length === 0) return 4;
+    var cityKey = ((loc.city || '') + '|' + (loc.state || '')).toLowerCase();
+    var keywords = LOC_GEO_OVERRIDES[cityKey] || [(loc.city || '').toLowerCase(), (loc.state || '').toLowerCase()];
+    var minSev = 4;
+    liveItems.forEach(function(item) {
+      var combined = ((item.title||'')+(item.desc||'')+(item.source||'')).toLowerCase();
+      if (keywords.some(function(k){ return combined.indexOf(k) !== -1; })) {
+        if (item.severity < minSev) minSev = item.severity;
+      }
+    });
+    /* Cap at 1 (tier 1 = High) rather than 0 (Critical) for location scoring — tier 0 is reserved for direct confirmed impacts */
+    return Math.max(1, minSev);
+  }
+
+  /* Update alertLevel for every monitored location, then refresh map pins and table. */
+  function updateLocationAlertLevels(liveItems) {
+    monitoredLocations.forEach(function(loc) {
+      loc.alertLevel = scoreLocationAlerts(loc, liveItems);
+    });
+    /* Refresh map markers if map is ready */
+    if (map) {
+      monitoredLocations.forEach(function(loc) {
+        if (!locationMarkers[loc.name]) return;
+        var marker = locationMarkers[loc.name];
+        marker.setIcon(makePinIcon(loc));
+        var emoji = loc.type === 'Critical' ? '&#11088; ' : '&#128205; ';
+        var critBadge = loc.type === 'Critical'
+          ? '<div style="display:inline-block;background:#F59E0B;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase">&#9670; Critical Building</div><br>'
+          : '';
+        var pop = '<div class="map-popup-title">' + emoji + escHtml(loc.name) + '</div>'
+          + critBadge
+          + '<div style="font-size:11px;color:#64748b;margin-bottom:6px">' + escHtml(loc.city||'') + ', ' + loc.state + ' &middot; ' + (loc.type||'Office') + '</div>'
+          + '<div style="font-size:12px;color:' + pinColor(loc.alertLevel) + ';font-weight:600">'
+          + (loc.alertLevel <= 3 ? 'Active Alert — Tier ' + loc.alertLevel : 'No Active Alerts') + '</div>';
+        marker.setPopupContent(pop);
+      });
+    }
+    renderLocationTable();
+  }
+
   function pinColor(alertLevel) {
     if (alertLevel <= 1) return '#C8102E';  /* red — critical */
     if (alertLevel === 2) return '#EA580C'; /* orange — high */
@@ -2880,6 +2986,8 @@ Account that should own these flows after handoff: [add name here]</textarea>
     document.getElementById('stat-tech-delta').textContent = counts.tech + ' items from live feeds';
     document.getElementById('stat-natural-delta').textContent = counts.natural + ' items from live feeds';
     document.getElementById('stat-financial-delta').textContent = counts.financial + ' items from live feeds';
+    /* Update location alert levels and map pins from live feed data */
+    updateLocationAlertLevels(items);
     /* Refresh critical buildings live alerts if that tab has been opened */
     if (cbLoaded) { cbLoaded = false; renderCriticalBuildings(); cbLoaded = true; }
   }
