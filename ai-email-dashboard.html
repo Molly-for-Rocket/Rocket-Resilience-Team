@@ -11,6 +11,12 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     .leaflet-container { background: #f5f6fa; font-family: var(--font, 'Nunito Sans', 'Segoe UI', sans-serif); }
+    /* OSM standard tiles are more saturated than the CARTO light basemap they
+       replaced. Desaturating and lightening only the tile layer preserves the
+       muted look, so the red/orange/amber alert pins and hazard overlays stay
+       the visual focus instead of competing with basemap colors.
+       Applied to tiles only — markers, popups and overlays are unaffected. */
+    .leaflet-tile-pane { filter: saturate(0.45) brightness(1.06) contrast(0.94); }
     .leaflet-popup-content-wrapper { background: #ffffff; color: #1A1A2E; border: 1px solid #E2E6EF; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,.12); }
     .leaflet-popup-tip { background: #ffffff; }
     .leaflet-popup-content { margin: 12px 16px; font-size: 13px; line-height: 1.5; min-width: 220px; }
@@ -1909,6 +1915,36 @@
   /* ── MAP ── */
   var map = null;
 
+  /* ── Basemap tiles ──────────────────────────────────────────────────────────
+     OpenStreetMap standard tiles: free, no API key, no watermark.
+     Replaced CARTO (basemaps.cartocdn.com), which now requires an account and
+     stamps unauthenticated tiles with an "API key required" overlay.
+     Both the main threat map and the mini-map share this so the basemap is
+     defined in exactly one place.                                              */
+  var BASEMAP_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  var BASEMAP_ATTRIB = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+  function addBasemap(targetMap, opts) {
+    opts = opts || {};
+    var layer = L.tileLayer(BASEMAP_URL, {
+      subdomains: 'abc',
+      /* OSM serves tiles up to z19. Keep this in sync with the map's own maxZoom
+         so Leaflet doesn't request tiles that come back as 404s. */
+      maxZoom: 19,
+      attribution: opts.attribution === false ? '' : BASEMAP_ATTRIB,
+    });
+    /* If tiles fail to load, say so instead of leaving a blank grey pane. */
+    layer.on('tileerror', function() {
+      if (layer._rocketErrLogged) return;
+      layer._rocketErrLogged = true;
+      if (typeof addLog === 'function') {
+        addLog('system', 'WARN', 'Basemap tiles failed to load — check network/proxy access to tile.openstreetmap.org');
+      }
+    });
+    layer.addTo(targetMap);
+    return layer;
+  }
+
   /* ── Event history: array of snapshots, one per unique (id + updated) combo ──
      Each entry = { ...all HAZARD_DETAILS fields, id, snapshotTime (ISO string) }
      Persisted in localStorage so it genuinely holds 7 days. It was previously in
@@ -2740,10 +2776,7 @@
       maxBoundsViscosity: 1.0
     }).setView([39.5, -98.35], 4);
     map.setMaxBounds(usBounds);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      subdomains: 'abcd', maxZoom: 19,
-    }).addTo(map);
+    addBasemap(map);
 
     /* Plot all Rocket Companies office locations */
     monitoredLocations.forEach(function(loc) {
@@ -2823,9 +2856,7 @@
       maxBoundsViscosity: 1.0,
       attributionControl: false
     }).setView([38.5, -96.0], 4);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd', maxZoom: 19
-    }).addTo(miniMap);
+    addBasemap(miniMap, { attribution: false });
 
     /* ── Threat overlays — driven from HAZARD_MAP_CONFIG so they stay in sync ── */
     renderMiniMapHazards();

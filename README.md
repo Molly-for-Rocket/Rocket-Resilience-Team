@@ -106,5 +106,18 @@ committed.
 
 ## Map
 
-Leaflet with CARTO basemap tiles — **no API key required**. If map tiles fail to
-load it is network/CSP, not credentials.
+Leaflet with **OpenStreetMap standard tiles — no API key, no account, no
+watermark.** The basemap is defined once in `addBasemap()`; both the threat map
+and the mini-map use it.
+
+Previously this used CARTO (`basemaps.cartocdn.com`), which now requires an
+account and stamps unauthenticated tiles with an "API key required" overlay.
+
+Notes:
+- OSM tiles are more saturated than the old CARTO basemap, so the tile pane is
+  desaturated in CSS (`.leaflet-tile-pane`) to keep alert pins readable. Markers
+  and overlays are unaffected.
+- OSM serves up to zoom 19; the map caps user zoom at 18 so Leaflet never
+  requests a tile that doesn't exist.
+- If tiles don't render, it's network/proxy access to `tile.openstreetmap.org` —
+  never credentials. A warning is written to the dashboard log on tile errors.
