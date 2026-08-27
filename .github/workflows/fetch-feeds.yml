@@ -2,12 +2,21 @@ name: Fetch Threat Intel Feeds
 
 on:
   schedule:
+    # Every 15 minutes. NOTE: GitHub disables scheduled workflows in repos with no
+    # commit activity for 60 days — the keepalive job below prevents that, which is
+    # why alerts.json previously went stale for weeks without anyone noticing.
     - cron: '*/15 * * * *'
   workflow_dispatch:
+
+# Prevent overlapping runs from racing on the alerts.json commit.
+concurrency:
+  group: fetch-feeds
+  cancel-in-progress: false
 
 jobs:
   fetch:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
 
@@ -17,12 +26,40 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci || npm install
 
       - name: Fetch all feeds
-        run: node fetch-feeds.js
+        id: fetch
+        run: node fetch-feeds.js 2>&1 | tee fetch.log
+
+      - name: Summarize feed health
+        if: always()
+        run: |
+          echo "### Feed fetch summary" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          grep -E '^(✓|✗|!|===)' fetch.log | tail -50 >> "$GITHUB_STEP_SUMMARY" || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      # Fail loudly if the run produced no usable data, so a silent breakage shows
+      # up as a red run instead of a quietly stale alerts.json.
+      - name: Verify output is usable
+        run: |
+          node -e "
+            const d = require('./alerts.json');
+            const total = (d.alerts || []).length;
+            const health = d.health || {};
+            const ok = Object.values(health).filter(h => h.status === 'ok').length;
+            const failed = Object.entries(health).filter(([,h]) => h.status === 'error').map(([k]) => k);
+            const empty  = Object.entries(health).filter(([,h]) => h.status === 'ok' && h.items === 0).map(([k]) => k);
+            console.log('retained alerts: ' + total + ', healthy sources: ' + ok + '/' + Object.keys(health).length);
+            if (failed.length) console.log('failed sources: ' + failed.join(', '));
+            if (empty.length)  console.log('zero-item sources: ' + empty.join(', '));
+            if (total === 0) { console.error('FAIL: alerts.json contains no alerts'); process.exit(1); }
+            if (ok < 5)      { console.error('FAIL: only ' + ok + ' healthy sources — likely a systemic fetch problem'); process.exit(1); }
+          "
 
       - name: Commit alerts.json
         run: |
@@ -30,4 +67,15 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add alerts.json
           git diff --cached --quiet || git commit -m "chore: update alerts.json [skip ci]"
+          # Rebase before pushing in case a concurrent run landed first.
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}" || true
           git push
+
+  # Keeps the repo "active" so GitHub does not auto-disable the cron above.
+  keepalive:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: gautamkrishnar/keepalive-workflow@v2

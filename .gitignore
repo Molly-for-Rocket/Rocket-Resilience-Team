@@ -1,0 +1,8 @@
+node_modules/
+*.log
+fetch.log
+
+# Local scratch / experiment files
+_*.cjs
+_*.mjs
+_*.bak

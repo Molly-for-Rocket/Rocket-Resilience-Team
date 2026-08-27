@@ -15,7 +15,9 @@ const RSS_SOURCES = [
   { id: 'cisa-alerts',   name: 'CISA Advisories',               category: 'cyber',       region: 'national',     minSeverity: 2, url: 'https://www.cisa.gov/uscert/ncas/alerts.xml' },
   // ── Terror / Law Enforcement ───────────────────────────────────────────────
   { id: 'fbi',           name: 'FBI Press Releases',            category: 'terror',      region: 'national',     minSeverity: 2, url: 'https://www.fbi.gov/feeds/fbi-in-the-news/rss.xml' },
-  { id: 'dhs',           name: 'DHS Newsroom',                  category: 'terror',      region: 'national',     minSeverity: 2, url: 'https://www.dhs.gov/dhs-news-updates/feed' },
+  // DHS: /dhs-news-updates/feed 404s. National Terrorism Advisory System is the
+  // feed the Resilience team actually needs — it carries NTAS bulletins directly.
+  { id: 'dhs',           name: 'DHS National Terrorism Advisory', category: 'terror',    region: 'national',     minSeverity: 3, url: 'https://www.dhs.gov/ntas/rss.xml' },
   // ── National News (strict filter — only genuine resilience events) ─────────
   { id: 'cbs',           name: 'CBS News National',             category: 'general',     region: 'national',     minSeverity: 2, url: 'https://www.cbsnews.com/latest/rss/main' },
   { id: 'nbc',           name: 'NBC News',                      category: 'general',     region: 'national',     minSeverity: 2, url: 'https://feeds.nbcnews.com/nbcnews/public/news' },
@@ -25,30 +27,41 @@ const RSS_SOURCES = [
   // ── Detroit / HQ / Data Center region ─────────────────────────────────────
   { id: 'bridgemi',      name: 'Bridge Michigan',               category: 'general',     region: 'detroit',      minSeverity: 3, url: 'https://www.bridgemi.com/feed/' },
   { id: 'wdet',          name: 'WDET Detroit Public Radio',     category: 'general',     region: 'detroit',      minSeverity: 3, url: 'https://wdet.org/feed/' },
-  { id: 'clickondet',    name: 'Click On Detroit (WDIV)',       category: 'general',     region: 'detroit',      minSeverity: 3, url: 'https://www.clickondetroit.com/rss/news.xml' },
-  { id: 'wxyz',          name: 'WXYZ Detroit',                  category: 'general',     region: 'detroit',      minSeverity: 3, url: 'https://www.wxyz.com/news/rss' },
-  { id: 'freep',         name: 'Detroit Free Press',            category: 'general',     region: 'detroit',      minSeverity: 3, url: 'https://rssfeeds.freep.com/freep/home?format=xml' },
-  { id: 'detroitnews',   name: 'Detroit News',                  category: 'general',     region: 'detroit',      minSeverity: 3, url: 'https://www.detroitnews.com/rss/news' },
-  { id: 'mspemergency',  name: 'Michigan State Police',         category: 'datacenter',  region: 'detroit',      minSeverity: 3, url: 'https://www.michigan.gov/msp/rss/news.xml' },
-  { id: 'miready',       name: 'Michigan EMHSD Ready',          category: 'datacenter',  region: 'detroit',      minSeverity: 3, url: 'https://www.michigan.gov/miready/rss/news.xml' },
+  // Detroit outlets migrated to Arc/Gannett feed platforms — old paths 404.
+  { id: 'clickondet',    name: 'Click On Detroit (WDIV)',       category: 'general',     region: 'detroit',      minSeverity: 3, url: 'https://www.clickondetroit.com/arc/outboundfeeds/rss/category/news/?outputType=xml' },
+  { id: 'wxyz',          name: 'WXYZ Detroit',                  category: 'general',     region: 'detroit',      minSeverity: 3, url: 'https://www.wxyz.com/news.rss' },
+  { id: 'freep',         name: 'Detroit Free Press',            category: 'general',     region: 'detroit',      minSeverity: 3, url: 'https://www.freep.com/feeds/live/news/rss' },
+  { id: 'detroitnews',   name: 'Detroit News',                  category: 'general',     region: 'detroit',      minSeverity: 3, url: 'https://www.detroitnews.com/feeds/live/news/rss' },
+  // michigan.gov retired per-agency RSS. Google News queries are stable, CORS-free
+  // server-side, and let us scope precisely to MSP / Michigan emergency management.
+  { id: 'mspemergency',  name: 'Michigan State Police (news)',  category: 'datacenter',  region: 'detroit',      minSeverity: 3, url: 'https://news.google.com/rss/search?q=%22Michigan+State+Police%22+OR+%22Michigan+emergency%22&hl=en-US&gl=US&ceid=US:en' },
+  { id: 'miready',       name: 'Michigan EMHSD / MI Ready',     category: 'datacenter',  region: 'detroit',      minSeverity: 3, url: 'https://news.google.com/rss/search?q=Michigan+%22state+of+emergency%22+OR+%22emergency+management%22&hl=en-US&gl=US&ceid=US:en' },
+  // DTE / Consumers Energy outage coverage — THIRA flags Telecom/Power failure as
+  // Critical for the Detroit data centers, but nothing was watching the utilities.
+  { id: 'dteoutage',     name: 'DTE / Michigan Power Outages',  category: 'infrastructure', region: 'detroit',   minSeverity: 3, url: 'https://news.google.com/rss/search?q=%22DTE+Energy%22+outage+OR+%22Consumers+Energy%22+outage&hl=en-US&gl=US&ceid=US:en' },
   // ── Regional offices — strict filter ──────────────────────────────────────
   { id: 'latimes',       name: 'LA Times',                      category: 'general',     region: 'socal',        minSeverity: 2, url: 'https://www.latimes.com/local/rss2.0.xml' },
   { id: 'abc7la',        name: 'ABC7 LA',                       category: 'general',     region: 'socal',        minSeverity: 2, url: 'https://abc7.com/feed/' },
   { id: 'nbcdfw',        name: 'NBC5 DFW Local',                category: 'general',     region: 'dfw',          minSeverity: 2, url: 'https://www.nbcdfw.com/news/local/feed/' },
   { id: 'wfaa',          name: 'WFAA Dallas',                   category: 'general',     region: 'dfw',          minSeverity: 2, url: 'https://www.wfaa.com/feeds/syndication/rss/news' },
   { id: 'wtop',          name: 'WTOP News DC',                  category: 'general',     region: 'dc',           minSeverity: 2, url: 'https://wtop.com/feed/' },
-  { id: 'wcnc',          name: 'WCNC Charlotte (NBC)',          category: 'general',     region: 'carolina',     minSeverity: 2, url: 'https://www.wcnc.com/feed/' },
+  { id: 'wcnc',          name: 'WCNC Charlotte (NBC)',          category: 'general',     region: 'carolina',     minSeverity: 2, url: 'https://www.wcnc.com/feeds/syndication/rss/news' },
   // ── Financial regulators — only enforcement actions, not routine releases ──
   { id: 'cfpb',          name: 'CFPB Newsroom',                 category: 'financial',   region: 'national',     minSeverity: 2, url: 'https://www.consumerfinance.gov/about-us/newsroom/feed/' },
   { id: 'sec',           name: 'SEC Press Releases',            category: 'financial',   region: 'national',     minSeverity: 2, url: 'https://www.sec.gov/news/pressreleases.rss' },
 ];
 
+// NOTE: `structured: true` marks sources whose severity is derived from the data
+// itself (NWS urgency, quake magnitude, KEV exploitation status, FEMA declaration)
+// rather than from news-style keyword matching. Keyword scoring silently zeroed out
+// CISA KEV and FEMA entirely — a FEMA declaration matches no keyword and scored 4,
+// and every KEV row matched "vulnerability" (tier 3) against a minSeverity of 2.
 const JSON_SOURCES = [
-  { id: 'nws',         name: 'NWS Active Alerts',           category: 'natural',        region: 'national',  minSeverity: 2, url: 'https://api.weather.gov/alerts/active?area=MI,CA,TX,DC,VA,MD,PA,NC,OH,AZ,IN,IL,FL,GA,CO,NV,WA,MN', headers: { 'Accept': 'application/geo+json', 'User-Agent': 'RocketBCR/2.0 (bcr@rocketcompanies.com)' } },
-  { id: 'usgs',        name: 'USGS Earthquakes',            category: 'natural',        region: 'national',  minSeverity: 3, url: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson' },
-  { id: 'fema',        name: 'FEMA Disaster Declarations',  category: 'natural',        region: 'national',  minSeverity: 3, url: 'https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?%24orderby=declarationDate%20desc&%24top=50' },
-  { id: 'cisa-kev',    name: 'CISA Known Exploited Vulns',  category: 'cyber',          region: 'national',  minSeverity: 2, url: 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json' },
-  { id: 'salesforce',  name: 'Salesforce Status',           category: 'infrastructure', region: 'national',  minSeverity: 3, url: 'https://api.status.salesforce.com/v1/incidents' },
+  { id: 'nws',         name: 'NWS Active Alerts',           category: 'natural',        region: 'national',  minSeverity: 3, structured: true, url: 'https://api.weather.gov/alerts/active?area=MI,CA,TX,DC,VA,MD,PA,NC,OH,AZ,IN,IL,FL,GA,CO,NV,WA,MN,MO,TN,KY,SC,NJ,NY,OK,UT,OR,ID,NE,LA', headers: { 'Accept': 'application/geo+json', 'User-Agent': 'RocketBCR/2.0 (bcr@rocketcompanies.com)' } },
+  { id: 'usgs',        name: 'USGS Earthquakes',            category: 'natural',        region: 'national',  minSeverity: 3, structured: true, url: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson' },
+  { id: 'fema',        name: 'FEMA Disaster Declarations',  category: 'natural',        region: 'national',  minSeverity: 3, structured: true, url: 'https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?%24orderby=declarationDate%20desc&%24top=50' },
+  { id: 'cisa-kev',    name: 'CISA Known Exploited Vulns',  category: 'cyber',          region: 'national',  minSeverity: 3, structured: true, url: 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json' },
+  { id: 'salesforce',  name: 'Salesforce Status',           category: 'infrastructure', region: 'national',  minSeverity: 3, structured: true, url: 'https://api.status.salesforce.com/v1/incidents' },
 ];
 
 // ─── SEVERITY SCORING ─────────────────────────────────────────────────────────
@@ -135,6 +148,27 @@ const SEV2 = [
   // Michigan State Police / City of Detroit emergency notices
   'michigan state police alert','michigan emergency','detroit emergency',
   'wayne county emergency',
+  // ── THIRA-aligned Critical risks (Rocket LP THIRA, 02/26/2026, score 9.4) ──
+  // The THIRA rates these Critical, but nothing in the tiers was matching them.
+  // Vendor Outage (36.0) + Telecom Failure Data/Voice (24.0) + Computer System
+  // Outage (36.0) are the top-scoring technology risks for the Detroit sites.
+  'vendor outage','third-party outage','third party outage','supplier outage',
+  'saas outage','cloud outage','aws outage','azure outage','google cloud outage',
+  'cloudflare outage','okta outage','crowdstrike outage','fiserv outage',
+  'ice mortgage technology','encompass outage','black knight outage',
+  'telecom failure','fiber cut','fiber outage','voice outage','pbx outage',
+  'carrier outage','att outage','verizon outage','comcast outage','level 3 outage',
+  'core banking outage','payment system outage','wire transfer outage',
+  'ach outage','fedwire','fednow outage','clearinghouse outage',
+  // Embezzlement / Fraud + Mortgage Fraud (24.0 Critical)
+  'mortgage fraud','wire fraud','embezzlement','title fraud','deed fraud',
+  'appraisal fraud','loan fraud scheme','business email compromise',
+  // Liquidity Shock / Borrowing Default (18.0 / 16.0 Critical)
+  'liquidity crisis','warehouse line','margin call','credit downgrade',
+  'covenant breach','ratings downgrade','bond downgrade',
+  // DHS National Terrorism Advisory System bulletins
+  'national terrorism advisory','ntas bulletin','elevated threat',
+  'imminent threat alert','heightened threat environment',
 ];
 
 // ── Tier 3: Significant — developing situations and advisories ───────────────
@@ -193,6 +227,32 @@ const ROCKET_NAMES = [
   'qube','611 woodward','800 tower drive','1401 rosa parks',
 ];
 
+// ── States/provinces with Rocket offices or remote team members ──────────────
+// Used to geo-filter FEMA declarations so we don't surface disasters in states
+// where Rocket has no people or facilities.
+const ROCKET_STATES = [
+  'MI','CA','AZ','TX','OH','NC','PA','DC','VA','MD','NV','FL','WA','OR','NJ','NY',
+  'OK','MN','WI','CO','TN','KY','GA','SC','IL','MO','UT','NE','LA','ID','AL','AK',
+  'CT','DE','HI','KS','MA','ME','MS','NH','RI','SD',
+];
+
+// ── Enterprise tech in Rocket's stack (or ubiquitous enough to matter) ───────
+// A CISA KEV entry against one of these is escalated — THIRA rates both Cyber
+// Attack and Computer System Outage as Critical (36.0) for the Detroit sites.
+const ENTERPRISE_TECH = [
+  'microsoft','windows','exchange','office','sharepoint','active directory','azure',
+  'outlook','teams','internet explorer','edge','sql server',
+  'cisco','fortinet','fortios','palo alto','pan-os','citrix','netscaler','vmware',
+  'esxi','vcenter','f5','big-ip','ivanti','pulse secure','sonicwall','juniper',
+  'oracle','java','weblogic','apache','tomcat','log4j','struts','nginx',
+  'linux','red hat','ubuntu','openssl','openssh',
+  'google','chrome','android','adobe','acrobat','coldfusion',
+  'atlassian','confluence','jira','bitbucket','jenkins','gitlab','github',
+  'salesforce','servicenow','okta','sap','zoom','slack','crowdstrike',
+  'progress','moveit','fortra','goanywhere','solarwinds','papercut','veeam',
+  'zoho','manageengine','qnap','fortimanager','sharefile','netlogon',
+];
+
 // ── Terror/threat detection for map plotting ─────────────────────────────────
 const PHYSICAL_TERROR = [
   'terror','terrorist','active shooter','mass shooting','suicide bomber',
@@ -220,6 +280,40 @@ function scoreItem(title, desc) {
   // Boost for direct Rocket entity mention — moves one tier more critical, floor 0
   for (const r of ROCKET_NAMES) if (text.includes(r.toLowerCase())) { score = Math.max(0, score - 1); break; }
   return score;
+}
+
+// ── Structured-source severity ───────────────────────────────────────────────
+// For feeds that publish their own urgency/severity, trust the source instead of
+// keyword-matching prose. Still applies the Rocket-entity boost at the end.
+function rocketBoost(text, score) {
+  const t = text.toLowerCase();
+  for (const r of ROCKET_NAMES) if (t.includes(r.toLowerCase())) return Math.max(0, score - 1);
+  return score;
+}
+
+// NWS publishes severity (Extreme/Severe/Moderate) and urgency (Immediate/Expected).
+function scoreNWS(p, text) {
+  const sev = (p.severity || '').toLowerCase();
+  const urg = (p.urgency || '').toLowerCase();
+  const evt = (p.event || '').toLowerCase();
+  let score = 3;
+  if (sev === 'extreme') score = 1;
+  else if (sev === 'severe') score = urg === 'immediate' ? 1 : 2;
+  else if (sev === 'moderate') score = 3;
+  else score = 4;
+  // Tornado/blizzard/ice directly threaten Detroit HQ + DC access — never below 2.
+  if (/tornado warning|blizzard warning|ice storm warning|hurricane warning/.test(evt)) score = Math.min(score, 1);
+  return rocketBoost(text, score);
+}
+
+// USGS: magnitude is the severity signal.
+function scoreQuake(mag, text) {
+  let score = 4;
+  if (mag >= 7.0) score = 0;
+  else if (mag >= 6.0) score = 1;
+  else if (mag >= 5.0) score = 2;
+  else if (mag >= 4.0) score = 3;
+  return rocketBoost(text, score);
 }
 
 function detectTerror(title, desc) {
@@ -301,7 +395,7 @@ function parseJSONSource(data, source) {
       const desc = ((p.description || '') + ' ' + (p.instruction || '')).substring(0, 800).trim();
       const isOngoing = /warning|watch|active|ongoing|currently/i.test(title);
       const hasGovResponse = /national weather service|emergency management|fema|governor/i.test(desc);
-      items.push({ id: `nws-${p.id || Math.random()}`.substring(0,20), title, description: desc, link: p['@id'] || '', pubDate: p.sent || '', sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: scoreItem(title, desc), terror: detectTerror(title, desc), isOngoing, hasGovResponse });
+      items.push({ id: `nws-${p.id || Math.random()}`.substring(0,20), title, description: desc, link: p['@id'] || '', pubDate: p.sent || '', sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: scoreNWS(p, title + ' ' + desc), terror: detectTerror(title, desc), isOngoing, hasGovResponse, areaDesc: p.areaDesc || '', nwsEvent: p.event || '' });
     }
   } else if (source.id === 'usgs') {
     for (const f of (data.features || []).slice(0, 100)) {
@@ -313,19 +407,53 @@ function parseJSONSource(data, source) {
       if (eLat && eLng && (eLat < ROCKET_BBOX.minLat || eLat > ROCKET_BBOX.maxLat || eLng < ROCKET_BBOX.minLng || eLng > ROCKET_BBOX.maxLng)) continue;
       const title = `M${mag.toFixed(1)} Earthquake — ${p.place || 'Unknown'}`;
       const desc = `Magnitude ${mag} earthquake near ${p.place}. Depth: ${coords[2]?.toFixed(1) || '?'} km. USGS status: ${p.status || 'reviewed'}. ${mag >= 5.0 ? 'SIGNIFICANT EARTHQUAKE — check for aftershocks and structural impact near Rocket offices.' : ''} ${p.tsunami === 1 ? 'TSUNAMI WARNING ISSUED.' : ''}`;
-      items.push({ id: `usgs-${p.code || mag}`.substring(0,20), title, description: desc, link: p.url || '', pubDate: p.time ? new Date(p.time).toISOString() : '', sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, lat: eLat, lng: eLng, magnitude: mag, severity: scoreItem(title, desc), terror: null, isOngoing: mag >= 4.5, hasGovResponse: mag >= 5.0 });
+      items.push({ id: `usgs-${p.code || mag}`.substring(0,20), title, description: desc, link: p.url || '', pubDate: p.time ? new Date(p.time).toISOString() : '', sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, lat: eLat, lng: eLng, magnitude: mag, severity: scoreQuake(mag, title + ' ' + desc), terror: null, isOngoing: mag >= 4.5, hasGovResponse: mag >= 5.0 });
     }
   } else if (source.id === 'fema') {
-    for (const d of (data.DisasterDeclarationsSummaries || []).slice(0, 30)) {
+    // Only surface declarations in states where Rocket has offices or remote TMs.
+    // A federal declaration is inherently significant, so severity comes from the
+    // declaration itself (was scoring 4 via keywords and being dropped entirely).
+    const seen = new Set();
+    for (const d of (data.DisasterDeclarationsSummaries || [])) {
+      if (!ROCKET_STATES.includes(d.state)) continue;
+      // API returns one row per designated county — collapse to one alert per disaster.
+      if (seen.has(d.disasterNumber)) continue;
+      seen.add(d.disasterNumber);
+      // Skip stale declarations — resilience cares about the last 45 days.
+      const declTime = new Date(d.declarationDate || 0).getTime();
+      if (declTime && (Date.now() - declTime) > 45 * 24 * 3600 * 1000) continue;
       const title = `FEMA DR-${d.disasterNumber}: ${d.incidentType} — ${d.designatedArea}, ${d.state}`;
       const desc = `Federal disaster declaration active. Type: ${d.incidentType}. State: ${d.state}. Declared: ${(d.declarationDate || '').substring(0,10)}. Programs: ${[d.ihProgramDeclared && 'Individual Assistance', d.paProgramDeclared && 'Public Assistance', d.hmProgramDeclared && 'Hazard Mitigation'].filter(Boolean).join(', ') || 'See FEMA.gov'}. Government response is active — FEMA field teams mobilized.`;
-      items.push({ id: `fema-${d.disasterNumber}`, title, description: desc, link: `https://www.fema.gov/disaster/${d.disasterNumber}`, pubDate: d.declarationDate || '', sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: scoreItem(title, desc), terror: null, isOngoing: true, hasGovResponse: true });
+      // Major declaration in a Rocket office state = SEV 2; MI (HQ + DC) = SEV 1.
+      let sev = d.state === 'MI' ? 1 : 2;
+      sev = rocketBoost(title + ' ' + desc, sev);
+      items.push({ id: `fema-${d.disasterNumber}`, title, description: desc, link: `https://www.fema.gov/disaster/${d.disasterNumber}`, pubDate: d.declarationDate || '', sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: sev, terror: null, isOngoing: true, hasGovResponse: true });
+      if (items.length >= 25) break;
     }
   } else if (source.id === 'cisa-kev') {
-    for (const v of (data.vulnerabilities || []).slice(-20).reverse()) {
+    // Every KEV entry is by definition actively exploited in the wild, so these are
+    // never "minor". Vendors in ENTERPRISE_TECH are in Rocket's stack (or ubiquitous
+    // enough to matter) and get escalated; the rest stay at SEV 3 for awareness.
+    // Previously scoreItem() gave all of these a 3 against minSeverity 2, so the
+    // entire KEV catalog was silently discarded.
+    const recent = (data.vulnerabilities || []).slice(-60).reverse();
+    for (const v of recent) {
+      // Only surface KEV entries added in the last 30 days — older ones are backlog.
+      const added = new Date(v.dateAdded || 0).getTime();
+      if (added && (Date.now() - added) > 30 * 24 * 3600 * 1000) continue;
+      const vendor = `${v.vendorProject || ''} ${v.product || ''}`.toLowerCase();
+      const isEnterprise = ENTERPRISE_TECH.some(t => vendor.includes(t));
       const title = `CISA KEV: ${v.cveID} — ${v.vendorProject} ${v.product}`;
       const desc = `${v.vulnerabilityName}. This vulnerability is actively being exploited in the wild per CISA. Required action: ${v.requiredAction || 'See CISA guidance'}. Remediation due: ${v.dueDate || 'N/A'}. ${v.shortDescription || ''}. Government mandates federal agencies patch by due date; CISA strongly advises all organizations to follow.`;
-      items.push({ id: v.cveID, title, description: desc, link: 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog', pubDate: v.dateAdded || '', sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: scoreItem(title, desc), terror: detectTerror(title, desc), isOngoing: true, hasGovResponse: true });
+      // Ransomware-linked + in-stack vendor = SEV 1; in-stack = SEV 2; else SEV 3.
+      // CISA sets this field to exactly "Known" or "Unknown" — anchor the match so
+      // "Unknown" does not satisfy a naive /known/i test.
+      const ransomware = /^known$/i.test((v.knownRansomwareCampaignUse || '').trim());
+      let sev = 3;
+      if (isEnterprise) sev = ransomware ? 1 : 2;
+      else if (ransomware) sev = 2;
+      items.push({ id: v.cveID, title, description: desc, link: 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog', pubDate: v.dateAdded || '', sourceId: source.id, sourceName: source.name, category: source.category, region: source.region, severity: sev, terror: detectTerror(title, desc), isOngoing: true, hasGovResponse: true, vendor: v.vendorProject || '', ransomware });
+      if (items.length >= 25) break;
     }
   } else if (source.id === 'salesforce') {
     const incidents = Array.isArray(data) ? data : (data.incidents || data.data || []);
@@ -344,17 +472,80 @@ function parseJSONSource(data, source) {
 
 // ─── WRITE OUTPUT FILE ────────────────────────────────────────────────────────
 
-import { writeFileSync } from 'fs';
+import { writeFileSync, readFileSync, existsSync } from 'fs';
 
-function writeOutput(allItems, healthMap) {
+const RETENTION_DAYS = 7;
+
+// Merge this run's alerts with the previous file so the dashboard has a rolling
+// 7-day window to search instead of only the current 15-minute snapshot.
+// `firstSeen` is preserved across runs so we can show when an event first appeared
+// and how long it has been active.
+function mergeHistory(freshItems) {
+  const cutoff = Date.now() - RETENTION_DAYS * 24 * 3600 * 1000;
+  const now = new Date().toISOString();
+  const byKey = new Map();
+
+  // Seed with previously retained alerts still inside the window.
+  if (existsSync('alerts.json')) {
+    try {
+      const prev = JSON.parse(readFileSync('alerts.json', 'utf8'));
+      for (const a of (prev.alerts || [])) {
+        const seen = new Date(a.firstSeen || a.pubDate || 0).getTime();
+        if (seen && seen < cutoff) continue;
+        byKey.set(historyKey(a), a);
+      }
+    } catch (e) {
+      console.log(`! Could not read previous alerts.json (${e.message}) — starting fresh history`);
+    }
+  }
+
+  // Overlay this run. Existing entries keep firstSeen and gain lastSeen/updateCount.
+  for (const item of freshItems) {
+    const k = historyKey(item);
+    const prior = byKey.get(k);
+    if (prior) {
+      byKey.set(k, {
+        ...item,
+        firstSeen: prior.firstSeen || prior.pubDate || now,
+        lastSeen: now,
+        updateCount: (prior.updateCount || 1) + (prior.severity !== item.severity ? 1 : 0),
+        active: true,
+      });
+    } else {
+      byKey.set(k, { ...item, firstSeen: now, lastSeen: now, updateCount: 1, active: true });
+    }
+  }
+
+  // Anything retained but absent from this run is no longer active (resolved/aged out).
+  const freshKeys = new Set(freshItems.map(historyKey));
+  const merged = [];
+  for (const [k, a] of byKey) {
+    merged.push(freshKeys.has(k) ? a : { ...a, active: false });
+  }
+
+  merged.sort((a, b) =>
+    a.severity - b.severity ||
+    new Date(b.pubDate || b.firstSeen) - new Date(a.pubDate || a.firstSeen));
+  return merged;
+}
+
+function historyKey(a) {
+  return (a.title || '').toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 60);
+}
+
+function writeOutput(freshItems, healthMap) {
+  const alerts = mergeHistory(freshItems);
+  const active = alerts.filter(a => a.active !== false);
   const payload = {
     fetchedAt: new Date().toISOString(),
-    totalItems: allItems.length,
+    retentionDays: RETENTION_DAYS,
+    totalItems: alerts.length,
+    activeItems: active.length,
     health: healthMap,
-    alerts: allItems,
+    alerts,
   };
   writeFileSync('alerts.json', JSON.stringify(payload));
-  console.log(`✓ Wrote alerts.json: ${allItems.length} alerts`);
+  console.log(`✓ Wrote alerts.json: ${active.length} active / ${alerts.length} retained over ${RETENTION_DAYS}d`);
 }
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
@@ -389,7 +580,14 @@ async function main() {
   deduped.sort((a, b) => a.severity - b.severity || new Date(b.pubDate) - new Date(a.pubDate));
 
   const healthy = Object.values(healthMap).filter(h => h.status === 'ok').length;
-  console.log(`\n=== Results: ${deduped.length} alerts from ${healthy}/${RSS_SOURCES.length + JSON_SOURCES.length} sources ===\n`);
+  const empty = Object.entries(healthMap).filter(([, h]) => h.status === 'ok' && h.items === 0).map(([k]) => k);
+  const failed = Object.entries(healthMap).filter(([, h]) => h.status === 'error').map(([k]) => k);
+  console.log(`\n=== Results: ${deduped.length} alerts from ${healthy}/${RSS_SOURCES.length + JSON_SOURCES.length} sources ===`);
+  if (failed.length) console.log(`  ✗ failed:   ${failed.join(', ')}`);
+  // Surfacing these matters: a feed that returns 0 looks "healthy" but is silently
+  // contributing nothing, which is how CISA KEV and FEMA went unnoticed for weeks.
+  if (empty.length) console.log(`  ! returned 0 items: ${empty.join(', ')}`);
+  console.log('');
 
   writeOutput(deduped, healthMap);
 }
